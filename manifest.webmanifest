@@ -1,0 +1,15 @@
+{
+  "name": "霞光预报",
+  "short_name": "霞光",
+  "description": "结合云层、能见度与空气质量的霞光指数",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101821",
+  "theme_color": "#101b2c",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},
+    {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

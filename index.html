@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101b2c">
+  <meta name="description" content="无自有后端、结合云层与空气质量的霞光指数预报">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="霞光">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css?v=8">
+  <title>霞光预报</title>
+</head>
+<body data-state="welcome" data-tier="great">
+  <div class="sky" aria-hidden="true"></div>
+  <main class="app-shell">
+    <header class="topbar">
+      <button class="brand" id="open-places" type="button" aria-label="选择地点">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-copy"><strong>霞光预报</strong><small id="place-name">选择地点</small></span>
+      </button>
+      <div class="top-actions liquid-glass">
+        <button class="icon-button favorite-button" id="favorite-button" type="button" aria-label="收藏当前地点" aria-pressed="false" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 3Z"/></svg>
+        </button>
+        <button class="icon-button" id="refresh-button" type="button" aria-label="刷新预报" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5M5.4 9a7 7 0 0 1 11.8-2.4L19 8M5 17v-5h5m8.6 3a7 7 0 0 1-11.8 2.4L5 16"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="panel welcome" id="panel-welcome">
+      <div class="welcome-layout">
+        <div class="welcome-copy">
+          <p class="eyebrow"><span aria-hidden="true"></span>霞光观测手记</p>
+          <h1>下一场霞光<br>值得等吗</h1>
+          <p class="intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
+          <div class="welcome-actions">
+            <button class="primary liquid-glass glass-tint" id="locate-button" type="button" aria-describedby="privacy-note">
+              <span>使用当前位置</span><span aria-hidden="true">↗</span>
+            </button>
+            <button class="text-button" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市</button>
+          </div>
+          <p class="privacy-note" id="privacy-note">无自有后端 · 定位、搜索与气象请求由浏览器直接发送至第三方服务</p>
+          <p class="notice" id="geo-notice" role="status"></p>
+        </div>
+        <aside class="method-note" aria-label="霞光指数观测依据">
+          <p class="method-title">观测依据</p>
+          <dl>
+            <div><dt>01</dt><dd><strong>云幕</strong><span>中高云提供显色层次</span></dd></div>
+            <div><dt>02</dt><dd><strong>光路</strong><span>太阳方向低云决定遮挡</span></dd></div>
+            <div><dt>03</dt><dd><strong>空气</strong><span>能见度与气溶胶影响通透</span></dd></div>
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel loading" id="panel-loading" hidden aria-live="polite">
+      <div class="loader" aria-hidden="true"></div>
+      <h2>正在读取天空</h2>
+      <p id="loading-text">连接气象数据…</p>
+    </section>
+
+    <section class="panel ready" id="panel-ready" hidden>
+      <div class="ready-toolbar">
+        <p>下一次可见时段</p>
+        <div class="event-tabs liquid-glass" role="group" aria-label="霞光时段">
+          <button id="tab-sunset" aria-pressed="true" data-event="sunset" type="button">晚霞</button>
+          <button id="tab-sunrise" aria-pressed="false" data-event="sunrise" type="button">朝霞</button>
+        </div>
+      </div>
+      <section class="hero-card" aria-labelledby="index-label">
+        <div class="event-brief">
+          <p class="hero-overline">霞光时刻</p>
+          <p class="event-time" id="event-time">—</p>
+          <p class="countdown" id="countdown">—</p>
+          <div class="data-meta"><span id="data-source">实时数据</span><span id="updated-at">—</span></div>
+        </div>
+        <div class="score-block">
+          <p class="index-label" id="index-label">霞光指数</p>
+          <div class="score-row"><strong id="score">—</strong><span>/ 99</span></div>
+          <p class="band" id="band">—</p>
+        </div>
+      </section>
+
+      <section class="section-block" aria-labelledby="reason-title">
+        <div class="section-head"><div><span>01</span><h2 id="reason-title">天空线索</h2></div><p>影响本次判断的主要条件</p></div>
+        <div class="reason-list" id="reasons"></div>
+      </section>
+
+      <section class="section-block metrics-block" aria-labelledby="metrics-title">
+        <div class="section-head"><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>取自霞光时刻附近的预报值</p></div>
+        <div class="metrics" aria-label="天气指标">
+          <article><span>低云</span><strong id="metric-low">—</strong></article>
+          <article><span>中云</span><strong id="metric-mid">—</strong></article>
+          <article><span>高云</span><strong id="metric-high">—</strong></article>
+          <article><span>太阳方向低云</span><strong id="metric-path">—</strong></article>
+          <article><span>能见度</span><strong id="metric-vis">—</strong></article>
+          <article><span>湿度</span><strong id="metric-rh">—</strong></article>
+          <article><span>AOD</span><strong id="metric-aod">—</strong></article>
+        </div>
+      </section>
+
+      <section class="section-block week-block" aria-labelledby="week-title">
+        <div class="section-head"><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>横向查看每日霞光指数</p></div>
+        <div class="week-strip" id="week"></div>
+      </section>
+    </section>
+
+    <section class="panel error" id="panel-error" hidden role="alert">
+      <div class="error-symbol">云</div>
+      <h2>天空暂时失联</h2>
+      <p id="error-text">暂无可用预测，请稍后重试</p>
+      <button class="primary" id="retry-button" type="button">重新尝试</button>
+      <button class="text-button" id="error-search" type="button">搜索其他城市</button>
+    </section>
+
+    <footer><div><span>气象数据</span><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></div><p>仅供个人观测参考，不代表确定概率</p></footer>
+  </main>
+
+  <dialog class="liquid-glass glass-sheet" id="places-dialog" aria-labelledby="places-title">
+    <form method="dialog" class="dialog-head"><div><p>地点与收藏</p><h2 id="places-title">选择天空</h2></div><button class="icon-button" value="cancel" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+    <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span><span aria-hidden="true">↗</span></button>
+    <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" type="search" placeholder="搜索城市" autocomplete="off" aria-label="搜索城市" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" hidden></span></label>
+    <p class="dialog-privacy" id="dialog-privacy">无自有后端；定位、搜索和气象数据由第三方服务处理。</p>
+    <p class="dialog-status" id="search-status" role="status"></p>
+    <ul class="search-results" id="search-results"></ul>
+    <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">还没有收藏地点</p></section>
+  </dialog>
+
+  <script type="module" src="js/app.mjs?v=2"></script>
+</body>
+</html>
