@@ -10,7 +10,7 @@
       <stop offset="1" stop-color="#ffc06f"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <rect width="512" height="512" fill="url(#sky)"/>
   <circle cx="350" cy="224" r="76" fill="url(#sun)"/>
   <path d="M0 332c84-30 148-24 220 5 86 35 171 32 292-23v198H0z" fill="#261b39"/>
   <path d="M0 367c105-22 174-11 246 18 74 30 164 24 266-19v146H0z" fill="#151224" opacity=".85"/>
