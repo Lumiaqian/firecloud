@@ -5,6 +5,9 @@ const J1970 = 2_440_588;
 const J2000 = 2_451_545;
 const OBLIQUITY = RAD * 23.4397;
 const EARTH_RADIUS_KM = 6371.0088;
+const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99]);
+const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86]);
+const OVERCAST_CODES = new Set([3, 45, 48]);
 
 const toJulian = (date) => date.valueOf() / DAY_MS - 0.5 + J1970;
 const fromJulian = (julian) => new Date((julian + 0.5 - J1970) * DAY_MS);
@@ -16,6 +19,26 @@ const julianCycle = (days, westLongitude) => Math.round(days - 0.0009 - westLong
 const approxTransit = (hourAngle, westLongitude, cycle) => 0.0009 + (hourAngle + westLongitude) / (2 * Math.PI) + cycle;
 const solarTransitJulian = (transit, anomaly, longitude) => J2000 + transit + 0.0053 * Math.sin(anomaly) - 0.0069 * Math.sin(2 * longitude);
 const gauss = (value, mean, spread) => Math.exp(-((value - mean) ** 2) / (2 * spread * spread));
+
+export function weatherTheme({
+  weatherCode,
+  isDay,
+  cloudCover,
+  precipitation,
+  snowfall,
+  fallbackLight = "day"
+} = {}) {
+  let weather = "clear";
+  if ((Number.isFinite(snowfall) && snowfall > 0) || SNOW_CODES.has(weatherCode)) weather = "snow";
+  else if ((Number.isFinite(precipitation) && precipitation > 0) || RAIN_CODES.has(weatherCode)) weather = "rain";
+  else if (OVERCAST_CODES.has(weatherCode) || (Number.isFinite(cloudCover) && cloudCover >= 75)) weather = "overcast";
+  else if (weatherCode === 1 || weatherCode === 2 || (Number.isFinite(cloudCover) && cloudCover >= 25)) weather = "partly";
+
+  let light = fallbackLight === "night" ? "night" : "day";
+  if (isDay === 0) light = "night";
+  else if (isDay === 1) light = "day";
+  return { weather, light };
+}
 
 function eclipticLongitude(anomaly) {
   const center = RAD * (1.9148 * Math.sin(anomaly) + 0.02 * Math.sin(2 * anomaly) + 0.0003 * Math.sin(3 * anomaly));

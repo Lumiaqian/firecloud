@@ -1,9 +1,10 @@
-import { buildSamplingPoints, solarAzimuth } from "./forecast.mjs";
+import { buildSamplingPoints, solarAzimuth } from "./forecast.mjs?v=2";
 
 export const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
 export const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
 export const REVERSE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
+const CURRENT_WEATHER_FIELDS = "weather_code,is_day,cloud_cover,precipitation,snowfall";
 
 export async function fetchJson(url, timeoutMs = 12_000) {
   const controller = new AbortController();
@@ -20,7 +21,7 @@ export async function fetchJson(url, timeoutMs = 12_000) {
   }
 }
 
-export function fetchForecastPoint(point) {
+export function fetchForecastPoint(point, { includeCurrent = false } = {}) {
   const query = new URLSearchParams({
     latitude: Number(point.lat).toFixed(4),
     longitude: Number(point.lon).toFixed(4),
@@ -29,6 +30,7 @@ export function fetchForecastPoint(point) {
     timeformat: "unixtime",
     timezone: "auto"
   });
+  if (includeCurrent) query.set("current", CURRENT_WEATHER_FIELDS);
   return fetchJson(`${FORECAST_URL}?${query}`);
 }
 
@@ -77,7 +79,7 @@ export async function fetchForecastBundle(place, eventType, eventTime) {
   const points = buildSamplingPoints(place.lat, place.lon, samplingBearing);
   const names = Object.keys(points);
   const [weatherResults, airResult] = await Promise.all([
-    Promise.allSettled(names.map((name) => fetchForecastPoint(points[name]))),
+    Promise.allSettled(names.map((name) => fetchForecastPoint(points[name], { includeCurrent: name === "local" }))),
     fetchAir(points.local).then(
       (value) => ({ status: "fulfilled", value }),
       (reason) => ({ status: "rejected", reason })

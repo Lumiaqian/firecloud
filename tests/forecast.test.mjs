@@ -5,7 +5,8 @@ import {
   indexBand,
   metricsAt,
   nextEvent,
-  scoreSky
+  scoreSky,
+  weatherTheme
 } from "../js/forecast.mjs";
 
 const cleanSky = {
@@ -82,4 +83,22 @@ test("下一次日落可查且极昼不抛错", () => {
   assert.ok(sunset instanceof Date);
   assert.ok(sunset > from);
   assert.equal(nextEvent("sunset", 89, 0, new Date("2026-06-21T12:00:00Z")), null);
+});
+
+test("实时天气映射为独立的背景天气与昼夜状态", () => {
+  const cases = [
+    [{ weatherCode: 0, isDay: 1 }, { weather: "clear", light: "day" }],
+    [{ weatherCode: 2, isDay: 1 }, { weather: "partly", light: "day" }],
+    [{ weatherCode: 45, isDay: 0 }, { weather: "overcast", light: "night" }],
+    [{ weatherCode: 61, isDay: 0 }, { weather: "rain", light: "night" }],
+    [{ weatherCode: 0, snowfall: 0.2, isDay: 1 }, { weather: "snow", light: "day" }]
+  ];
+  for (const [input, expected] of cases) assert.deepEqual(weatherTheme(input), expected);
+});
+
+test("旧缓存缺少 current 字段时回退到当前小时云量与本地昼夜", () => {
+  assert.deepEqual(
+    weatherTheme({ cloudCover: 82, fallbackLight: "night" }),
+    { weather: "overcast", light: "night" }
+  );
 });

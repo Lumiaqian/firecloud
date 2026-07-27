@@ -1,5 +1,5 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs";
-import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes } from "./forecast.mjs";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=2";
+import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, weatherTheme } from "./forecast.mjs?v=2";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -171,6 +171,25 @@ function tierFor(score) {
   return "dull";
 }
 
+function applyWeatherBackground(bundle) {
+  const now = new Date();
+  const current = bundle?.forecasts?.local?.current ?? {};
+  const metrics = metricsAt(bundle, now);
+  const cloudLayers = [metrics.low, metrics.mid, metrics.high].filter(Number.isFinite);
+  const { sunrise, sunset } = sunTimes(now, state.place.lat, state.place.lon);
+  const fallbackLight = sunrise && sunset && (now < sunrise || now > sunset) ? "night" : "day";
+  const theme = weatherTheme({
+    weatherCode: current.weather_code,
+    isDay: current.is_day,
+    cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
+    precipitation: current.precipitation ?? metrics.precip,
+    snowfall: current.snowfall,
+    fallbackLight
+  });
+  document.body.dataset.weather = theme.weather;
+  document.body.dataset.light = theme.light;
+}
+
 function renderWeek(bundle) {
   elements.week.replaceChildren();
   const base = currentEventTime();
@@ -200,6 +219,7 @@ function renderReady(cacheAge = 0) {
   }
   const metrics = metricsAt(state.bundle, eventTime);
   const score = scoreSky(metrics);
+  applyWeatherBackground(state.bundle);
   const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
   elements.placeName.textContent = state.place.name;
   elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime)}`;
