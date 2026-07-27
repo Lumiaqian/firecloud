@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#101b2c">
+  <meta name="theme-color" id="theme-color" content="#101b2c">
   <meta name="description" content="无自有后端、结合云层与空气质量的霞光指数预报">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -12,14 +12,14 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=12">
+  <link rel="stylesheet" href="css/style.css?v=13">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
   <div class="sky" aria-hidden="true"><canvas class="weather-canvas" id="weather-canvas"></canvas></div>
   <main class="app-shell">
     <header class="topbar">
-      <button class="brand" id="open-places" type="button" aria-label="选择地点">
+      <button class="brand" id="open-places" type="button" aria-label="选择地点，当前地点：未选择">
         <span class="brand-mark" aria-hidden="true"></span>
         <span class="brand-copy"><strong>霞光预报</strong><small id="place-name">选择地点</small></span>
       </button>
@@ -61,7 +61,7 @@
 
     <section class="panel loading" id="panel-loading" hidden aria-live="polite">
       <div class="loader" aria-hidden="true"></div>
-      <h2>正在读取天空</h2>
+      <h1>正在读取天空</h1>
       <p id="loading-text">连接气象数据…</p>
     </section>
 
@@ -76,14 +76,16 @@
       <section class="hero-card" aria-labelledby="index-label">
         <div class="event-brief">
           <p class="hero-overline">霞光时刻</p>
-          <p class="event-time" id="event-time">—</p>
+          <h1 class="event-time" id="event-time">—</h1>
+          <p class="event-date" id="event-date">—</p>
           <p class="countdown" id="countdown">—</p>
           <div class="data-meta"><span id="data-source">实时数据</span><span id="updated-at">—</span></div>
         </div>
         <div class="score-block">
           <p class="index-label" id="index-label">霞光指数</p>
-          <div class="score-row"><strong id="score">—</strong><span>/ 99</span></div>
+          <div class="score-row"><strong id="score">—</strong></div>
           <p class="band" id="band">—</p>
+          <p class="verdict" id="verdict">—</p>
         </div>
       </section>
 
@@ -93,27 +95,31 @@
       </section>
 
       <section class="section-block metrics-block" aria-labelledby="metrics-title">
-        <div class="section-head"><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>取自霞光时刻附近的预报值</p></div>
-        <div class="metrics" aria-label="天气指标">
-          <article><span>低云</span><strong id="metric-low">—</strong></article>
-          <article><span>中云</span><strong id="metric-mid">—</strong></article>
-          <article><span>高云</span><strong id="metric-high">—</strong></article>
-          <article><span>太阳方向低云</span><strong id="metric-path">—</strong></article>
-          <article><span>能见度</span><strong id="metric-vis">—</strong></article>
-          <article><span>湿度</span><strong id="metric-rh">—</strong></article>
-          <article><span>AOD</span><strong id="metric-aod">—</strong></article>
+        <div class="section-head"><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>横向查看全部指标</p></div>
+        <div class="horizontal-scroll-region" data-scroll-region>
+          <div class="metrics" aria-label="天气指标">
+            <article><span>低云</span><strong id="metric-low">—</strong></article>
+            <article><span>中云</span><strong id="metric-mid">—</strong></article>
+            <article><span>高云</span><strong id="metric-high">—</strong></article>
+            <article><span>太阳方向低云</span><strong id="metric-path">—</strong></article>
+            <article><span>能见度</span><strong id="metric-vis">—</strong></article>
+            <article><span>湿度</span><strong id="metric-rh">—</strong></article>
+            <article><span>AOD</span><strong id="metric-aod">—</strong></article>
+          </div>
         </div>
       </section>
 
       <section class="section-block week-block" aria-labelledby="week-title">
-        <div class="section-head"><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>横向查看每日霞光指数</p></div>
-        <div class="week-strip" id="week"></div>
+        <div class="section-head"><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>横向查看每日指数</p></div>
+        <div class="horizontal-scroll-region" data-scroll-region>
+          <div class="week-strip" id="week"></div>
+        </div>
       </section>
     </section>
 
     <section class="panel error" id="panel-error" hidden role="alert">
       <div class="error-symbol">云</div>
-      <h2>天空暂时失联</h2>
+      <h1 id="error-title" tabindex="-1">天空暂时失联</h1>
       <p id="error-text">暂无可用预测，请稍后重试</p>
       <button class="primary" id="retry-button" type="button">重新尝试</button>
       <button class="text-button" id="error-search" type="button">搜索其他城市</button>
@@ -125,13 +131,13 @@
   <dialog class="liquid-glass glass-sheet" id="places-dialog" aria-labelledby="places-title">
     <form method="dialog" class="dialog-head"><div><p>地点与收藏</p><h2 id="places-title">选择天空</h2></div><button class="icon-button dialog-close" value="cancel" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
     <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span></button>
-    <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" autocomplete="off" aria-label="搜索城市" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" hidden></span></label>
+    <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" autocomplete="off" aria-label="搜索城市" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" aria-hidden="true" hidden></span></label>
     <p class="dialog-privacy" id="dialog-privacy">无自有后端；定位、搜索和气象数据由第三方服务处理。</p>
     <p class="dialog-status" id="search-status" role="status"></p>
     <ul class="search-results" id="search-results"></ul>
     <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">还没有收藏地点</p></section>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=6"></script>
+  <script type="module" src="js/app.mjs?v=8"></script>
 </body>
 </html>

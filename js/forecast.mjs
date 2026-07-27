@@ -236,6 +236,14 @@ export function indexBand(score) {
   return "平淡";
 }
 
+export function waitAdvice(score) {
+  if (score >= 80) return "值得专程等待";
+  if (score >= 65) return "值得追这场霞光";
+  if (score >= 50) return "可以顺路看看";
+  if (score >= 35) return "有空可以留意";
+  return "不建议专程等待";
+}
+
 export function nextEvent(type, lat, lng, from = new Date()) {
   if (type !== "sunset" && type !== "sunrise") throw new TypeError('事件类型必须是 "sunset" 或 "sunrise"');
   const graceStart = from.getTime() - 30 * 60 * 1000;

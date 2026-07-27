@@ -1,5 +1,5 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=3";
-import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, weatherTheme } from "./forecast.mjs?v=2";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=4";
+import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, waitAdvice, weatherTheme } from "./forecast.mjs?v=3";
 import { createWeatherFx } from "./weather-fx.mjs?v=3";
 
 const PLACE_KEY = "firecloud:place:v1";
@@ -11,13 +11,16 @@ const $ = (id) => document.getElementById(id);
 const panels = ["welcome", "loading", "ready", "error"];
 createWeatherFx($("weather-canvas"));
 const elements = {
-  placeName: $("place-name"), openPlaces: $("open-places"), favorite: $("favorite-button"), refresh: $("refresh-button"),
-  locate: $("locate-button"), welcomeSearch: $("welcome-search"), geoNotice: $("geo-notice"), loadingText: $("loading-text"),
-  tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), score: $("score"), band: $("band"),
-  countdown: $("countdown"), source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
-  errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"), dialog: $("places-dialog"),
-  dialogLocate: $("dialog-locate"), search: $("city-search"), searchStatus: $("search-status"), searchSpinner: $("search-spinner"),
-  searchResults: $("search-results"), favoritesList: $("favorites-list"), favoritesEmpty: $("favorites-empty"),
+  themeColor: $("theme-color"), placeName: $("place-name"), openPlaces: $("open-places"),
+  favorite: $("favorite-button"), refresh: $("refresh-button"), locate: $("locate-button"),
+  welcomeSearch: $("welcome-search"), geoNotice: $("geo-notice"), loadingText: $("loading-text"),
+  tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
+  score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
+  source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
+  errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
+  dialog: $("places-dialog"), dialogLocate: $("dialog-locate"), search: $("city-search"),
+  searchStatus: $("search-status"), searchSpinner: $("search-spinner"), searchResults: $("search-results"),
+  favoritesList: $("favorites-list"), favoritesEmpty: $("favorites-empty"),
   metrics: {
     low: $("metric-low"), mid: $("metric-mid"), high: $("metric-high"), pathLow: $("metric-path"),
     vis: $("metric-vis"), rh: $("metric-rh"), aod: $("metric-aod")
@@ -107,8 +110,34 @@ function setBusy(busy) {
   for (const tab of elements.tabs) tab.disabled = busy;
 }
 
-function formatClock(date) {
-  return new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+function localTimeZone(bundle) {
+  const timeZone = bundle?.forecasts?.local?.timezone;
+  if (typeof timeZone !== "string" || !timeZone) return undefined;
+  try {
+    new Intl.DateTimeFormat("zh-CN", { timeZone }).format(0);
+    return timeZone;
+  } catch {
+    return undefined;
+  }
+}
+
+function formatClock(date, timeZone) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone
+  }).format(date);
+}
+
+function formatEventDate(date, timeZone) {
+  const formatted = new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    timeZone
+  }).format(date);
+  return formatted.replace(/(?=周)/, " · ");
 }
 
 function formatUpdated(timestamp) {
@@ -201,13 +230,35 @@ function applyWeatherBackground(bundle) {
     if (Number.isFinite(value)) document.body.dataset[name] = String(value);
     else delete document.body.dataset[name];
   }
+  const skyTop = getComputedStyle(document.body).getPropertyValue("--sky-top").trim();
+  if (/^#[\da-f]{6}$/i.test(skyTop)) elements.themeColor.content = skyTop;
 }
+
+function updateHorizontalScrollRegions() {
+  for (const region of document.querySelectorAll("[data-scroll-region]")) {
+    const scroller = region.firstElementChild;
+    const canScroll = scroller.scrollWidth > scroller.clientWidth + 1;
+    region.classList.toggle("can-scroll", canScroll);
+    region.classList.toggle("is-at-end", !canScroll || scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2);
+  }
+}
+
+for (const region of document.querySelectorAll("[data-scroll-region]")) {
+  region.firstElementChild.addEventListener("scroll", () => updateHorizontalScrollRegions(), { passive: true });
+}
+window.addEventListener("resize", updateHorizontalScrollRegions, { passive: true });
 
 function renderWeek(bundle) {
   elements.week.replaceChildren();
   const base = currentEventTime();
   if (!base) return;
-  const formatter = new Intl.DateTimeFormat("zh-CN", { weekday: "short" });
+  const timeZone = localTimeZone(bundle);
+  const formatter = new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    timeZone
+  });
   for (let day = 0; day < 7; day += 1) {
     const probe = new Date(base.getTime() + day * 86_400_000);
     const eventTime = sunTimes(probe, state.place.lat, state.place.lon)[state.event];
@@ -218,10 +269,11 @@ function renderWeek(bundle) {
     } else {
       const metrics = metricsAt(bundle, eventTime);
       const score = scoreSky(metrics);
-      card.innerHTML = `<span>${formatter.format(eventTime)}</span><strong>${score}</strong><small>${formatClock(eventTime)} · ${indexBand(score)}</small>`;
+      card.innerHTML = `<span>${formatter.format(eventTime)}</span><strong>${score}</strong><small>${formatClock(eventTime, timeZone)} · ${indexBand(score)}</small>`;
     }
     elements.week.append(card);
   }
+  requestAnimationFrame(updateHorizontalScrollRegions);
 }
 
 function renderReady(cacheAge = 0) {
@@ -232,12 +284,17 @@ function renderReady(cacheAge = 0) {
   }
   const metrics = metricsAt(state.bundle, eventTime);
   const score = scoreSky(metrics);
+  document.body.dataset.tier = tierFor(score);
   applyWeatherBackground(state.bundle);
   const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
+  const timeZone = localTimeZone(state.bundle);
   elements.placeName.textContent = state.place.name;
-  elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime)}`;
+  elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${state.place.name}`);
+  elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime, timeZone)}`;
+  elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
   elements.score.textContent = String(score);
   elements.band.textContent = indexBand(score);
+  elements.verdict.textContent = waitAdvice(score);
   elements.source.textContent = state.stale ? "缓存数据" : "实时数据";
   elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt)}`;
   elements.reasons.replaceChildren(...reasonsFor(metrics).map((reason) => {
@@ -253,7 +310,6 @@ function renderReady(cacheAge = 0) {
   displayMetric(elements.metrics.rh, metrics.rh, (value) => `${Math.round(value)}%`);
   displayMetric(elements.metrics.aod, metrics.aod, (value) => value.toFixed(2));
   for (const tab of elements.tabs) tab.setAttribute("aria-pressed", String(tab.dataset.event === state.event));
-  document.body.dataset.tier = tierFor(score);
   updateFavoriteButton();
   renderWeek(state.bundle);
   updateTicker(eventTime);
@@ -264,6 +320,7 @@ function showError(message) {
   setBusy(false);
   elements.errorText.textContent = message;
   setPanel("error");
+  queueMicrotask(() => elements.errorTitle.focus({ preventScroll: true }));
 }
 
 async function loadPlace(place, { preferCache = false, force = false } = {}) {
@@ -274,6 +331,7 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
   state.place = normalized;
   storage.set(PLACE_KEY, normalized);
   elements.placeName.textContent = normalized.name;
+  elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${normalized.name}`);
   const cached = readValidCache(normalized, eventType);
   if (!force && preferCache && cached) {
     state.bundle = cached.bundle;
@@ -349,6 +407,8 @@ function clearSearch() {
   searchRequestId += 1;
   clearTimeout(searchTimer);
   elements.search.value = "";
+  elements.search.removeAttribute("aria-busy");
+  elements.searchResults.removeAttribute("aria-busy");
   elements.searchSpinner.hidden = true;
   elements.searchStatus.textContent = "";
   elements.searchResults.replaceChildren();
@@ -385,22 +445,30 @@ elements.search.addEventListener("input", () => {
     elements.searchResults.replaceChildren();
     elements.searchStatus.textContent = "";
     elements.searchSpinner.hidden = true;
+    elements.search.removeAttribute("aria-busy");
+    elements.searchResults.removeAttribute("aria-busy");
     return;
   }
   searchTimer = setTimeout(async () => {
     elements.searchSpinner.hidden = false;
-    elements.searchStatus.textContent = "";
+    elements.search.setAttribute("aria-busy", "true");
+    elements.searchResults.setAttribute("aria-busy", "true");
+    elements.searchStatus.textContent = "正在搜索…";
     try {
       const results = await searchCities(query);
       if (requestId !== searchRequestId) return;
       renderSearchResults(results);
-      elements.searchStatus.textContent = results.length ? "" : "没有找到匹配城市";
+      elements.searchStatus.textContent = results.length ? `找到 ${results.length} 个地点` : "没有找到匹配城市";
     } catch {
       if (requestId !== searchRequestId) return;
       elements.searchResults.replaceChildren();
       elements.searchStatus.textContent = "城市搜索暂不可用";
     } finally {
-      if (requestId === searchRequestId) elements.searchSpinner.hidden = true;
+      if (requestId === searchRequestId) {
+        elements.searchSpinner.hidden = true;
+        elements.search.removeAttribute("aria-busy");
+        elements.searchResults.removeAttribute("aria-busy");
+      }
     }
   }, 300);
 });

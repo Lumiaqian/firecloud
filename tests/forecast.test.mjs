@@ -6,6 +6,7 @@ import {
   metricsAt,
   nextEvent,
   scoreSky,
+  waitAdvice,
   weatherTheme
 } from "../js/forecast.mjs";
 
@@ -30,6 +31,14 @@ test("理想中高云且空气清洁达到极佳", () => {
   const score = scoreSky(cleanSky);
   assert.ok(score >= 80);
   assert.equal(indexBand(score), "极佳");
+});
+
+test("等待建议覆盖全部指数分档", () => {
+  assert.equal(waitAdvice(80), "值得专程等待");
+  assert.equal(waitAdvice(65), "值得追这场霞光");
+  assert.equal(waitAdvice(50), "可以顺路看看");
+  assert.equal(waitAdvice(35), "有空可以留意");
+  assert.equal(waitAdvice(34), "不建议专程等待");
 });
 
 test("低云和中云同时厚重时封顶 10", () => {
