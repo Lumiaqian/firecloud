@@ -180,7 +180,7 @@ a {
 .sky::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -14% -18%;
   opacity: var(--sky-cloud-opacity);
   background:
     radial-gradient(ellipse 90% 22% at 15% 36%, rgba(230, 234, 233, 0.16), transparent 72%),
@@ -203,6 +203,90 @@ a {
   );
   mix-blend-mode: soft-light;
   transition: opacity 900ms ease;
+}
+
+body[data-state="ready"][data-weather] .sky::before,
+body[data-state="ready"][data-weather] .sky::after {
+  will-change: transform, opacity, background-position;
+}
+
+body[data-state="ready"][data-weather="clear"] .sky::before {
+  animation: clear-air-drift 18s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-light="day"][data-weather="clear"] .sky::after {
+  opacity: 0.24;
+  background: radial-gradient(circle at 76% 20%, rgba(255, 226, 174, 0.42), transparent 24%);
+  mix-blend-mode: screen;
+  animation: daylight-breathe 8s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-light="night"][data-weather="clear"] .sky::after,
+body[data-state="ready"][data-light="night"][data-weather="partly"] .sky::after {
+  opacity: 0.46;
+  background-image:
+    radial-gradient(circle, rgba(235, 244, 255, 0.9) 0 1px, transparent 1.4px),
+    radial-gradient(circle, rgba(208, 227, 245, 0.72) 0 0.8px, transparent 1.2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.54) 0 0.6px, transparent 1px);
+  background-position: 12px 18px, 42px 76px, 88px 32px;
+  background-size: 112px 108px, 156px 148px, 206px 194px;
+  mix-blend-mode: screen;
+  animation: stars-twinkle 5.5s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-weather="partly"] .sky::before {
+  animation: cloud-drift 28s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-weather="overcast"] .sky::before {
+  animation: overcast-roll 22s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-weather="overcast"] .sky::after {
+  animation: texture-drift 15s linear infinite;
+}
+
+body[data-state="ready"][data-weather="rain"] .sky::before {
+  animation: storm-clouds 16s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-weather="rain"] .sky::after {
+  inset: -18% -12%;
+  opacity: 0.34;
+  background-image:
+    linear-gradient(104deg, transparent 46%, rgba(210, 228, 237, 0.34) 48%, transparent 52%),
+    linear-gradient(104deg, transparent 47%, rgba(178, 204, 218, 0.2) 49%, transparent 52%);
+  background-position: 0 -80px, 22px -130px;
+  background-size: 38px 92px, 57px 138px;
+  mix-blend-mode: screen;
+  animation: rain-fall 720ms linear infinite;
+}
+
+body[data-state="ready"][data-weather="snow"] .sky::before {
+  animation: snow-clouds 26s ease-in-out infinite alternate;
+}
+
+body[data-state="ready"][data-weather="snow"] .sky::after {
+  inset: -12% -8%;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle, rgba(247, 251, 252, 0.94) 0 1.4px, transparent 1.9px),
+    radial-gradient(circle, rgba(229, 239, 243, 0.76) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.58) 0 0.7px, transparent 1.2px);
+  background-position: 8px -20px, 35px -64px, 72px -96px;
+  background-size: 52px 58px, 83px 92px, 126px 138px;
+  mix-blend-mode: screen;
+  animation: snow-fall 9s linear infinite;
+}
+
+@media (max-width: 760px) {
+  body[data-state="ready"][data-weather="rain"] .sky::after {
+    opacity: 0.25;
+  }
+
+  body[data-state="ready"][data-weather="snow"] .sky::after {
+    opacity: 0.38;
+  }
 }
 
 body[data-state="ready"] .sky,
@@ -1374,6 +1458,95 @@ dialog.liquid-glass::backdrop {
   }
 }
 
+@keyframes clear-air-drift {
+  from {
+    transform: translate3d(-2%, -0.5%, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(2.5%, 0.8%, 0) scale(1.06);
+  }
+}
+
+@keyframes daylight-breathe {
+  from {
+    transform: translate3d(-1%, 1%, 0) scale(0.96);
+    opacity: 0.16;
+  }
+  to {
+    transform: translate3d(1.5%, -1%, 0) scale(1.08);
+    opacity: 0.28;
+  }
+}
+
+@keyframes stars-twinkle {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.28;
+  }
+  to {
+    transform: translate3d(0.4%, -0.3%, 0);
+    opacity: 0.52;
+  }
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translate3d(-4%, -1%, 0) scale(1.03);
+  }
+  to {
+    transform: translate3d(4%, 1%, 0) scale(1.08);
+  }
+}
+
+@keyframes overcast-roll {
+  from {
+    transform: translate3d(-3%, 0, 0) scale(1.05);
+    opacity: 0.74;
+  }
+  to {
+    transform: translate3d(3%, 1.5%, 0) scale(1.1);
+    opacity: var(--sky-cloud-opacity);
+  }
+}
+
+@keyframes storm-clouds {
+  from {
+    transform: translate3d(-3%, -1%, 0) scale(1.08);
+    opacity: 0.82;
+  }
+  to {
+    transform: translate3d(3%, 1%, 0) scale(1.12);
+    opacity: var(--sky-cloud-opacity);
+  }
+}
+
+@keyframes snow-clouds {
+  from {
+    transform: translate3d(-2.5%, -0.5%, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(2.5%, 1%, 0) scale(1.08);
+  }
+}
+
+@keyframes texture-drift {
+  to {
+    background-position: 0 20px;
+  }
+}
+
+@keyframes rain-fall {
+  to {
+    background-position: -38px 104px, -35px 146px;
+  }
+}
+
+@keyframes snow-fall {
+  to {
+    background-position: 28px 96px, 12px 120px, 104px 150px;
+  }
+}
+
 body[data-state="welcome"] .welcome,
 body[data-state="ready"] .ready {
   animation: panel-enter 480ms ease both;
@@ -1686,6 +1859,11 @@ body[data-state="ready"] .ready {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .sky::before,
+  .sky::after {
+    animation: none !important;
   }
 }
 
