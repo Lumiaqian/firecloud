@@ -4,7 +4,7 @@ export const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
 export const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
 export const REVERSE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
-const CURRENT_WEATHER_FIELDS = "weather_code,is_day,cloud_cover,precipitation,snowfall";
+const CURRENT_WEATHER_FIELDS = "weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m";
 
 export async function fetchJson(url, timeoutMs = 12_000) {
   const controller = new AbortController();
@@ -26,6 +26,8 @@ export function fetchForecastPoint(point, { includeCurrent = false } = {}) {
     latitude: Number(point.lat).toFixed(4),
     longitude: Number(point.lon).toFixed(4),
     hourly: "cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility,precipitation",
+    precipitation_unit: "mm",
+    wind_speed_unit: "kmh",
     forecast_days: "7",
     timeformat: "unixtime",
     timezone: "auto"

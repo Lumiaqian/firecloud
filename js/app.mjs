@@ -1,6 +1,6 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=2";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=3";
 import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, weatherTheme } from "./forecast.mjs?v=2";
-import { createWeatherFx } from "./weather-fx.mjs?v=2";
+import { createWeatherFx } from "./weather-fx.mjs?v=3";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -180,16 +180,27 @@ function applyWeatherBackground(bundle) {
   const cloudLayers = [metrics.low, metrics.mid, metrics.high].filter(Number.isFinite);
   const { sunrise, sunset } = sunTimes(now, state.place.lat, state.place.lon);
   const fallbackLight = sunrise && sunset && (now < sunrise || now > sunset) ? "night" : "day";
+  const precipitation = current.precipitation ?? metrics.precip;
   const theme = weatherTheme({
     weatherCode: current.weather_code,
     isDay: current.is_day,
     cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
-    precipitation: current.precipitation ?? metrics.precip,
+    precipitation,
     snowfall: current.snowfall,
     fallbackLight
   });
+  const particleInputs = {
+    precipitation,
+    snowfall: current.snowfall,
+    windSpeed: current.wind_speed_10m,
+    windDirection: current.wind_direction_10m
+  };
   document.body.dataset.weather = theme.weather;
   document.body.dataset.light = theme.light;
+  for (const [name, value] of Object.entries(particleInputs)) {
+    if (Number.isFinite(value)) document.body.dataset[name] = String(value);
+    else delete document.body.dataset[name];
+  }
 }
 
 function renderWeek(bundle) {

@@ -1,7 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { collisionPlane, listenToMediaQuery, particleBudget, weatherEffectFor } from "../js/weather-fx.mjs";
+import {
+  collisionPlane,
+  listenToMediaQuery,
+  particleBudget,
+  weatherDynamicsFor,
+  weatherEffectFor
+} from "../js/weather-fx.mjs";
 
 test("天气主题映射到真实粒子效果", () => {
   assert.equal(weatherEffectFor({ weather: "rain", light: "day" }), "rain");
@@ -17,6 +23,36 @@ test("粒子数量随画布面积变化且受上限保护", () => {
   assert.equal(particleBudget("stars", 390, 844), 24);
   assert.equal(particleBudget("rain", 8_000, 8_000), 180);
   assert.equal(particleBudget(null, 390, 844), 0);
+});
+test("粒子数量随雨雪强度和风速动态变化", () => {
+  const lightRain = weatherDynamicsFor({ effect: "rain", precipitation: 0.1, windSpeed: 0 });
+  const heavyRain = weatherDynamicsFor({
+    effect: "rain",
+    precipitation: 4,
+    windSpeed: 64,
+    windDirection: 90
+  });
+  assert.equal(particleBudget("rain", 390, 844, lightRain.densityScale), 54);
+  assert.equal(particleBudget("rain", 390, 844, heavyRain.densityScale), 136);
+  assert.ok(heavyRain.windX < 0);
+  assert.ok(heavyRain.fallSpeedScale > lightRain.fallSpeedScale);
+
+  const lightSnow = weatherDynamicsFor({ effect: "snow", snowfall: 0.05, windSpeed: 0 });
+  const heavySnow = weatherDynamicsFor({ effect: "snow", snowfall: 0.8, windSpeed: 32 });
+  assert.equal(particleBudget("snow", 390, 844, lightSnow.densityScale), 38);
+  assert.equal(particleBudget("snow", 390, 844, heavySnow.densityScale), 72);
+  assert.deepEqual(
+    weatherDynamicsFor({ effect: "stars", precipitation: 4, windSpeed: 64 }),
+    { densityScale: 1, windX: 46, fallSpeedScale: 1 }
+  );
+});
+
+test("风向按气象来向转换为屏幕横向速度", () => {
+  const eastWind = weatherDynamicsFor({ effect: "rain", windSpeed: "32", windDirection: "90" });
+  const westWind = weatherDynamicsFor({ effect: "rain", windSpeed: "32", windDirection: "270" });
+  assert.ok(eastWind.windX < 0);
+  assert.ok(westWind.windX > 0);
+  assert.ok(Math.abs(eastWind.windX + westWind.windX) < 1e-9);
 });
 
 test("雨雪只在视口底部的虚拟地面发生碰撞", () => {

@@ -9,6 +9,11 @@ const COLLISION_BANDS = {
   snow: [0.91, 1.02]
 };
 const MAX_RAIN_IMPACTS = 120;
+const DEFAULT_DYNAMICS = Object.freeze({
+  densityScale: 1,
+  windX: 46,
+  fallSpeedScale: 1
+});
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -24,10 +29,44 @@ export function weatherEffectFor({ weather, light }) {
   return null;
 }
 
-export function particleBudget(effect, width, height) {
+export function particleBudget(effect, width, height, densityScale = 1) {
   const limits = PARTICLE_LIMITS[effect];
   if (!limits) return 0;
-  return clamp(Math.round((width * height) / limits.divisor), limits.min, limits.max);
+  const base = clamp(Math.round((width * height) / limits.divisor), limits.min, limits.max);
+  return clamp(Math.round(base * densityScale), Math.ceil(limits.min / 2), limits.max);
+}
+
+function finiteMetric(value) {
+  if (value == null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+export function weatherDynamicsFor({ effect, precipitation, snowfall, windSpeed, windDirection } = {}) {
+  if (effect !== "rain" && effect !== "snow") return DEFAULT_DYNAMICS;
+  const amount = finiteMetric(effect === "snow" ? snowfall : precipitation);
+  let intensityScale = 1;
+  if (amount != null) {
+    intensityScale = effect === "snow"
+      ? 0.6 + Math.sqrt(Math.max(0, amount) / 0.2) * 0.4
+      : 0.55 + Math.sqrt(Math.max(0, amount)) * 0.45;
+  }
+
+  const measuredWindSpeed = finiteMetric(windSpeed);
+  const safeWindSpeed = clamp(measuredWindSpeed ?? 0, 0, 120);
+  const direction = finiteMetric(windDirection);
+  const windX = measuredWindSpeed == null
+    ? DEFAULT_DYNAMICS.windX
+    : direction == null
+      ? safeWindSpeed * 0.7
+      : -Math.sin(direction * Math.PI / 180) * safeWindSpeed * 2.2;
+  const windDensityBoost = 1 + Math.min(safeWindSpeed / 320, 0.25);
+
+  return {
+    densityScale: clamp(intensityScale * windDensityBoost, 0.5, 1.8),
+    windX,
+    fallSpeedScale: 1 + Math.min(safeWindSpeed / 300, 0.35)
+  };
 }
 
 export function collisionPlane(effect, height, sample = Math.random()) {
@@ -44,7 +83,7 @@ export function listenToMediaQuery(mediaQuery, listener) {
   return () => mediaQuery.removeListener(listener);
 }
 
-function createRainDrop(width, height, initial = true) {
+function createRainDrop(width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
   const depth = 0.08 + Math.pow(Math.random(), 1.45) * 0.92;
   const length = randomBetween(7, 14) + depth * 28;
   const impactY = collisionPlane("rain", height);
@@ -54,8 +93,8 @@ function createRainDrop(width, height, initial = true) {
     impactY,
     depth,
     length,
-    speed: 300 + depth * 850,
-    wind: 24 + depth * 70,
+    speed: (300 + depth * 850) * dynamics.fallSpeedScale,
+    wind: dynamics.windX * (0.4 + depth * 0.6) + randomBetween(-6, 6),
     flutter: randomBetween(2, 9),
     phase: randomBetween(0, Math.PI * 2),
     turn: randomBetween(1.2, 2.4),
@@ -64,7 +103,7 @@ function createRainDrop(width, height, initial = true) {
   };
 }
 
-function createSnowflake(width, height, initial = true) {
+function createSnowflake(width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
   const depth = 0.12 + Math.pow(Math.random(), 1.3) * 0.88;
   const impactY = collisionPlane("snow", height);
   return {
@@ -76,8 +115,8 @@ function createSnowflake(width, height, initial = true) {
     stretch: randomBetween(0.72, 1.28),
     rotation: randomBetween(0, Math.PI * 2),
     spin: randomBetween(-0.7, 0.7),
-    velocityY: 18 + depth * 66,
-    drift: randomBetween(-8, 8),
+    velocityY: (18 + depth * 66) * dynamics.fallSpeedScale,
+    drift: dynamics.windX * (0.28 + depth * 0.72) + randomBetween(-8, 8),
     sway: 7 + depth * 15,
     phase: randomBetween(0, Math.PI * 2),
     turn: randomBetween(0.55, 1.2),
@@ -100,9 +139,9 @@ function createStar(width, height) {
   };
 }
 
-function createParticle(effect, width, height, initial = true) {
-  if (effect === "rain") return createRainDrop(width, height, initial);
-  if (effect === "snow") return createSnowflake(width, height, initial);
+function createParticle(effect, width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
+  if (effect === "rain") return createRainDrop(width, height, initial, dynamics);
+  if (effect === "snow") return createSnowflake(width, height, initial, dynamics);
   return createStar(width, height);
 }
 
@@ -155,7 +194,7 @@ function updateRainImpacts(impacts, elapsed) {
   impacts.length = activeCount;
 }
 
-function updateRain(particles, impacts, width, height, elapsed) {
+function updateRain(particles, impacts, width, height, elapsed, dynamics) {
   for (let index = 0; index < particles.length; index += 1) {
     const drop = particles[index];
     drop.phase += drop.turn * elapsed;
@@ -163,15 +202,15 @@ function updateRain(particles, impacts, width, height, elapsed) {
     drop.y += drop.speed * elapsed;
     if (drop.y >= drop.impactY) {
       if (drop.x > -drop.length && drop.x < width + drop.length) createRainImpact(impacts, drop);
-      particles[index] = createRainDrop(width, height, false);
-    } else if (drop.x > width + drop.length) {
-      particles[index] = createRainDrop(width, height, false);
+      particles[index] = createRainDrop(width, height, false, dynamics);
+    } else if (drop.x < -drop.length || drop.x > width + drop.length) {
+      particles[index] = createRainDrop(width, height, false, dynamics);
     }
   }
   updateRainImpacts(impacts, elapsed);
 }
 
-function updateSnow(particles, width, height, elapsed) {
+function updateSnow(particles, width, height, elapsed, dynamics) {
   for (let index = 0; index < particles.length; index += 1) {
     const flake = particles[index];
     flake.phase += flake.turn * elapsed;
@@ -195,7 +234,7 @@ function updateSnow(particles, width, height, elapsed) {
     }
 
     if (flake.settleAge >= flake.settleLife || flake.x < -36 || flake.x > width + 36) {
-      particles[index] = createSnowflake(width, height, false);
+      particles[index] = createSnowflake(width, height, false, dynamics);
     }
   }
 }
@@ -287,6 +326,7 @@ export function createWeatherFx(canvas, root = document.body) {
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let effect = null;
+  let dynamics = DEFAULT_DYNAMICS;
   let particles = [];
   let impacts = [];
   let width = 0;
@@ -296,8 +336,8 @@ export function createWeatherFx(canvas, root = document.body) {
   let previousTime = 0;
 
   function rebuildParticles() {
-    const count = particleBudget(effect, width, height);
-    particles = Array.from({ length: count }, () => createParticle(effect, width, height));
+    const count = particleBudget(effect, width, height, dynamics.densityScale);
+    particles = Array.from({ length: count }, () => createParticle(effect, width, height, true, dynamics));
     impacts = [];
   }
 
@@ -325,11 +365,11 @@ export function createWeatherFx(canvas, root = document.body) {
     clearCanvas();
     context.globalCompositeOperation = "screen";
     if (effect === "rain") {
-      updateRain(particles, impacts, width, height, elapsed);
+      updateRain(particles, impacts, width, height, elapsed, dynamics);
       drawRain(context, particles);
       drawRainImpacts(context, impacts);
     } else if (effect === "snow") {
-      updateSnow(particles, width, height, elapsed);
+      updateSnow(particles, width, height, elapsed, dynamics);
       drawSnow(context, particles);
     } else if (effect === "stars") {
       updateStars(particles, elapsed);
@@ -359,8 +399,12 @@ export function createWeatherFx(canvas, root = document.body) {
 
   function syncTheme() {
     const nextEffect = weatherEffectFor(root.dataset);
-    if (nextEffect !== effect) {
+    const nextDynamics = weatherDynamicsFor({ effect: nextEffect, ...root.dataset });
+    const dynamicsChanged = Object.keys(nextDynamics)
+      .some((name) => nextDynamics[name] !== dynamics[name]);
+    if (nextEffect !== effect || dynamicsChanged) {
       effect = nextEffect;
+      dynamics = nextDynamics;
       rebuildParticles();
     }
     syncAnimation();
@@ -376,7 +420,18 @@ export function createWeatherFx(canvas, root = document.body) {
 
   const observer = new MutationObserver(syncTheme);
   const stopListeningForMotion = listenToMediaQuery(reducedMotion, syncAnimation);
-  observer.observe(root, { attributes: true, attributeFilter: ["data-state", "data-weather", "data-light"] });
+  observer.observe(root, {
+    attributes: true,
+    attributeFilter: [
+      "data-state",
+      "data-weather",
+      "data-light",
+      "data-precipitation",
+      "data-snowfall",
+      "data-wind-speed",
+      "data-wind-direction"
+    ]
+  });
   window.addEventListener("resize", queueResize, { passive: true });
   document.addEventListener("visibilitychange", syncAnimation);
   resizeCanvas();
