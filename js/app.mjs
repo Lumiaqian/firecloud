@@ -1,6 +1,6 @@
 import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=2";
 import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, weatherTheme } from "./forecast.mjs?v=2";
-import { createWeatherFx } from "./weather-fx.mjs?v=1";
+import { createWeatherFx } from "./weather-fx.mjs?v=2";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";

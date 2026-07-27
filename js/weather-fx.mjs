@@ -4,6 +4,12 @@ const PARTICLE_LIMITS = {
   stars: { divisor: 14_000, min: 24, max: 72 }
 };
 
+const COLLISION_BANDS = {
+  rain: [0.93, 1.015],
+  snow: [0.91, 1.02]
+};
+const MAX_RAIN_IMPACTS = 120;
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
@@ -24,6 +30,11 @@ export function particleBudget(effect, width, height) {
   return clamp(Math.round((width * height) / limits.divisor), limits.min, limits.max);
 }
 
+export function collisionPlane(effect, height, sample = Math.random()) {
+  const [minRatio, maxRatio] = COLLISION_BANDS[effect] ?? [1, 1];
+  return height * (minRatio + (maxRatio - minRatio) * clamp(sample, 0, 1));
+}
+
 export function listenToMediaQuery(mediaQuery, listener) {
   if (typeof mediaQuery.addEventListener === "function") {
     mediaQuery.addEventListener("change", listener);
@@ -36,9 +47,11 @@ export function listenToMediaQuery(mediaQuery, listener) {
 function createRainDrop(width, height, initial = true) {
   const depth = 0.08 + Math.pow(Math.random(), 1.45) * 0.92;
   const length = randomBetween(7, 14) + depth * 28;
+  const impactY = collisionPlane("rain", height);
   return {
     x: randomBetween(-width * 0.14, width),
-    y: initial ? randomBetween(-height * 0.2, height) : randomBetween(-height * 0.28, -length),
+    y: initial ? randomBetween(-height * 0.2, impactY) : randomBetween(-height * 0.28, -length),
+    impactY,
     depth,
     length,
     speed: 300 + depth * 850,
@@ -53,20 +66,25 @@ function createRainDrop(width, height, initial = true) {
 
 function createSnowflake(width, height, initial = true) {
   const depth = 0.12 + Math.pow(Math.random(), 1.3) * 0.88;
+  const impactY = collisionPlane("snow", height);
   return {
     x: randomBetween(-20, width + 20),
-    y: initial ? randomBetween(-height * 0.16, height) : randomBetween(-height * 0.18, -12),
+    y: initial ? randomBetween(-height * 0.16, impactY) : randomBetween(-height * 0.18, -12),
+    impactY,
     depth,
     size: 0.5 + depth * 2.5,
     stretch: randomBetween(0.72, 1.28),
     rotation: randomBetween(0, Math.PI * 2),
     spin: randomBetween(-0.7, 0.7),
-    speed: 18 + depth * 66,
+    velocityY: 18 + depth * 66,
     drift: randomBetween(-8, 8),
     sway: 7 + depth * 15,
     phase: randomBetween(0, Math.PI * 2),
     turn: randomBetween(0.55, 1.2),
-    alpha: 0.22 + depth * 0.56
+    alpha: 0.22 + depth * 0.56,
+    grounded: false,
+    settleAge: 0,
+    settleLife: randomBetween(0.58, 1.18)
   };
 }
 
@@ -88,16 +106,69 @@ function createParticle(effect, width, height, initial = true) {
   return createStar(width, height);
 }
 
-function updateRain(particles, width, height, elapsed) {
+function createRainImpact(impacts, drop) {
+  if (drop.depth < 0.25 || Math.random() > 0.62 || impacts.length >= MAX_RAIN_IMPACTS) return;
+
+  const energy = 0.45 + drop.depth * 0.55;
+  impacts.push({
+    kind: "ripple",
+    x: drop.x,
+    y: drop.impactY,
+    age: 0,
+    life: randomBetween(0.16, 0.24),
+    radius: 2 + drop.depth * 3.5,
+    expansion: 8 + drop.depth * 12,
+    alpha: 0.08 + drop.depth * 0.18
+  });
+
+  const sprayCount = Math.min(2 + Math.floor(drop.depth * 3), MAX_RAIN_IMPACTS - impacts.length);
+  for (let index = 0; index < sprayCount; index += 1) {
+    const direction = index % 2 === 0 ? -1 : 1;
+    impacts.push({
+      kind: "spray",
+      x: drop.x,
+      y: drop.impactY,
+      velocityX: drop.wind * 0.12 + direction * randomBetween(24, 74) * energy,
+      velocityY: -randomBetween(45, 125) * energy,
+      gravity: randomBetween(360, 520),
+      age: 0,
+      life: randomBetween(0.2, 0.36),
+      width: 0.3 + drop.depth * 0.48,
+      alpha: 0.08 + drop.depth * 0.28
+    });
+  }
+}
+
+function updateRainImpacts(impacts, elapsed) {
+  let activeCount = 0;
+  for (const impact of impacts) {
+    impact.age += elapsed;
+    if (impact.age >= impact.life) continue;
+    if (impact.kind === "spray") {
+      impact.velocityY += impact.gravity * elapsed;
+      impact.x += impact.velocityX * elapsed;
+      impact.y += impact.velocityY * elapsed;
+    }
+    impacts[activeCount] = impact;
+    activeCount += 1;
+  }
+  impacts.length = activeCount;
+}
+
+function updateRain(particles, impacts, width, height, elapsed) {
   for (let index = 0; index < particles.length; index += 1) {
     const drop = particles[index];
     drop.phase += drop.turn * elapsed;
     drop.x += (drop.wind + Math.sin(drop.phase) * drop.flutter) * elapsed;
     drop.y += drop.speed * elapsed;
-    if (drop.y > height + drop.length || drop.x > width + drop.length) {
+    if (drop.y >= drop.impactY) {
+      if (drop.x > -drop.length && drop.x < width + drop.length) createRainImpact(impacts, drop);
+      particles[index] = createRainDrop(width, height, false);
+    } else if (drop.x > width + drop.length) {
       particles[index] = createRainDrop(width, height, false);
     }
   }
+  updateRainImpacts(impacts, elapsed);
 }
 
 function updateSnow(particles, width, height, elapsed) {
@@ -105,9 +176,25 @@ function updateSnow(particles, width, height, elapsed) {
     const flake = particles[index];
     flake.phase += flake.turn * elapsed;
     flake.rotation += flake.spin * elapsed;
-    flake.x += (flake.drift + Math.sin(flake.phase) * flake.sway) * elapsed;
-    flake.y += flake.speed * elapsed;
-    if (flake.y > height + 12 || flake.x < -36 || flake.x > width + 36) {
+
+    if (flake.grounded) {
+      flake.settleAge += elapsed;
+      flake.velocityY += 110 * elapsed;
+      flake.y = Math.min(flake.impactY, flake.y + flake.velocityY * elapsed);
+      if (flake.y === flake.impactY) flake.velocityY = 0;
+      flake.x += flake.drift * 0.22 * elapsed;
+    } else {
+      flake.x += (flake.drift + Math.sin(flake.phase) * flake.sway) * elapsed;
+      flake.y += flake.velocityY * elapsed;
+      if (flake.y >= flake.impactY) {
+        flake.y = flake.impactY;
+        flake.velocityY *= -randomBetween(0.1, 0.2);
+        flake.spin *= 0.35;
+        flake.grounded = true;
+      }
+    }
+
+    if (flake.settleAge >= flake.settleLife || flake.x < -36 || flake.x > width + 36) {
       particles[index] = createSnowflake(width, height, false);
     }
   }
@@ -130,20 +217,44 @@ function drawRain(context, particles) {
   }
 }
 
+function drawRainImpacts(context, impacts) {
+  context.lineCap = "round";
+  for (const impact of impacts) {
+    const progress = impact.age / impact.life;
+    const alpha = impact.alpha * (1 - progress);
+    context.beginPath();
+    if (impact.kind === "ripple") {
+      const radius = impact.radius + impact.expansion * progress;
+      context.ellipse(impact.x, impact.y, radius, radius * 0.18, 0, 0, Math.PI * 2);
+      context.lineWidth = 0.45;
+    } else {
+      context.moveTo(impact.x - impact.velocityX * 0.012, impact.y - impact.velocityY * 0.012);
+      context.lineTo(impact.x, impact.y);
+      context.lineWidth = impact.width;
+    }
+    context.strokeStyle = `rgba(213, 234, 244, ${alpha})`;
+    context.stroke();
+  }
+}
+
 function drawSnow(context, particles) {
   for (const flake of particles) {
+    const settleProgress = flake.grounded ? clamp(flake.settleAge / flake.settleLife, 0, 1) : 0;
+    const alpha = flake.alpha * (1 - settleProgress);
+    const contact = flake.grounded && flake.y === flake.impactY;
     context.save();
     context.translate(flake.x, flake.y);
     context.rotate(flake.rotation);
+    if (contact) context.scale(1 + settleProgress * 0.22, 1 - settleProgress * 0.18);
     if (flake.size > 1.7) {
       context.beginPath();
       context.ellipse(0, 0, flake.size * 2.2, flake.size * flake.stretch * 2.2, 0, 0, Math.PI * 2);
-      context.fillStyle = `rgba(226, 239, 245, ${flake.alpha * 0.1})`;
+      context.fillStyle = `rgba(226, 239, 245, ${alpha * 0.1})`;
       context.fill();
     }
     context.beginPath();
     context.ellipse(0, 0, flake.size, flake.size * flake.stretch, 0, 0, Math.PI * 2);
-    context.fillStyle = `rgba(243, 249, 251, ${flake.alpha})`;
+    context.fillStyle = `rgba(243, 249, 251, ${alpha})`;
     context.fill();
     context.restore();
   }
@@ -177,6 +288,7 @@ export function createWeatherFx(canvas, root = document.body) {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let effect = null;
   let particles = [];
+  let impacts = [];
   let width = 0;
   let height = 0;
   let animationFrame = null;
@@ -186,6 +298,7 @@ export function createWeatherFx(canvas, root = document.body) {
   function rebuildParticles() {
     const count = particleBudget(effect, width, height);
     particles = Array.from({ length: count }, () => createParticle(effect, width, height));
+    impacts = [];
   }
 
   function resizeCanvas() {
@@ -212,8 +325,9 @@ export function createWeatherFx(canvas, root = document.body) {
     clearCanvas();
     context.globalCompositeOperation = "screen";
     if (effect === "rain") {
-      updateRain(particles, width, height, elapsed);
+      updateRain(particles, impacts, width, height, elapsed);
       drawRain(context, particles);
+      drawRainImpacts(context, impacts);
     } else if (effect === "snow") {
       updateSnow(particles, width, height, elapsed);
       drawSnow(context, particles);
