@@ -6,7 +6,7 @@
   "description": "纯静态霞光指数预报 PWA",
   "scripts": {
     "dev": "python3 -m http.server 8765 --bind 127.0.0.1",
-    "check": "node --check js/api.mjs && node --check js/app.mjs && node --check js/forecast.mjs && node --check sw.js",
+    "check": "node --check js/api.mjs && node --check js/app.mjs && node --check js/forecast.mjs && node --check js/weather-fx.mjs && node --check sw.js",
     "test": "node --test tests/*.test.mjs",
     "verify": "npm run check && npm test"
   },

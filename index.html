@@ -12,11 +12,11 @@
   <link rel="icon" href="icons/icon-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/style.css?v=11">
+  <link rel="stylesheet" href="css/style.css?v=12">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
-  <div class="sky" aria-hidden="true"></div>
+  <div class="sky" aria-hidden="true"><canvas class="weather-canvas" id="weather-canvas"></canvas></div>
   <main class="app-shell">
     <header class="topbar">
       <button class="brand" id="open-places" type="button" aria-label="选择地点">
@@ -132,6 +132,6 @@
     <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">还没有收藏地点</p></section>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=3"></script>
+  <script type="module" src="js/app.mjs?v=4"></script>
 </body>
 </html>

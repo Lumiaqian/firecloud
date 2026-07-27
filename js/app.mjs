@@ -1,5 +1,6 @@
 import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=2";
 import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, weatherTheme } from "./forecast.mjs?v=2";
+import { createWeatherFx } from "./weather-fx.mjs?v=1";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -8,6 +9,7 @@ const CACHE_MAX_AGE = 12 * 60 * 60 * 1000;
 const CACHE_LIMIT = 16;
 const $ = (id) => document.getElementById(id);
 const panels = ["welcome", "loading", "ready", "error"];
+createWeatherFx($("weather-canvas"));
 const elements = {
   placeName: $("place-name"), openPlaces: $("open-places"), favorite: $("favorite-button"), refresh: $("refresh-button"),
   locate: $("locate-button"), welcomeSearch: $("welcome-search"), geoNotice: $("geo-notice"), loadingText: $("loading-text"),
