@@ -239,6 +239,24 @@ a {
   transition: opacity 800ms ease;
 }
 
+.weather-contact-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 800ms ease;
+}
+
+body[data-state="ready"][data-weather="rain"] .weather-contact-canvas,
+body[data-state="ready"][data-weather="snow"] .weather-contact-canvas {
+  opacity: 0.92;
+}
+
 body[data-state="ready"][data-weather="rain"] .weather-canvas {
   opacity: 0.86;
 }
@@ -1882,7 +1900,8 @@ body[data-state="ready"] .ready {
     animation: none !important;
   }
 
-  .weather-canvas {
+  .weather-canvas,
+  .weather-contact-canvas {
     opacity: 0 !important;
   }
 }

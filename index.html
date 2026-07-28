@@ -12,11 +12,12 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=14">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
   <div class="sky" aria-hidden="true"><canvas class="weather-canvas" id="weather-canvas"></canvas></div>
+  <canvas class="weather-contact-canvas" id="weather-contact-canvas" aria-hidden="true"></canvas>
   <main class="app-shell">
     <header class="topbar">
       <button class="brand" id="open-places" type="button" aria-label="选择地点，当前地点：未选择">
@@ -66,14 +67,14 @@
     </section>
 
     <section class="panel ready" id="panel-ready" hidden>
-      <div class="ready-toolbar">
+      <div class="ready-toolbar" data-weather-surface>
         <p>下一次可见时段</p>
         <div class="event-tabs liquid-glass" role="group" aria-label="霞光时段">
           <button id="tab-sunset" aria-pressed="true" data-event="sunset" type="button">晚霞</button>
           <button id="tab-sunrise" aria-pressed="false" data-event="sunrise" type="button">朝霞</button>
         </div>
       </div>
-      <section class="hero-card" aria-labelledby="index-label">
+      <section class="hero-card" aria-labelledby="index-label" data-weather-surface>
         <div class="event-brief">
           <p class="hero-overline">霞光时刻</p>
           <h1 class="event-time" id="event-time">—</h1>
@@ -90,12 +91,12 @@
       </section>
 
       <section class="section-block" aria-labelledby="reason-title">
-        <div class="section-head"><div><span>01</span><h2 id="reason-title">天空线索</h2></div><p>影响本次判断的主要条件</p></div>
+        <div class="section-head" data-weather-surface><div><span>01</span><h2 id="reason-title">天空线索</h2></div><p>影响本次判断的主要条件</p></div>
         <div class="reason-list" id="reasons"></div>
       </section>
 
       <section class="section-block metrics-block" aria-labelledby="metrics-title">
-        <div class="section-head"><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>横向查看全部指标</p></div>
+        <div class="section-head" data-weather-surface><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>横向查看全部指标</p></div>
         <div class="horizontal-scroll-region" data-scroll-region>
           <div class="metrics" aria-label="天气指标">
             <article><span>低云</span><strong id="metric-low">—</strong></article>
@@ -110,7 +111,7 @@
       </section>
 
       <section class="section-block week-block" aria-labelledby="week-title">
-        <div class="section-head"><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>横向查看每日指数</p></div>
+        <div class="section-head" data-weather-surface><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>横向查看每日指数</p></div>
         <div class="horizontal-scroll-region" data-scroll-region>
           <div class="week-strip" id="week"></div>
         </div>
@@ -138,6 +139,6 @@
     <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">还没有收藏地点</p></section>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=8"></script>
+  <script type="module" src="js/app.mjs?v=9"></script>
 </body>
 </html>

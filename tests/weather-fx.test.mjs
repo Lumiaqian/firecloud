@@ -6,7 +6,8 @@ import {
   listenToMediaQuery,
   particleBudget,
   weatherDynamicsFor,
-  weatherEffectFor
+  weatherEffectFor,
+  weatherSurfaceCrossing
 } from "../js/weather-fx.mjs";
 
 test("天气主题映射到真实粒子效果", () => {
@@ -55,12 +56,23 @@ test("风向按气象来向转换为屏幕横向速度", () => {
   assert.ok(Math.abs(eastWind.windX + westWind.windX) < 1e-9);
 });
 
-test("雨雪只在视口底部的虚拟地面发生碰撞", () => {
+test("雨雪虚拟地面碰撞带保持在视口底部", () => {
   assert.equal(Math.round(collisionPlane("rain", 1_000, 0)), 930);
   assert.equal(Math.round(collisionPlane("rain", 1_000, 1)), 1_015);
   assert.equal(Math.round(collisionPlane("snow", 1_000, 0)), 910);
   assert.equal(Math.round(collisionPlane("snow", 1_000, 1)), 1_020);
   assert.equal(Math.round(collisionPlane("stars", 1_000, 0.5)), 1_000);
+});
+
+test("雨雪穿过页面分隔线时命中最近的可见表面", () => {
+  const surfaces = [
+    { id: 0, left: 20, right: 370, y: 180 },
+    { id: 1, left: 20, right: 370, y: 320 }
+  ];
+  assert.equal(weatherSurfaceCrossing(surfaces, 120, 160, 340), surfaces[0]);
+  assert.equal(weatherSurfaceCrossing(surfaces, 120, 181, 340), surfaces[1]);
+  assert.equal(weatherSurfaceCrossing(surfaces, 10, 160, 340), null);
+  assert.equal(weatherSurfaceCrossing(surfaces, 120, 340, 160), null);
 });
 
 test("动态偏好监听兼容现代与旧版 Safari 接口", () => {
