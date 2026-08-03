@@ -1,18 +1,23 @@
 const PARTICLE_LIMITS = {
   rain: { divisor: 4_200, min: 64, max: 180 },
   snow: { divisor: 7_000, min: 46, max: 120 },
+  hail: { divisor: 6_000, min: 52, max: 140 },
+  wind: { divisor: 18_000, min: 18, max: 64 },
   stars: { divisor: 14_000, min: 24, max: 72 }
 };
 
 const COLLISION_BANDS = {
   rain: [0.93, 1.015],
-  snow: [0.91, 1.02]
+  snow: [0.91, 1.02],
+  hail: [0.925, 1.015]
 };
 const MAX_RAIN_IMPACTS = 120;
 const MAX_SNOW_CONTACTS = 90;
+const MAX_HAIL_CONTACTS = 100;
 const DEFAULT_DYNAMICS = Object.freeze({
   densityScale: 1,
   windX: 46,
+  windY: 0,
   fallSpeedScale: 1
 });
 
@@ -23,9 +28,17 @@ function clamp(value, min, max) {
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
-
-export function weatherEffectFor({ weather, light }) {
-  if (weather === "rain" || weather === "snow") return weather;
+export function weatherEffectFor({
+  weather,
+  light,
+  storm,
+  windSpeed,
+  windGust
+} = {}) {
+  if (weather === "rain" || weather === "thunder") return "rain";
+  if (weather === "snow" || weather === "hail") return weather;
+  const windDrive = Math.max(finiteMetric(windSpeed) ?? 0, finiteMetric(windGust) ?? 0);
+  if ((storm === "strong" || storm === "severe") && windDrive >= 40) return "wind";
   if (light === "night" && (weather === "clear" || weather === "partly")) return "stars";
   return null;
 }
@@ -46,32 +59,60 @@ function finiteMetric(value) {
 function sameDynamics(left, right) {
   return left.densityScale === right.densityScale
     && left.windX === right.windX
+    && left.windY === right.windY
     && left.fallSpeedScale === right.fallSpeedScale;
 }
 
-export function weatherDynamicsFor({ effect, precipitation, snowfall, windSpeed, windDirection } = {}) {
-  if (effect !== "rain" && effect !== "snow") return DEFAULT_DYNAMICS;
+export function weatherDynamicsFor({
+  effect,
+  precipitation,
+  snowfall,
+  windSpeed,
+  windDirection,
+  windGust
+} = {}) {
+  if (effect !== "rain" && effect !== "snow" && effect !== "hail" && effect !== "wind") {
+    return DEFAULT_DYNAMICS;
+  }
   const amount = finiteMetric(effect === "snow" ? snowfall : precipitation);
   let intensityScale = 1;
   if (amount != null) {
     intensityScale = effect === "snow"
       ? 0.6 + Math.sqrt(Math.max(0, amount) / 0.2) * 0.4
-      : 0.55 + Math.sqrt(Math.max(0, amount)) * 0.45;
+      : effect === "hail"
+        ? 0.72 + Math.sqrt(Math.max(0, amount)) * 0.4
+        : 0.55 + Math.sqrt(Math.max(0, amount)) * 0.45;
   }
 
   const measuredWindSpeed = finiteMetric(windSpeed);
-  const safeWindSpeed = clamp(measuredWindSpeed ?? 0, 0, 120);
+  const measuredWindGust = finiteMetric(windGust);
+  const windDrive = Math.max(measuredWindSpeed ?? 0, measuredWindGust ?? 0);
+  const safeWindSpeed = clamp(windDrive, 0, 160);
   const direction = finiteMetric(windDirection);
-  const windX = measuredWindSpeed == null
+  const hasMeasuredWind = measuredWindSpeed != null || measuredWindGust != null;
+  const windX = !hasMeasuredWind
     ? DEFAULT_DYNAMICS.windX
     : direction == null
       ? safeWindSpeed * 0.7
       : -Math.sin(direction * Math.PI / 180) * safeWindSpeed * 2.2;
-  const windDensityBoost = 1 + Math.min(safeWindSpeed / 320, 0.25);
+  const windY = !hasMeasuredWind || direction == null
+    ? DEFAULT_DYNAMICS.windY
+    : Math.cos(direction * Math.PI / 180) * safeWindSpeed * 2.2;
 
+  if (effect === "wind") {
+    return {
+      densityScale: clamp(0.55 + safeWindSpeed / 120, 0.55, 1.35),
+      windX,
+      windY,
+      fallSpeedScale: 1 + Math.min(safeWindSpeed / 260, 0.5)
+    };
+  }
+
+  const windDensityBoost = 1 + Math.min(safeWindSpeed / 320, 0.25);
   return {
     densityScale: clamp(intensityScale * windDensityBoost, 0.5, 1.8),
     windX,
+    windY,
     fallSpeedScale: 1 + Math.min(safeWindSpeed / 300, 0.35)
   };
 }
@@ -149,6 +190,47 @@ function createSnowflake(width, height, initial = true, dynamics = DEFAULT_DYNAM
     settleLife: randomBetween(0.58, 1.18)
   };
 }
+function createHailstone(width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
+  const depth = 0.18 + Math.pow(Math.random(), 1.35) * 0.82;
+  const size = 0.9 + depth * 2.1;
+  const impactY = collisionPlane("hail", height);
+  return {
+    x: randomBetween(-width * 0.12, width),
+    y: initial ? randomBetween(-height * 0.2, impactY) : randomBetween(-height * 0.22, -size),
+    impactY,
+    depth,
+    size,
+    velocityX: dynamics.windX * (0.3 + depth * 0.7),
+    velocityY: (520 + depth * 920) * dynamics.fallSpeedScale,
+    gravity: 1_080,
+    bounces: 0,
+    alpha: 0.24 + depth * 0.5
+  };
+}
+
+function createWindGust(width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
+  const length = randomBetween(18, 58);
+  const dynamicsSpeed = Math.hypot(dynamics.windX, dynamics.windY);
+  const velocityScale = randomBetween(0.72, 1.2);
+  const velocityX = (dynamicsSpeed > 0 ? dynamics.windX : DEFAULT_DYNAMICS.windX) * velocityScale;
+  const velocityY = (dynamicsSpeed > 0 ? dynamics.windY : DEFAULT_DYNAMICS.windY) * velocityScale;
+  const startsFromHorizontalEdge = Math.abs(velocityX) >= Math.abs(velocityY);
+  return {
+    x: initial || !startsFromHorizontalEdge
+      ? randomBetween(-length, width + length)
+      : velocityX >= 0 ? -length : width + length,
+    y: initial || startsFromHorizontalEdge
+      ? randomBetween(-length, height + length)
+      : velocityY >= 0 ? -length : height + length,
+    length,
+    velocityX,
+    velocityY,
+    phase: randomBetween(0, Math.PI * 2),
+    turn: randomBetween(1.2, 2.6),
+    width: randomBetween(0.35, 0.9),
+    alpha: randomBetween(0.06, 0.18)
+  };
+}
 
 function createStar(width, height) {
   const depth = randomBetween(0.2, 1);
@@ -162,9 +244,12 @@ function createStar(width, height) {
   };
 }
 
+
 function createParticle(effect, width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
   if (effect === "rain") return createRainDrop(width, height, initial, dynamics);
   if (effect === "snow") return createSnowflake(width, height, initial, dynamics);
+  if (effect === "hail") return createHailstone(width, height, initial, dynamics);
+  if (effect === "wind") return createWindGust(width, height, initial, dynamics);
   return createStar(width, height);
 }
 
@@ -243,6 +328,68 @@ function updateSnowContacts(contacts, elapsed) {
   }
   contacts.length = activeCount;
 }
+function createHailContact(contacts, stone, surface) {
+  if (stone.depth < 0.18 || contacts.length >= MAX_HAIL_CONTACTS) return;
+  contacts.push({
+    x: stone.x,
+    y: surface.y,
+    size: stone.size,
+    velocityX: stone.velocityX * 0.12,
+    age: 0,
+    life: randomBetween(0.12, 0.2),
+    alpha: stone.alpha * 0.72
+  });
+}
+
+function updateHailContacts(contacts, elapsed) {
+  let activeCount = 0;
+  for (const contact of contacts) {
+    contact.age += elapsed;
+    if (contact.age >= contact.life) continue;
+    contact.x += contact.velocityX * elapsed;
+    contacts[activeCount] = contact;
+    activeCount += 1;
+  }
+  contacts.length = activeCount;
+}
+
+function updateHail(particles, contacts, surfaces, width, height, elapsed, dynamics) {
+  for (let index = 0; index < particles.length; index += 1) {
+    const stone = particles[index];
+    const previousY = stone.y;
+    stone.x += stone.velocityX * elapsed;
+    stone.y += stone.velocityY * elapsed;
+    stone.velocityY += stone.gravity * elapsed;
+    const surface = weatherSurfaceCrossing(surfaces, stone.x, previousY, stone.y);
+    if (surface) createHailContact(contacts, stone, surface);
+
+    if (stone.y >= stone.impactY) {
+      stone.y = stone.impactY;
+      stone.velocityY = -Math.abs(stone.velocityY) * randomBetween(0.3, 0.48);
+      stone.velocityX *= 0.72;
+      stone.bounces += 1;
+    }
+
+    if (stone.bounces >= 2 || stone.x < -stone.size * 4 || stone.x > width + stone.size * 4) {
+      particles[index] = createHailstone(width, height, false, dynamics);
+    }
+  }
+  updateHailContacts(contacts, elapsed);
+}
+
+function updateWind(particles, width, height, elapsed, dynamics) {
+  for (let index = 0; index < particles.length; index += 1) {
+    const gust = particles[index];
+    gust.phase += gust.turn * elapsed;
+    gust.x += gust.velocityX * elapsed;
+    gust.y += gust.velocityY * elapsed;
+    if (gust.x < -gust.length || gust.x > width + gust.length
+      || gust.y < -gust.length || gust.y > height + gust.length) {
+      particles[index] = createWindGust(width, height, false, dynamics);
+    }
+  }
+}
+
 
 function updateRain(particles, groundImpacts, contactImpacts, surfaces, width, height, elapsed, dynamics) {
   for (let index = 0; index < particles.length; index += 1) {
@@ -333,6 +480,61 @@ function drawRainImpacts(context, impacts) {
     context.stroke();
   }
 }
+function drawHail(context, particles) {
+  for (const stone of particles) {
+    context.beginPath();
+    context.arc(stone.x, stone.y, stone.size, 0, Math.PI * 2);
+    context.fillStyle = `rgba(230, 242, 248, ${stone.alpha})`;
+    context.fill();
+    context.beginPath();
+    context.arc(stone.x - stone.size * 0.26, stone.y - stone.size * 0.3, stone.size * 0.34, 0, Math.PI * 2);
+    context.fillStyle = `rgba(255, 255, 255, ${stone.alpha * 0.6})`;
+    context.fill();
+  }
+}
+
+function drawHailContacts(context, contacts) {
+  context.lineCap = "round";
+  for (const contact of contacts) {
+    const progress = contact.age / contact.life;
+    const alpha = contact.alpha * (1 - progress);
+    const radius = contact.size * (1 + progress * 1.8);
+    context.beginPath();
+    context.ellipse(contact.x, contact.y, radius * 1.55, radius * 0.28, 0, 0, Math.PI * 2);
+    context.lineWidth = 0.5;
+    context.strokeStyle = `rgba(237, 247, 251, ${alpha})`;
+    context.stroke();
+    context.beginPath();
+    context.moveTo(contact.x, contact.y);
+    context.lineTo(contact.x + contact.velocityX * 0.02, contact.y - radius * (1 - progress));
+    context.lineWidth = Math.max(0.35, contact.size * 0.22);
+    context.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+    context.stroke();
+  }
+}
+
+function drawWind(context, particles) {
+  context.lineCap = "round";
+  for (const gust of particles) {
+    const speed = Math.hypot(gust.velocityX, gust.velocityY);
+    if (speed === 0) continue;
+    const tailX = gust.x - gust.velocityX / speed * gust.length;
+    const tailY = gust.y - gust.velocityY / speed * gust.length;
+    const bend = Math.sin(gust.phase) * 3;
+    context.beginPath();
+    context.moveTo(tailX, tailY);
+    context.quadraticCurveTo(
+      (tailX + gust.x) / 2 - gust.velocityY / speed * bend,
+      (tailY + gust.y) / 2 + gust.velocityX / speed * bend,
+      gust.x,
+      gust.y
+    );
+    context.lineWidth = gust.width;
+    context.strokeStyle = `rgba(215, 234, 241, ${gust.alpha})`;
+    context.stroke();
+  }
+}
+
 
 function drawSnow(context, particles) {
   for (const flake of particles) {
@@ -410,6 +612,7 @@ export function createWeatherFx(canvas, {
   const contactImpacts = [];
   const snowContacts = [];
   const surfaces = [];
+  const hailContacts = [];
   let width = 0;
   let height = 0;
   let animationFrame = null;
@@ -420,8 +623,8 @@ export function createWeatherFx(canvas, {
   function clearContactEffects() {
     contactImpacts.length = 0;
     snowContacts.length = 0;
+    hailContacts.length = 0;
   }
-
   function rebuildParticles() {
     const count = particleBudget(effect, width, height, dynamics.densityScale);
     particles = Array.from({ length: count }, () => createParticle(effect, width, height, true, dynamics));
@@ -484,6 +687,13 @@ export function createWeatherFx(canvas, {
       updateSnow(particles, snowContacts, surfaces, width, height, elapsed, dynamics);
       drawSnow(context, particles);
       drawSnowContacts(contactContext ?? context, snowContacts);
+    } else if (effect === "hail") {
+      updateHail(particles, hailContacts, surfaces, width, height, elapsed, dynamics);
+      drawHail(context, particles);
+      drawHailContacts(contactContext ?? context, hailContacts);
+    } else if (effect === "wind") {
+      updateWind(particles, width, height, elapsed, dynamics);
+      drawWind(context, particles);
     } else if (effect === "stars") {
       updateStars(particles, elapsed);
       drawStars(context, particles);
@@ -559,7 +769,9 @@ export function createWeatherFx(canvas, {
       "data-precipitation",
       "data-snowfall",
       "data-wind-speed",
-      "data-wind-direction"
+      "data-wind-direction",
+      "data-wind-gust",
+      "data-storm"
     ]
   });
   window.addEventListener("resize", queueResize, { passive: true });

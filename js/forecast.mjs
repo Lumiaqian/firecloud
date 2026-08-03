@@ -5,9 +5,10 @@ const J1970 = 2_440_588;
 const J2000 = 2_451_545;
 const OBLIQUITY = RAD * 23.4397;
 const EARTH_RADIUS_KM = 6371.0088;
-const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99]);
+const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82]);
 const SNOW_CODES = new Set([71, 73, 75, 77, 85, 86]);
-const OVERCAST_CODES = new Set([3, 45, 48]);
+const FOG_CODES = new Set([45, 48]);
+const HAIL_CODES = new Set([96, 99]);
 
 const toJulian = (date) => date.valueOf() / DAY_MS - 0.5 + J1970;
 const fromJulian = (julian) => new Date((julian + 0.5 - J1970) * DAY_MS);
@@ -29,15 +30,29 @@ export function weatherTheme({
   fallbackLight = "day"
 } = {}) {
   let weather = "clear";
-  if ((Number.isFinite(snowfall) && snowfall > 0) || SNOW_CODES.has(weatherCode)) weather = "snow";
+  if (HAIL_CODES.has(weatherCode)) weather = "hail";
+  else if (weatherCode === 95) weather = "thunder";
+  else if ((Number.isFinite(snowfall) && snowfall > 0) || SNOW_CODES.has(weatherCode)) weather = "snow";
   else if ((Number.isFinite(precipitation) && precipitation > 0) || RAIN_CODES.has(weatherCode)) weather = "rain";
-  else if (OVERCAST_CODES.has(weatherCode) || (Number.isFinite(cloudCover) && cloudCover >= 75)) weather = "overcast";
+  else if (FOG_CODES.has(weatherCode)) weather = "fog";
+  else if (weatherCode === 3 || (Number.isFinite(cloudCover) && cloudCover >= 75)) weather = "overcast";
   else if (weatherCode === 1 || weatherCode === 2 || (Number.isFinite(cloudCover) && cloudCover >= 25)) weather = "partly";
 
   let light = fallbackLight === "night" ? "night" : "day";
   if (isDay === 0) light = "night";
   else if (isDay === 1) light = "day";
   return { weather, light };
+}
+
+export function stormLevelFor({ windSpeed, windGust, pressure } = {}) {
+  const speed = Number.isFinite(windSpeed) ? windSpeed : 0;
+  const gust = Number.isFinite(windGust) ? windGust : 0;
+  const mslPressure = Number.isFinite(pressure) ? pressure : Infinity;
+
+  if (speed >= 60 || gust >= 80 || mslPressure < 970) return "severe";
+  if (speed >= 40 || gust >= 60 || mslPressure < 985) return "strong";
+  if (speed >= 25 || gust >= 40 || mslPressure < 1000) return "breezy";
+  return "calm";
 }
 
 function eclipticLongitude(anomaly) {

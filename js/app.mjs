@@ -1,6 +1,6 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=4";
-import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, sunTimes, waitAdvice, weatherTheme } from "./forecast.mjs?v=3";
-import { createWeatherFx } from "./weather-fx.mjs?v=4";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=5";
+import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, stormLevelFor, sunTimes, waitAdvice, weatherTheme } from "./forecast.mjs?v=4";
+import { createWeatherFx } from "./weather-fx.mjs?v=5";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -220,15 +220,48 @@ function applyWeatherBackground(bundle) {
     snowfall: current.snowfall,
     fallbackLight
   });
-  const particleInputs = {
+  const windSpeed = current.wind_speed_10m;
+  const windDirection = current.wind_direction_10m;
+  const windGust = current.wind_gusts_10m;
+  const pressure = current.pressure_msl;
+  const visibility = metrics.vis;
+  const storm = stormLevelFor({ windSpeed, windGust, pressure });
+  const atmosphereInputs = {
     precipitation,
     snowfall: current.snowfall,
-    windSpeed: current.wind_speed_10m,
-    windDirection: current.wind_direction_10m
+    windSpeed,
+    windDirection,
+    windGust,
+    pressure,
+    visibility
+  };
+  const windStrength = Math.min(1, Math.max(0, Math.max(windSpeed ?? 0, windGust ?? 0) / 100));
+  const fogDensity = Number.isFinite(visibility)
+    ? Math.min(0.86, Math.max(0.2, 1 - visibility / 20_000))
+    : 0.52;
+  const atmosphereStyles = {
+    "--wind-strength": windStrength.toFixed(3),
+    "--wind-direction": `${Number.isFinite(windDirection) ? windDirection : 0}deg`,
+    "--wind-motion-add": `${(windStrength * 10).toFixed(2)}vw`,
+    "--wind-back-speed-cut": `${(windStrength * 22).toFixed(2)}s`,
+    "--wind-front-speed-cut": `${(windStrength * 17).toFixed(2)}s`,
+    "--wind-sweep-speed-cut": `${(windStrength * 3.5).toFixed(2)}s`,
+    "--fog-density": fogDensity.toFixed(3),
+    "--fog-back-opacity": Math.min(0.64, 0.28 + fogDensity * 0.36).toFixed(3),
+    "--fog-front-opacity": Math.min(0.66, 0.24 + fogDensity * 0.42).toFixed(3),
+    "--fog-back-opacity-reduced": Math.min(0.22, 0.1 + fogDensity * 0.12).toFixed(3),
+    "--fog-front-opacity-reduced": Math.min(0.22, 0.08 + fogDensity * 0.14).toFixed(3),
+    "--strong-cloud-duration": `${Math.max(9, 16 - windStrength * 5).toFixed(2)}s`,
+    "--severe-cloud-duration": `${Math.max(6, 11 - windStrength * 4).toFixed(2)}s`
   };
   document.body.dataset.weather = theme.weather;
   document.body.dataset.light = theme.light;
-  for (const [name, value] of Object.entries(particleInputs)) {
+  document.body.dataset.storm = storm;
+  document.body.dataset.windActive = String(Math.max(windSpeed ?? 0, windGust ?? 0) >= 40);
+  for (const [name, value] of Object.entries(atmosphereStyles)) {
+    document.body.style.setProperty(name, value);
+  }
+  for (const [name, value] of Object.entries(atmosphereInputs)) {
     if (Number.isFinite(value)) document.body.dataset[name] = String(value);
     else delete document.body.dataset[name];
   }

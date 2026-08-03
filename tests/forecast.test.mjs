@@ -6,6 +6,7 @@ import {
   metricsAt,
   nextEvent,
   scoreSky,
+  stormLevelFor,
   waitAdvice,
   weatherTheme
 } from "../js/forecast.mjs";
@@ -94,15 +95,37 @@ test("下一次日落可查且极昼不抛错", () => {
   assert.equal(nextEvent("sunset", 89, 0, new Date("2026-06-21T12:00:00Z")), null);
 });
 
-test("实时天气映射为独立的背景天气与昼夜状态", () => {
+test("实时天气映射覆盖八种背景天气与昼夜状态", () => {
   const cases = [
     [{ weatherCode: 0, isDay: 1 }, { weather: "clear", light: "day" }],
     [{ weatherCode: 2, isDay: 1 }, { weather: "partly", light: "day" }],
-    [{ weatherCode: 45, isDay: 0 }, { weather: "overcast", light: "night" }],
+    [{ weatherCode: 3, isDay: 1 }, { weather: "overcast", light: "day" }],
+    [{ weatherCode: 45, isDay: 0 }, { weather: "fog", light: "night" }],
     [{ weatherCode: 61, isDay: 0 }, { weather: "rain", light: "night" }],
-    [{ weatherCode: 0, snowfall: 0.2, isDay: 1 }, { weather: "snow", light: "day" }]
+    [{ weatherCode: 0, snowfall: 0.2, isDay: 1 }, { weather: "snow", light: "day" }],
+    [{ weatherCode: 95, isDay: 1 }, { weather: "thunder", light: "day" }],
+    [{ weatherCode: 96, isDay: 0 }, { weather: "hail", light: "night" }]
   ];
   for (const [input, expected] of cases) assert.deepEqual(weatherTheme(input), expected);
+});
+
+test("天气代码优先级让冰雹、雷暴和降雪胜过降水", () => {
+  assert.equal(weatherTheme({ weatherCode: 99, snowfall: 1, precipitation: 2 }).weather, "hail");
+  assert.equal(weatherTheme({ weatherCode: 95, snowfall: 1, precipitation: 2 }).weather, "thunder");
+  assert.equal(weatherTheme({ weatherCode: 71, precipitation: 2 }).weather, "snow");
+  assert.equal(weatherTheme({ weatherCode: 48 }).weather, "fog");
+});
+
+test("风暴等级覆盖边界、缺失字段与低气压增强", () => {
+  assert.equal(stormLevelFor(), "calm");
+  assert.equal(stormLevelFor({ windSpeed: 24.9, windGust: 39.9, pressure: 1000 }), "calm");
+  assert.equal(stormLevelFor({ windSpeed: 25 }), "breezy");
+  assert.equal(stormLevelFor({ windGust: 60 }), "strong");
+  assert.equal(stormLevelFor({ windSpeed: 60 }), "severe");
+  assert.equal(stormLevelFor({ windGust: 80 }), "severe");
+  assert.equal(stormLevelFor({ pressure: 999 }), "breezy");
+  assert.equal(stormLevelFor({ pressure: 984 }), "strong");
+  assert.equal(stormLevelFor({ pressure: 969 }), "severe");
 });
 
 test("旧缓存缺少 current 字段时回退到当前小时云量与本地昼夜", () => {

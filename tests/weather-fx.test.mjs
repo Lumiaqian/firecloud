@@ -12,17 +12,25 @@ import {
 
 test("天气主题映射到真实粒子效果", () => {
   assert.equal(weatherEffectFor({ weather: "rain", light: "day" }), "rain");
+  assert.equal(weatherEffectFor({ weather: "thunder", light: "night" }), "rain");
   assert.equal(weatherEffectFor({ weather: "snow", light: "night" }), "snow");
+  assert.equal(weatherEffectFor({ weather: "hail", light: "day" }), "hail");
+  assert.equal(weatherEffectFor({ weather: "clear", storm: "strong", windGust: "40" }), "wind");
+  assert.equal(weatherEffectFor({ weather: "overcast", storm: "severe", windSpeed: 48 }), "wind");
+  assert.equal(weatherEffectFor({ weather: "overcast", storm: "severe", windSpeed: 0, windGust: "0" }), null);
   assert.equal(weatherEffectFor({ weather: "clear", light: "night" }), "stars");
   assert.equal(weatherEffectFor({ weather: "partly", light: "night" }), "stars");
-  assert.equal(weatherEffectFor({ weather: "overcast", light: "day" }), null);
+  assert.equal(weatherEffectFor({ weather: "overcast", light: "day", storm: "calm" }), null);
 });
 
 test("粒子数量随画布面积变化且受上限保护", () => {
   assert.equal(particleBudget("rain", 390, 844), 78);
   assert.equal(particleBudget("snow", 390, 844), 47);
+  assert.equal(particleBudget("hail", 390, 844), 55);
+  assert.equal(particleBudget("wind", 390, 844), 18);
   assert.equal(particleBudget("stars", 390, 844), 24);
-  assert.equal(particleBudget("rain", 8_000, 8_000), 180);
+  assert.equal(particleBudget("hail", 8_000, 8_000), 140);
+  assert.equal(particleBudget("wind", 8_000, 8_000), 64);
   assert.equal(particleBudget(null, 390, 844), 0);
 });
 test("粒子数量随雨雪强度和风速动态变化", () => {
@@ -44,23 +52,66 @@ test("粒子数量随雨雪强度和风速动态变化", () => {
   assert.equal(particleBudget("snow", 390, 844, heavySnow.densityScale), 72);
   assert.deepEqual(
     weatherDynamicsFor({ effect: "stars", precipitation: 4, windSpeed: 64 }),
-    { densityScale: 1, windX: 46, fallSpeedScale: 1 }
+    { densityScale: 1, windX: 46, windY: 0, fallSpeedScale: 1 }
   );
 });
 
-test("风向按气象来向转换为屏幕横向速度", () => {
-  const eastWind = weatherDynamicsFor({ effect: "rain", windSpeed: "32", windDirection: "90" });
-  const westWind = weatherDynamicsFor({ effect: "rain", windSpeed: "32", windDirection: "270" });
-  assert.ok(eastWind.windX < 0);
-  assert.ok(westWind.windX > 0);
-  assert.ok(Math.abs(eastWind.windX + westWind.windX) < 1e-9);
+test("冰雹和干燥强风分别随降水及阵风增强", () => {
+  const lightHail = weatherDynamicsFor({ effect: "hail", precipitation: 0.1, windSpeed: 0 });
+  const heavyHail = weatherDynamicsFor({
+    effect: "hail",
+    precipitation: 4,
+    windSpeed: 24,
+    windGust: 80,
+    windDirection: 90
+  });
+  assert.ok(heavyHail.densityScale > lightHail.densityScale);
+  assert.ok(heavyHail.windX < 0);
+  assert.ok(heavyHail.fallSpeedScale > lightHail.fallSpeedScale);
+
+  const steadyWind = weatherDynamicsFor({
+    effect: "wind",
+    windSpeed: 32,
+    windDirection: 270
+  });
+  const gustingWind = weatherDynamicsFor({
+    effect: "wind",
+    windSpeed: 32,
+    windGust: 80,
+    windDirection: 270
+  });
+  assert.ok(gustingWind.windX > steadyWind.windX);
+  assert.ok(gustingWind.densityScale > steadyWind.densityScale);
+  assert.ok(gustingWind.fallSpeedScale > steadyWind.fallSpeedScale);
+  assert.ok(Math.abs(gustingWind.windY) < 1e-9);
 });
 
-test("雨雪虚拟地面碰撞带保持在视口底部", () => {
+test("干燥风按气象来向转换为二维屏幕速度，雨雪仍只消费横向风", () => {
+  const northWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 0 });
+  const eastWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 90 });
+  const southWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 180 });
+  const westWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 270 });
+  assert.ok(northWind.windY > 0);
+  assert.ok(eastWind.windX < 0);
+  assert.ok(southWind.windY < 0);
+  assert.ok(westWind.windX > 0);
+  assert.ok(Math.abs(eastWind.windY) < 1e-9);
+  assert.ok(Math.abs(northWind.windX) < 1e-9);
+
+  const rain = weatherDynamicsFor({ effect: "rain", windSpeed: 32, windDirection: 0 });
+  const snow = weatherDynamicsFor({ effect: "snow", windSpeed: 32, windDirection: 180 });
+  assert.ok(Math.abs(rain.windX) < 1e-9);
+  assert.ok(Math.abs(snow.windX) < 1e-9);
+});
+
+test("降水虚拟地面碰撞带保持在视口底部，横风不产生碰撞", () => {
   assert.equal(Math.round(collisionPlane("rain", 1_000, 0)), 930);
   assert.equal(Math.round(collisionPlane("rain", 1_000, 1)), 1_015);
   assert.equal(Math.round(collisionPlane("snow", 1_000, 0)), 910);
   assert.equal(Math.round(collisionPlane("snow", 1_000, 1)), 1_020);
+  assert.equal(Math.round(collisionPlane("hail", 1_000, 0)), 925);
+  assert.equal(Math.round(collisionPlane("hail", 1_000, 1)), 1_015);
+  assert.equal(Math.round(collisionPlane("wind", 1_000, 0.5)), 1_000);
   assert.equal(Math.round(collisionPlane("stars", 1_000, 0.5)), 1_000);
 });
 

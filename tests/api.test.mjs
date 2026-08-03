@@ -19,7 +19,7 @@ test("本地点位请求包含当前天气字段，远端点位保持原请求",
 
   assert.equal(
     requested[0].searchParams.get("current"),
-    "weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m"
+    "weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl"
   );
   assert.equal(requested[0].searchParams.get("precipitation_unit"), "mm");
   assert.equal(requested[0].searchParams.get("wind_speed_unit"), "kmh");

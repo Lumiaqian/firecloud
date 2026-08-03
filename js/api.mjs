@@ -1,10 +1,10 @@
-import { buildSamplingPoints, solarAzimuth } from "./forecast.mjs?v=3";
+import { buildSamplingPoints, solarAzimuth } from "./forecast.mjs?v=4";
 
 export const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
 export const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
 export const REVERSE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
-const CURRENT_WEATHER_FIELDS = "weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m";
+const CURRENT_WEATHER_FIELDS = "weather_code,is_day,cloud_cover,precipitation,snowfall,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl";
 
 export async function fetchJson(url, timeoutMs = 12_000) {
   const controller = new AbortController();
