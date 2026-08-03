@@ -556,6 +556,21 @@ body[data-state="ready"][data-weather="overcast"] .weather-atmosphere {
   --atmosphere-front-base-duration: 25s;
 }
 
+@media (min-width: 900px) {
+  body[data-light="day"][data-weather="overcast"] {
+    --sky-cloud-opacity: 0.34;
+  }
+
+  body[data-light="night"][data-weather="overcast"] {
+    --sky-cloud-opacity: 0.4;
+  }
+
+  body[data-state="ready"][data-weather="overcast"] .weather-atmosphere {
+    --atmosphere-back-opacity: 0.32;
+    --atmosphere-front-opacity: 0.18;
+  }
+}
+
 body[data-state="ready"][data-weather="fog"] .weather-atmosphere {
   --atmosphere-back-image: var(--atmosphere-fog-back-texture);
   --atmosphere-front-image: var(--atmosphere-fog-front-texture);
