@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   atmosphereDriveFor,
+  clearEnergyFor,
   collisionPlane,
   listenToMediaQuery,
   particleBudget,
@@ -146,6 +147,23 @@ test("雨雪穿过页面表面顶边时命中下落路径上最近的一层", ()
   assert.equal(weatherSurfaceCrossing(surfaces, 120, 181, 340), surfaces[1]);
   assert.equal(weatherSurfaceCrossing(surfaces, 10, 160, 340), null);
   assert.equal(weatherSurfaceCrossing(surfaces, 120, 340, 160), null);
+});
+
+test("晴天日照热闹度随霞光指数与晨昏窗口变化", () => {
+  const noonDull = clearEnergyFor({ twilightWarmth: 0, tier: "dull" });
+  const noonEpic = clearEnergyFor({ twilightWarmth: 0, tier: "epic" });
+  const goldenDull = clearEnergyFor({ twilightWarmth: 1, tier: "dull" });
+  const goldenEpic = clearEnergyFor({ twilightWarmth: 1, tier: "epic" });
+  assert.ok(noonDull < 0.12);
+  assert.ok(noonEpic < 0.35);
+  assert.ok(noonDull < noonEpic);
+  assert.ok(goldenDull > 0.7);
+  assert.ok(goldenEpic >= goldenDull);
+  assert.equal(
+    clearEnergyFor({ twilightWarmth: -1, tier: "unknown" }),
+    clearEnergyFor({ twilightWarmth: 0, tier: "unknown" })
+  );
+  assert.ok(clearEnergyFor({ twilightWarmth: 2, tier: "epic" }) <= 1);
 });
 
 test("动态偏好监听兼容现代与旧版 Safari 接口", () => {

@@ -19,6 +19,7 @@
   --precip-intensity: 0;
   --fx-density: 0;
   --twilight-warmth: 0;
+  --clear-energy: 0.22;
   --precip-fog-boost: 0;
   --wind-strength: 0;
   --wind-direction: 0deg;
@@ -101,15 +102,20 @@ body[data-tier="dull"] {
 }
 
 body[data-light="day"][data-weather="clear"] {
-  --sky-top: #1a4a72;
-  --sky-mid: #5e8aa0;
-  --sky-horizon: #d4a078;
-  --sky-glow: rgba(255, 208, 140, 0.48);
+  /* Noon-first clear: bright azure, soft warm floor scaled by --clear-energy */
+  --sky-top: #2f7ab4;
+  --sky-mid: #86b8cc;
+  --sky-horizon: color-mix(
+    in srgb,
+    #c5c0b4 calc((1 - var(--clear-energy)) * 100%),
+    #e2a070 calc(var(--clear-energy) * 100%)
+  );
+  --sky-glow: rgb(255 214 160 / calc(0.1 + var(--clear-energy) * 0.34));
   --sky-cloud-opacity: 0;
-  --sky-texture-opacity: 0.06;
-  --atmosphere-sun-core: rgba(255, 236, 196, 0.42);
-  --atmosphere-sun-ray: rgba(255, 224, 168, 0.2);
-  --atmosphere-heat: rgba(255, 228, 180, 0.18);
+  --sky-texture-opacity: 0.04;
+  --atmosphere-sun-core: rgb(255 244 220 / calc(0.26 + var(--clear-energy) * 0.16));
+  --atmosphere-sun-ray: rgb(255 230 190 / calc(0.02 + var(--clear-energy) * 0.09));
+  --atmosphere-heat: rgb(255 228 180 / calc(0.03 + var(--clear-energy) * 0.12));
 }
 
 body[data-light="day"][data-weather="partly"] {
@@ -302,8 +308,8 @@ body[data-light="day"][data-weather="clear"]::after {
   background: linear-gradient(
     180deg,
     rgba(3, 8, 14, 0) 0%,
-    rgba(3, 8, 14, 0.03) 52%,
-    rgba(3, 8, 14, 0.2) 100%
+    rgba(3, 8, 14, 0.015) 56%,
+    rgba(3, 8, 14, 0.14) 100%
   );
 }
 
@@ -428,9 +434,9 @@ a {
     radial-gradient(ellipse 92% 17% at 4% 68%, var(--atmosphere-fog-high) 0 29%, transparent 73%),
     radial-gradient(ellipse 84% 18% at 92% 76%, var(--atmosphere-fog-low) 0 28%, transparent 75%);
   --atmosphere-heat-texture:
-    radial-gradient(ellipse 11% 46% at calc(var(--sun-x) - 12%) 91%, var(--atmosphere-heat) 0 20%, transparent 74%),
-    radial-gradient(ellipse 14% 52% at var(--sun-x) 94%, var(--atmosphere-heat) 0 18%, transparent 75%),
-    radial-gradient(ellipse 10% 40% at calc(var(--sun-x) + 10%) 89%, var(--atmosphere-heat) 0 21%, transparent 73%);
+    radial-gradient(ellipse 16% 38% at calc(var(--sun-x) - 10%) 92%, var(--atmosphere-heat) 0 18%, transparent 78%),
+    radial-gradient(ellipse 20% 44% at var(--sun-x) 95%, var(--atmosphere-heat) 0 16%, transparent 80%),
+    radial-gradient(ellipse 14% 34% at calc(var(--sun-x) + 9%) 91%, var(--atmosphere-heat) 0 18%, transparent 78%);
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -534,20 +540,42 @@ body[data-state="ready"][data-weather] .weather-atmosphere {
 
 body[data-state="ready"][data-light="day"][data-weather="clear"] .weather-atmosphere {
   --atmosphere-back-image: var(--atmosphere-heat-texture);
-  --atmosphere-back-opacity: 0.72;
+  --atmosphere-back-opacity: calc(0.16 + var(--clear-energy) * 0.42);
   --atmosphere-back-animation: atmosphere-heat-breathe;
-  --atmosphere-back-base-duration: 11s;
-  --atmosphere-back-min-duration: 7s;
-  --atmosphere-back-blur: 16px;
-  --atmosphere-back-blend: screen;
+  --atmosphere-back-base-duration: 14s;
+  --atmosphere-back-min-duration: 9s;
+  --atmosphere-back-blur: 22px;
+  --atmosphere-back-blend: soft-light;
+  /* Soft daylight bloom first; sparse conic spokes only as a whisper of energy */
   --atmosphere-light-image:
-    radial-gradient(circle at var(--sun-x) var(--sun-y), var(--atmosphere-sun-core) 0, transparent 22%),
-    repeating-conic-gradient(from 198deg at var(--sun-x) var(--sun-y), transparent 0 13deg, var(--atmosphere-sun-ray) 16deg 19deg, transparent 23deg 37deg);
-  --atmosphere-light-opacity: 0.82;
+    radial-gradient(
+      circle at var(--sun-x) var(--sun-y),
+      rgb(255 252 245 / 0.78) 0%,
+      rgb(255 240 210 / 0.42) 7%,
+      var(--atmosphere-sun-core) 16%,
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse 118% 96% at var(--sun-x) var(--sun-y),
+      transparent 22%,
+      var(--atmosphere-sun-ray) 48%,
+      transparent 72%
+    ),
+    repeating-conic-gradient(
+      from 210deg at var(--sun-x) var(--sun-y),
+      transparent 0 26deg,
+      var(--atmosphere-sun-ray) 27deg 28deg,
+      transparent 29deg 55deg
+    );
+  --atmosphere-light-opacity: calc(0.38 + var(--clear-energy) * 0.3);
   --atmosphere-light-blend: screen;
-  --atmosphere-light-mask: radial-gradient(ellipse 92% 82% at var(--sun-x) var(--sun-y), var(--ink) 0 17%, transparent 76%);
+  --atmosphere-light-mask: radial-gradient(
+    ellipse 86% 74% at var(--sun-x) var(--sun-y),
+    var(--ink) 0 24%,
+    transparent 70%
+  );
   --atmosphere-light-animation: atmosphere-sun-breathe;
-  --atmosphere-light-duration: 9s;
+  --atmosphere-light-duration: 11s;
 }
 
 body[data-state="ready"][data-light="night"][data-weather="clear"] .weather-atmosphere {
@@ -751,11 +779,34 @@ body[data-state="ready"][data-weather="clear"] .sky::before {
   animation: clear-air-drift 18s ease-in-out infinite alternate;
 }
 
+body[data-state="ready"][data-light="day"][data-weather="clear"] .sky {
+  background:
+    radial-gradient(ellipse 70% 14% at 74% 82%, var(--sky-glow), transparent 74%),
+    radial-gradient(
+      ellipse 92% 26% at 50% 100%,
+      rgb(255 168 96 / calc(var(--twilight-warmth) * 0.26)) 0%,
+      transparent 72%
+    ),
+    linear-gradient(
+      180deg,
+      var(--sky-top) 0%,
+      var(--sky-mid) 46%,
+      color-mix(in srgb, var(--sky-mid) 58%, var(--sky-horizon)) 76%,
+      var(--sky-horizon) 100%
+    );
+  filter: brightness(0.97) saturate(0.98);
+}
+
 body[data-state="ready"][data-light="day"][data-weather="clear"] .sky::after {
-  opacity: 0.34;
-  background: radial-gradient(circle at var(--sun-x) var(--sun-y), rgba(255, 232, 186, 0.55), transparent 28%);
-  mix-blend-mode: screen;
-  animation: daylight-breathe 8s ease-in-out infinite alternate;
+  opacity: calc(0.16 + var(--clear-energy) * 0.14);
+  background: radial-gradient(
+    circle at var(--sun-x) var(--sun-y),
+    rgb(255 246 224 / 0.46) 0%,
+    rgb(255 232 196 / 0.2) 18%,
+    transparent 40%
+  );
+  mix-blend-mode: soft-light;
+  animation: daylight-breathe 10s ease-in-out infinite alternate;
 }
 
 body[data-state="ready"][data-weather="partly"] .sky::before {
@@ -2002,12 +2053,10 @@ dialog.liquid-glass::backdrop {
 
 @keyframes daylight-breathe {
   from {
-    transform: translate3d(-1%, 1%, 0) scale(0.96);
-    opacity: 0.16;
+    transform: translate3d(-0.6%, 0.5%, 0) scale(0.98);
   }
   to {
-    transform: translate3d(1.5%, -1%, 0) scale(1.08);
-    opacity: 0.28;
+    transform: translate3d(0.8%, -0.5%, 0) scale(1.03);
   }
 }
 
@@ -2095,23 +2144,21 @@ dialog.liquid-glass::backdrop {
 
 @keyframes atmosphere-heat-breathe {
   from {
-    transform: translate3d(-1.2%, 1.2%, 0) scale(0.98);
-    opacity: 0.42;
+    transform: translate3d(-0.8%, 0.8%, 0) scale(0.99);
   }
   to {
-    transform: translate3d(1.4%, -1%, 0) scale(1.07);
-    opacity: 0.58;
+    transform: translate3d(0.9%, -0.6%, 0) scale(1.04);
   }
 }
 
 @keyframes atmosphere-sun-breathe {
   from {
-    transform: scale(0.99);
-    filter: brightness(0.94);
+    transform: scale(0.995);
+    filter: brightness(0.97);
   }
   to {
-    transform: scale(1.025);
-    filter: brightness(1.06);
+    transform: scale(1.012);
+    filter: brightness(1.03);
   }
 }
 

@@ -13,7 +13,7 @@ import {
   waitAdvice,
   weatherTheme
 } from "./forecast.mjs?v=5";
-import { atmosphereDriveFor, createWeatherFx } from "./weather-fx.mjs?v=6";
+import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=7";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -283,6 +283,10 @@ function applyWeatherBackground(bundle) {
     ? Math.min(0.85, Math.max(0.15, 1 - visibility / 8_000))
     : 0;
   const twilightWarmth = twilightWarmthFor(now, sun);
+  const clearEnergy = clearEnergyFor({
+    twilightWarmth,
+    tier: document.body.dataset.tier || "great"
+  });
   const azimuth = solarAzimuth(now, state.place.lat, state.place.lon);
   const elevation = solarElevation(now, state.place.lat, state.place.lon);
   const sunPos = theme.light === "night"
@@ -295,6 +299,7 @@ function applyWeatherBackground(bundle) {
     "--precip-intensity": drive.precipIntensity.toFixed(3),
     "--fx-density": drive.fxDensity.toFixed(3),
     "--twilight-warmth": twilightWarmth.toFixed(3),
+    "--clear-energy": clearEnergy.toFixed(3),
     "--precip-fog-boost": precipFogBoost.toFixed(3),
     "--wind-strength": windStrength.toFixed(3),
     "--wind-direction": `${Number.isFinite(windDirection) ? windDirection : 0}deg`,

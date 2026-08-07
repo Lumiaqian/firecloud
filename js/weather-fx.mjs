@@ -155,6 +155,18 @@ export function atmosphereDriveFor({
   };
 }
 
+/** Daytime clear sun busyness: quiet at noon/low index, warmer near golden hour or high score. */
+export function clearEnergyFor({ twilightWarmth = 0, tier = "great" } = {}) {
+  const warmth = clamp(Number(twilightWarmth) || 0, 0, 1);
+  const tierFactor = {
+    dull: 0.1,
+    fair: 0.3,
+    great: 0.5,
+    epic: 0.72
+  }[tier] ?? 0.4;
+  return clamp(warmth * 0.74 + tierFactor * (0.2 + warmth * 0.42), 0, 1);
+}
+
 export function collisionPlane(effect, height, sample = Math.random()) {
   const [minRatio, maxRatio] = COLLISION_BANDS[effect] ?? [1, 1];
   return height * (minRatio + (maxRatio - minRatio) * clamp(sample, 0, 1));
