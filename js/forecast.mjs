@@ -32,8 +32,8 @@ export function weatherTheme({
   let weather = "clear";
   if (HAIL_CODES.has(weatherCode)) weather = "hail";
   else if (weatherCode === 95) weather = "thunder";
-  else if ((Number.isFinite(snowfall) && snowfall > 0) || SNOW_CODES.has(weatherCode)) weather = "snow";
-  else if ((Number.isFinite(precipitation) && precipitation > 0) || RAIN_CODES.has(weatherCode)) weather = "rain";
+  else if ((Number.isFinite(snowfall) && snowfall >= 0.02) || SNOW_CODES.has(weatherCode)) weather = "snow";
+  else if ((Number.isFinite(precipitation) && precipitation >= 0.05) || RAIN_CODES.has(weatherCode)) weather = "rain";
   else if (FOG_CODES.has(weatherCode)) weather = "fog";
   else if (weatherCode === 3 || (Number.isFinite(cloudCover) && cloudCover >= 75)) weather = "overcast";
   else if (weatherCode === 1 || weatherCode === 2 || (Number.isFinite(cloudCover) && cloudCover >= 25)) weather = "partly";
@@ -105,6 +105,29 @@ export function solarAzimuth(date, lat, lng) {
     Math.cos(hourAngle) * Math.sin(lat * RAD) - Math.tan(solarDeclination) * Math.cos(lat * RAD)
   );
   return (azimuthFromSouth * DEG + 180 + 360) % 360;
+}
+
+export function solarElevation(date, lat, lng) {
+  const days = toDays(date);
+  const longitude = eclipticLongitude(solarMeanAnomaly(days));
+  const solarDeclination = declination(longitude);
+  const hourAngle = RAD * (280.16 + 360.9856235 * days) + lng * RAD - rightAscension(longitude);
+  const sinAltitude = Math.sin(lat * RAD) * Math.sin(solarDeclination)
+    + Math.cos(lat * RAD) * Math.cos(solarDeclination) * Math.cos(hourAngle);
+  return Math.asin(Math.min(1, Math.max(-1, sinAltitude))) * DEG;
+}
+
+/** Map solar azimuth/elevation to CSS percentage coords for the sun disk. */
+export function sunDiskPosition(azimuthDeg, elevationDeg, {
+  fallbackX = 78,
+  fallbackY = 19
+} = {}) {
+  if (!Number.isFinite(azimuthDeg) || !Number.isFinite(elevationDeg) || elevationDeg < -1) {
+    return { x: fallbackX, y: fallbackY, valid: false };
+  }
+  const x = Math.min(92, Math.max(8, 50 + Math.sin(azimuthDeg * RAD) * 38));
+  const y = Math.min(86, Math.max(8, 82 - Math.min(elevationDeg, 88) / 88 * 70));
+  return { x, y, valid: true };
 }
 
 export function destinationPoint(lat, lng, bearingDeg, distanceKm) {

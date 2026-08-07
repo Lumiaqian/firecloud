@@ -65,6 +65,7 @@ function sameDynamics(left, right) {
 
 export function weatherDynamicsFor({
   effect,
+  weather,
   precipitation,
   snowfall,
   windSpeed,
@@ -83,6 +84,7 @@ export function weatherDynamicsFor({
         ? 0.72 + Math.sqrt(Math.max(0, amount)) * 0.4
         : 0.55 + Math.sqrt(Math.max(0, amount)) * 0.45;
   }
+  if (weather === "thunder" && effect === "rain") intensityScale *= 1.28;
 
   const measuredWindSpeed = finiteMetric(windSpeed);
   const measuredWindGust = finiteMetric(windGust);
@@ -95,7 +97,7 @@ export function weatherDynamicsFor({
     : direction == null
       ? safeWindSpeed * 0.7
       : -Math.sin(direction * Math.PI / 180) * safeWindSpeed * 2.2;
-  const windY = !hasMeasuredWind || direction == null
+  const fullWindY = !hasMeasuredWind || direction == null
     ? DEFAULT_DYNAMICS.windY
     : Math.cos(direction * Math.PI / 180) * safeWindSpeed * 2.2;
 
@@ -103,7 +105,7 @@ export function weatherDynamicsFor({
     return {
       densityScale: clamp(0.55 + safeWindSpeed / 120, 0.55, 1.35),
       windX,
-      windY,
+      windY: fullWindY,
       fallSpeedScale: 1 + Math.min(safeWindSpeed / 260, 0.5)
     };
   }
@@ -112,8 +114,44 @@ export function weatherDynamicsFor({
   return {
     densityScale: clamp(intensityScale * windDensityBoost, 0.5, 1.8),
     windX,
-    windY,
+    // precip particles take a small longitudinal wind so streaks tilt without looking blown upward
+    windY: fullWindY * 0.22,
     fallSpeedScale: 1 + Math.min(safeWindSpeed / 300, 0.35)
+  };
+}
+
+/** Normalize dynamics into 0–1 CSS drivers shared with atmosphere wash/cloud opacity. */
+export function atmosphereDriveFor({
+  weather,
+  precipitation,
+  snowfall,
+  windSpeed,
+  windDirection,
+  windGust
+} = {}) {
+  let effect = null;
+  if (weather === "rain" || weather === "thunder") effect = "rain";
+  else if (weather === "snow" || weather === "hail") effect = weather;
+  else {
+    const windDrive = Math.max(finiteMetric(windSpeed) ?? 0, finiteMetric(windGust) ?? 0);
+    if (windDrive >= 40) effect = "wind";
+  }
+  if (!effect) {
+    return { precipIntensity: 0, fxDensity: 0, densityScale: 1 };
+  }
+  const dynamics = weatherDynamicsFor({
+    effect,
+    weather,
+    precipitation,
+    snowfall,
+    windSpeed,
+    windDirection,
+    windGust
+  });
+  return {
+    precipIntensity: clamp((dynamics.densityScale - 0.5) / 1.3, 0, 1),
+    fxDensity: clamp(dynamics.densityScale / 1.8, 0, 1),
+    densityScale: dynamics.densityScale
   };
 }
 
@@ -159,6 +197,7 @@ function createRainDrop(width, height, initial = true, dynamics = DEFAULT_DYNAMI
     length,
     speed: (300 + depth * 850) * dynamics.fallSpeedScale,
     wind: dynamics.windX * (0.4 + depth * 0.6) + randomBetween(-6, 6),
+    windY: dynamics.windY * (0.35 + depth * 0.45),
     flutter: randomBetween(2, 9),
     phase: randomBetween(0, Math.PI * 2),
     turn: randomBetween(1.2, 2.4),
@@ -176,15 +215,16 @@ function createSnowflake(width, height, initial = true, dynamics = DEFAULT_DYNAM
     impactY,
     depth,
     size: 0.5 + depth * 2.5,
-    stretch: randomBetween(0.72, 1.28),
+    stretch: randomBetween(0.82, 1.12),
     rotation: randomBetween(0, Math.PI * 2),
-    spin: randomBetween(-0.7, 0.7),
-    velocityY: (18 + depth * 66) * dynamics.fallSpeedScale,
+    spin: randomBetween(-0.55, 0.55),
+    velocityY: (18 + depth * 66) * dynamics.fallSpeedScale + dynamics.windY * (0.2 + depth * 0.25),
     drift: dynamics.windX * (0.28 + depth * 0.72) + randomBetween(-8, 8),
     sway: 7 + depth * 15,
     phase: randomBetween(0, Math.PI * 2),
     turn: randomBetween(0.55, 1.2),
-    alpha: 0.22 + depth * 0.56,
+    alpha: 0.26 + depth * 0.52,
+    arms: depth > 0.55 && Math.random() > 0.45,
     grounded: false,
     settleAge: 0,
     settleLife: randomBetween(0.58, 1.18)
@@ -201,7 +241,7 @@ function createHailstone(width, height, initial = true, dynamics = DEFAULT_DYNAM
     depth,
     size,
     velocityX: dynamics.windX * (0.3 + depth * 0.7),
-    velocityY: (520 + depth * 920) * dynamics.fallSpeedScale,
+    velocityY: (520 + depth * 920) * dynamics.fallSpeedScale + dynamics.windY * (0.25 + depth * 0.35),
     gravity: 1_080,
     bounces: 0,
     alpha: 0.24 + depth * 0.5
@@ -209,8 +249,9 @@ function createHailstone(width, height, initial = true, dynamics = DEFAULT_DYNAM
 }
 
 function createWindGust(width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
-  const length = randomBetween(18, 58);
   const dynamicsSpeed = Math.hypot(dynamics.windX, dynamics.windY);
+  const drive = Math.min(dynamicsSpeed, 140);
+  const length = randomBetween(18, 58) * (0.85 + drive / 220);
   const velocityScale = randomBetween(0.72, 1.2);
   const velocityX = (dynamicsSpeed > 0 ? dynamics.windX : DEFAULT_DYNAMICS.windX) * velocityScale;
   const velocityY = (dynamicsSpeed > 0 ? dynamics.windY : DEFAULT_DYNAMICS.windY) * velocityScale;
@@ -227,20 +268,27 @@ function createWindGust(width, height, initial = true, dynamics = DEFAULT_DYNAMI
     velocityY,
     phase: randomBetween(0, Math.PI * 2),
     turn: randomBetween(1.2, 2.6),
-    width: randomBetween(0.35, 0.9),
-    alpha: randomBetween(0.06, 0.18)
+    width: randomBetween(0.35, 0.9) * (0.9 + drive / 280),
+    alpha: randomBetween(0.08, 0.2) * (0.75 + drive / 160)
   };
 }
 
 function createStar(width, height) {
-  const depth = randomBetween(0.2, 1);
+  const roll = Math.random();
+  const layer = roll < 0.34 ? 0 : roll < 0.72 ? 1 : 2;
+  const depth = layer === 0
+    ? randomBetween(0.15, 0.38)
+    : layer === 1
+      ? randomBetween(0.4, 0.72)
+      : randomBetween(0.74, 1);
   return {
     x: randomBetween(0, width),
-    y: randomBetween(0, height * 0.72),
-    size: 0.35 + depth * 1.05,
-    alpha: 0.16 + depth * 0.5,
+    y: randomBetween(0, height * (layer === 2 ? 0.62 : 0.74)),
+    size: 0.22 + depth * (layer === 0 ? 0.5 : layer === 1 ? 0.85 : 1.2),
+    alpha: (0.12 + depth * 0.52) * (layer === 0 ? 0.62 : 1),
     phase: randomBetween(0, Math.PI * 2),
-    twinkle: randomBetween(0.55, 1.35)
+    twinkle: randomBetween(0.4, 1.2) * (layer === 2 ? 1.15 : 0.85),
+    layer
   };
 }
 
@@ -397,7 +445,7 @@ function updateRain(particles, groundImpacts, contactImpacts, surfaces, width, h
     const previousY = drop.y;
     drop.phase += drop.turn * elapsed;
     drop.x += (drop.wind + Math.sin(drop.phase) * drop.flutter) * elapsed;
-    drop.y += drop.speed * elapsed;
+    drop.y += (drop.speed + (drop.windY ?? 0)) * elapsed;
     const surface = weatherSurfaceCrossing(surfaces, drop.x, previousY, drop.y);
     if (surface) createRainImpact(contactImpacts, drop, surface.y, 0.3);
     if (drop.y >= drop.impactY) {
@@ -451,9 +499,11 @@ function updateStars(particles, elapsed) {
 function drawRain(context, particles) {
   context.lineCap = "round";
   for (const drop of particles) {
-    const tailX = drop.x - (drop.wind / drop.speed) * drop.length;
+    const fall = Math.max(40, drop.speed + (drop.windY ?? 0));
+    const tailX = drop.x - (drop.wind / fall) * drop.length;
+    const tailY = drop.y - drop.length;
     context.beginPath();
-    context.moveTo(tailX, drop.y - drop.length);
+    context.moveTo(tailX, tailY);
     context.lineTo(drop.x, drop.y);
     context.lineWidth = drop.width;
     context.strokeStyle = `rgba(207, 227, 238, ${drop.alpha})`;
@@ -481,7 +531,21 @@ function drawRainImpacts(context, impacts) {
   }
 }
 function drawHail(context, particles) {
+  context.lineCap = "round";
   for (const stone of particles) {
+    const speed = Math.hypot(stone.velocityX, stone.velocityY);
+    if (speed > 80) {
+      const trail = Math.min(16, speed * 0.014);
+      context.beginPath();
+      context.moveTo(
+        stone.x - stone.velocityX / speed * trail,
+        stone.y - stone.velocityY / speed * trail
+      );
+      context.lineTo(stone.x, stone.y);
+      context.lineWidth = Math.max(0.4, stone.size * 0.42);
+      context.strokeStyle = `rgba(198, 226, 240, ${stone.alpha * 0.38})`;
+      context.stroke();
+    }
     context.beginPath();
     context.arc(stone.x, stone.y, stone.size, 0, Math.PI * 2);
     context.fillStyle = `rgba(230, 242, 248, ${stone.alpha})`;
@@ -537,6 +601,7 @@ function drawWind(context, particles) {
 
 
 function drawSnow(context, particles) {
+  context.lineCap = "round";
   for (const flake of particles) {
     const settleProgress = flake.grounded ? clamp(flake.settleAge / flake.settleLife, 0, 1) : 0;
     const alpha = flake.alpha * (1 - settleProgress);
@@ -551,8 +616,23 @@ function drawSnow(context, particles) {
       context.fillStyle = `rgba(226, 239, 245, ${alpha * 0.1})`;
       context.fill();
     }
+    if (flake.arms && flake.size > 1.15) {
+      const arm = flake.size * 1.55;
+      context.beginPath();
+      context.moveTo(-arm, 0);
+      context.lineTo(arm, 0);
+      context.moveTo(0, -arm * flake.stretch);
+      context.lineTo(0, arm * flake.stretch);
+      context.moveTo(-arm * 0.7, -arm * 0.7);
+      context.lineTo(arm * 0.7, arm * 0.7);
+      context.moveTo(-arm * 0.7, arm * 0.7);
+      context.lineTo(arm * 0.7, -arm * 0.7);
+      context.lineWidth = Math.max(0.35, flake.size * 0.22);
+      context.strokeStyle = `rgba(236, 246, 252, ${alpha * 0.82})`;
+      context.stroke();
+    }
     context.beginPath();
-    context.ellipse(0, 0, flake.size, flake.size * flake.stretch, 0, 0, Math.PI * 2);
+    context.ellipse(0, 0, flake.size * 0.72, flake.size * flake.stretch * 0.72, 0, 0, Math.PI * 2);
     context.fillStyle = `rgba(243, 249, 251, ${alpha})`;
     context.fill();
     context.restore();
@@ -578,11 +658,18 @@ function drawStars(context, particles) {
   for (const star of particles) {
     const shimmer = 0.58 + Math.sin(star.phase) * 0.42;
     const alpha = star.alpha * shimmer;
+    if (star.layer === 0) {
+      context.beginPath();
+      context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      context.fillStyle = `rgba(188, 210, 230, ${alpha * 0.75})`;
+      context.fill();
+      continue;
+    }
     context.beginPath();
     context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
     context.fillStyle = `rgba(224, 238, 250, ${alpha})`;
     context.fill();
-    if (star.size > 1.15 && shimmer > 0.8) {
+    if (star.layer === 2 && star.size > 1.05 && shimmer > 0.78) {
       context.beginPath();
       context.moveTo(star.x - star.size * 2.4, star.y);
       context.lineTo(star.x + star.size * 2.4, star.y);
@@ -620,6 +707,8 @@ export function createWeatherFx(canvas, {
   let surfaceFrame = null;
   let previousTime = 0;
 
+  const SURFACE_TOP_INSET = 2;
+
   function clearContactEffects() {
     contactImpacts.length = 0;
     snowContacts.length = 0;
@@ -632,16 +721,49 @@ export function createWeatherFx(canvas, {
     clearContactEffects();
   }
 
+  function retargetDynamics() {
+    for (const particle of particles) {
+      if (effect === "rain") {
+        particle.wind = dynamics.windX * (0.4 + particle.depth * 0.6);
+        particle.windY = dynamics.windY * (0.35 + particle.depth * 0.45);
+        particle.speed = (300 + particle.depth * 850) * dynamics.fallSpeedScale;
+      } else if (effect === "snow") {
+        particle.drift = dynamics.windX * (0.28 + particle.depth * 0.72);
+        particle.velocityY = (18 + particle.depth * 66) * dynamics.fallSpeedScale
+          + dynamics.windY * (0.2 + particle.depth * 0.25);
+      } else if (effect === "hail") {
+        particle.velocityX = dynamics.windX * (0.3 + particle.depth * 0.7);
+      } else if (effect === "wind") {
+        const speed = Math.hypot(dynamics.windX, dynamics.windY) || Math.hypot(DEFAULT_DYNAMICS.windX, DEFAULT_DYNAMICS.windY);
+        const scale = Math.hypot(particle.velocityX, particle.velocityY) / Math.max(speed, 1);
+        particle.velocityX = dynamics.windX * Math.max(0.72, scale || 1);
+        particle.velocityY = dynamics.windY * Math.max(0.72, scale || 1);
+      }
+    }
+  }
+
+  function adjustParticleCount() {
+    const count = particleBudget(effect, width, height, dynamics.densityScale);
+    if (count > particles.length) {
+      while (particles.length < count) {
+        particles.push(createParticle(effect, width, height, true, dynamics));
+      }
+    } else if (count < particles.length) {
+      particles.length = count;
+    }
+  }
+
   function measureSurfaces() {
     surfaces.length = 0;
     if (root.dataset.state !== "ready") return;
     for (const element of surfaceElements) {
       const bounds = element.getBoundingClientRect();
-      if (bounds.width <= 0 || bounds.bottom < 0 || bounds.bottom > height) continue;
+      // Collide with the top edge of UI surfaces (small inset), not the bottom.
+      if (bounds.width <= 0 || bounds.top < 0 || bounds.top > height) continue;
       surfaces.push({
         left: Math.max(0, bounds.left),
         right: Math.min(width, bounds.right),
-        y: bounds.bottom
+        y: bounds.top + SURFACE_TOP_INSET
       });
     }
     surfaces.sort((a, b) => a.y - b.y);
@@ -662,8 +784,10 @@ export function createWeatherFx(canvas, {
     width = nextWidth;
     height = nextHeight;
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    // Contact splatters are softer; a lower DPR keeps fill-rate down.
+    const contactRatio = Math.min(window.devicePixelRatio || 1, 1.25);
     resizeContext(canvas, context, pixelRatio);
-    resizeContext(contactCanvas, contactContext, pixelRatio);
+    resizeContext(contactCanvas, contactContext, contactRatio);
     rebuildParticles();
   }
 
@@ -724,11 +848,17 @@ export function createWeatherFx(canvas, {
     const nextEffect = weatherEffectFor(root.dataset);
     const nextDynamics = weatherDynamicsFor({ effect: nextEffect, ...root.dataset });
     const dynamicsChanged = !sameDynamics(nextDynamics, dynamics);
-    if (nextEffect !== effect || dynamicsChanged) {
+    if (nextEffect !== effect) {
       effect = nextEffect;
       dynamics = nextDynamics;
       rebuildParticles();
+    } else if (dynamicsChanged) {
+      dynamics = nextDynamics;
+      adjustParticleCount();
+      retargetDynamics();
     }
+    if (effect) root.dataset.fx = effect;
+    else delete root.dataset.fx;
     queueSurfaceMeasure();
     syncAnimation();
   }

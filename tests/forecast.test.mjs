@@ -6,7 +6,10 @@ import {
   metricsAt,
   nextEvent,
   scoreSky,
+  solarAzimuth,
+  solarElevation,
   stormLevelFor,
+  sunDiskPosition,
   waitAdvice,
   weatherTheme
 } from "../js/forecast.mjs";
@@ -133,4 +136,21 @@ test("旧缓存缺少 current 字段时回退到当前小时云量与本地昼�
     weatherTheme({ cloudCover: 82, fallbackLight: "night" }),
     { weather: "overcast", light: "night" }
   );
+});
+
+test("微量降水不触发雨雪主题，太阳方位可映射到屏幕坐标", () => {
+  assert.equal(weatherTheme({ weatherCode: 0, precipitation: 0.02 }).weather, "clear");
+  assert.equal(weatherTheme({ weatherCode: 0, snowfall: 0.01 }).weather, "clear");
+  assert.equal(weatherTheme({ weatherCode: 0, precipitation: 0.08 }).weather, "rain");
+
+  const noon = new Date("2026-06-21T04:00:00Z");
+  const az = solarAzimuth(noon, 31.2, 121.5);
+  const el = solarElevation(noon, 31.2, 121.5);
+  assert.ok(az >= 0 && az < 360);
+  assert.ok(el > 20);
+  const disk = sunDiskPosition(az, el);
+  assert.equal(disk.valid, true);
+  assert.ok(disk.x > 8 && disk.x < 92);
+  assert.ok(disk.y > 8 && disk.y < 70);
+  assert.deepEqual(sunDiskPosition(180, -10), { x: 78, y: 19, valid: false });
 });

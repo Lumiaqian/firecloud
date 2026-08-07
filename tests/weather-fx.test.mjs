@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  atmosphereDriveFor,
   collisionPlane,
   listenToMediaQuery,
   particleBudget,
@@ -33,6 +34,7 @@ test("粒子数量随画布面积变化且受上限保护", () => {
   assert.equal(particleBudget("wind", 8_000, 8_000), 64);
   assert.equal(particleBudget(null, 390, 844), 0);
 });
+
 test("粒子数量随雨雪强度和风速动态变化", () => {
   const lightRain = weatherDynamicsFor({ effect: "rain", precipitation: 0.1, windSpeed: 0 });
   const heavyRain = weatherDynamicsFor({
@@ -54,6 +56,22 @@ test("粒子数量随雨雪强度和风速动态变化", () => {
     weatherDynamicsFor({ effect: "stars", precipitation: 4, windSpeed: 64 }),
     { densityScale: 1, windX: 46, windY: 0, fallSpeedScale: 1 }
   );
+});
+
+test("雷暴雨强于同降水普通雨，并输出统一大气强度驱动", () => {
+  const rain = weatherDynamicsFor({ effect: "rain", weather: "rain", precipitation: 1, windSpeed: 0 });
+  const thunder = weatherDynamicsFor({ effect: "rain", weather: "thunder", precipitation: 1, windSpeed: 0 });
+  assert.ok(thunder.densityScale > rain.densityScale);
+
+  const drive = atmosphereDriveFor({ weather: "thunder", precipitation: 2, windSpeed: 20 });
+  assert.ok(drive.precipIntensity > 0.3);
+  assert.ok(drive.fxDensity > 0.3);
+  assert.deepEqual(
+    atmosphereDriveFor({ weather: "clear", windSpeed: 10 }),
+    { precipIntensity: 0, fxDensity: 0, densityScale: 1 }
+  );
+  const windDrive = atmosphereDriveFor({ weather: "clear", windSpeed: 48, windDirection: 90 });
+  assert.ok(windDrive.fxDensity > 0);
 });
 
 test("冰雹和干燥强风分别随降水及阵风增强", () => {
@@ -86,7 +104,7 @@ test("冰雹和干燥强风分别随降水及阵风增强", () => {
   assert.ok(Math.abs(gustingWind.windY) < 1e-9);
 });
 
-test("干燥风按气象来向转换为二维屏幕速度，雨雪仍只消费横向风", () => {
+test("干燥风按气象来向转换为二维屏幕速度，雨雪消费小比例纵向风", () => {
   const northWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 0 });
   const eastWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 90 });
   const southWind = weatherDynamicsFor({ effect: "wind", windSpeed: 32, windDirection: 180 });
@@ -102,6 +120,10 @@ test("干燥风按气象来向转换为二维屏幕速度，雨雪仍只消费�
   const snow = weatherDynamicsFor({ effect: "snow", windSpeed: 32, windDirection: 180 });
   assert.ok(Math.abs(rain.windX) < 1e-9);
   assert.ok(Math.abs(snow.windX) < 1e-9);
+  assert.ok(rain.windY > 0);
+  assert.ok(snow.windY < 0);
+  assert.ok(rain.windY < northWind.windY);
+  assert.ok(Math.abs(snow.windY) < Math.abs(southWind.windY));
 });
 
 test("降水虚拟地面碰撞带保持在视口底部，横风不产生碰撞", () => {
@@ -115,7 +137,7 @@ test("降水虚拟地面碰撞带保持在视口底部，横风不产生碰撞",
   assert.equal(Math.round(collisionPlane("stars", 1_000, 0.5)), 1_000);
 });
 
-test("雨雪穿过页面分隔线时命中最近的可见表面", () => {
+test("雨雪穿过页面表面顶边时命中下落路径上最近的一层", () => {
   const surfaces = [
     { id: 0, left: 20, right: 370, y: 180 },
     { id: 1, left: 20, right: 370, y: 320 }

@@ -1,6 +1,19 @@
 import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=5";
-import { indexBand, metricsAt, nextEvent, reasonsFor, scoreSky, stormLevelFor, sunTimes, waitAdvice, weatherTheme } from "./forecast.mjs?v=4";
-import { createWeatherFx } from "./weather-fx.mjs?v=5";
+import {
+  indexBand,
+  metricsAt,
+  nextEvent,
+  reasonsFor,
+  scoreSky,
+  solarAzimuth,
+  solarElevation,
+  stormLevelFor,
+  sunDiskPosition,
+  sunTimes,
+  waitAdvice,
+  weatherTheme
+} from "./forecast.mjs?v=5";
+import { atmosphereDriveFor, createWeatherFx } from "./weather-fx.mjs?v=6";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -204,12 +217,30 @@ function tierFor(score) {
   return "dull";
 }
 
+function twilightWarmthFor(now, { sunrise, sunset, goldenStart, goldenEnd }) {
+  if (!sunrise || !sunset) return 0;
+  const t = now.getTime();
+  const windows = [
+    [sunrise.getTime() - 35 * 60_000, (goldenEnd ?? sunrise).getTime() + 25 * 60_000],
+    [(goldenStart ?? sunset).getTime() - 25 * 60_000, sunset.getTime() + 35 * 60_000]
+  ];
+  let warmth = 0;
+  for (const [start, end] of windows) {
+    if (t < start || t > end || end <= start) continue;
+    const mid = (start + end) / 2;
+    const half = (end - start) / 2;
+    warmth = Math.max(warmth, 1 - Math.abs(t - mid) / half);
+  }
+  return Math.min(1, Math.max(0, warmth));
+}
+
 function applyWeatherBackground(bundle) {
   const now = new Date();
   const current = bundle?.forecasts?.local?.current ?? {};
   const metrics = metricsAt(bundle, now);
   const cloudLayers = [metrics.low, metrics.mid, metrics.high].filter(Number.isFinite);
-  const { sunrise, sunset } = sunTimes(now, state.place.lat, state.place.lon);
+  const sun = sunTimes(now, state.place.lat, state.place.lon);
+  const { sunrise, sunset } = sun;
   const fallbackLight = sunrise && sunset && (now < sunrise || now > sunset) ? "night" : "day";
   const precipitation = current.precipitation ?? metrics.precip;
   const theme = weatherTheme({
@@ -235,11 +266,36 @@ function applyWeatherBackground(bundle) {
     pressure,
     visibility
   };
+  const drive = atmosphereDriveFor({
+    weather: theme.weather,
+    precipitation,
+    snowfall: current.snowfall,
+    windSpeed,
+    windDirection,
+    windGust
+  });
   const windStrength = Math.min(1, Math.max(0, Math.max(windSpeed ?? 0, windGust ?? 0) / 100));
   const fogDensity = Number.isFinite(visibility)
     ? Math.min(0.86, Math.max(0.2, 1 - visibility / 20_000))
     : 0.52;
+  const precipFogBoost = (theme.weather === "rain" || theme.weather === "thunder")
+    && Number.isFinite(visibility) && visibility < 8_000
+    ? Math.min(0.85, Math.max(0.15, 1 - visibility / 8_000))
+    : 0;
+  const twilightWarmth = twilightWarmthFor(now, sun);
+  const azimuth = solarAzimuth(now, state.place.lat, state.place.lon);
+  const elevation = solarElevation(now, state.place.lat, state.place.lon);
+  const sunPos = theme.light === "night"
+    ? { x: 78, y: 19, valid: false }
+    : sunDiskPosition(azimuth, elevation);
   const atmosphereStyles = {
+    "--sun-x": `${sunPos.x.toFixed(1)}%`,
+    "--sun-y": `${sunPos.y.toFixed(1)}%`,
+    "--sun-elevation": Number.isFinite(elevation) ? elevation.toFixed(2) : "-90",
+    "--precip-intensity": drive.precipIntensity.toFixed(3),
+    "--fx-density": drive.fxDensity.toFixed(3),
+    "--twilight-warmth": twilightWarmth.toFixed(3),
+    "--precip-fog-boost": precipFogBoost.toFixed(3),
     "--wind-strength": windStrength.toFixed(3),
     "--wind-direction": `${Number.isFinite(windDirection) ? windDirection : 0}deg`,
     "--wind-motion-add": `${(windStrength * 10).toFixed(2)}vw`,
@@ -247,8 +303,8 @@ function applyWeatherBackground(bundle) {
     "--wind-front-speed-cut": `${(windStrength * 17).toFixed(2)}s`,
     "--wind-sweep-speed-cut": `${(windStrength * 3.5).toFixed(2)}s`,
     "--fog-density": fogDensity.toFixed(3),
-    "--fog-back-opacity": Math.min(0.64, 0.28 + fogDensity * 0.36).toFixed(3),
-    "--fog-front-opacity": Math.min(0.66, 0.24 + fogDensity * 0.42).toFixed(3),
+    "--fog-back-opacity": Math.min(0.72, 0.34 + fogDensity * 0.4).toFixed(3),
+    "--fog-front-opacity": Math.min(0.74, 0.3 + fogDensity * 0.46).toFixed(3),
     "--fog-back-opacity-reduced": Math.min(0.22, 0.1 + fogDensity * 0.12).toFixed(3),
     "--fog-front-opacity-reduced": Math.min(0.22, 0.08 + fogDensity * 0.14).toFixed(3),
     "--strong-cloud-duration": `${Math.max(9, 16 - windStrength * 5).toFixed(2)}s`,
@@ -258,6 +314,7 @@ function applyWeatherBackground(bundle) {
   document.body.dataset.light = theme.light;
   document.body.dataset.storm = storm;
   document.body.dataset.windActive = String(Math.max(windSpeed ?? 0, windGust ?? 0) >= 40);
+  document.body.dataset.lightning = String(theme.weather === "thunder" || theme.weather === "hail");
   for (const [name, value] of Object.entries(atmosphereStyles)) {
     document.body.style.setProperty(name, value);
   }
