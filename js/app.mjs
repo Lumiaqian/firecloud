@@ -1,4 +1,4 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=5";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=6";
 import {
   indexBand,
   metricsAt,

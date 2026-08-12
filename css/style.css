@@ -1465,6 +1465,11 @@ body[data-state="error"] .sky {
   position: relative;
 }
 
+.horizontal-scroll-region:focus-within {
+  outline: 2px solid var(--signal);
+  outline-offset: 4px;
+}
+
 .horizontal-scroll-region::after {
   content: "";
   width: 42px;
@@ -2328,10 +2333,10 @@ body[data-state="ready"] .ready {
   }
 
   .hero-card {
-    min-height: 280px;
-    padding: 32px 0 34px;
+    min-height: 250px;
+    padding: 28px 0 30px;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 20px;
+    gap: 16px;
   }
 
   .event-time {
@@ -2400,6 +2405,48 @@ body[data-state="ready"] .ready {
     grid-auto-columns: 112px;
     overflow-x: auto;
     scroll-snap-type: x proximity;
+  }
+
+  .horizontal-scroll-region.can-scroll::before {
+    content: "← 左右滑动 →";
+    position: absolute;
+    right: 0;
+    top: -31px;
+    z-index: 3;
+    color: rgba(247, 241, 231, 0.82);
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .metrics-block .section-head > p,
+  .week-block .section-head > p {
+    visibility: hidden;
+  }
+
+  .hero-overline,
+  .index-label,
+  .ready-toolbar > p,
+  .method-title,
+  .method-note span,
+  .metrics span,
+  .day-card small,
+  footer {
+    font-size: 12px;
+  }
+
+  .data-meta {
+    padding-top: 20px;
+    font-size: 12px;
+  }
+
+  .score-row strong {
+    font-size: clamp(88px, 25vw, 104px);
+  }
+
+  .privacy-note {
+    font-size: 13px;
+    line-height: 1.7;
   }
 
   .metrics article {

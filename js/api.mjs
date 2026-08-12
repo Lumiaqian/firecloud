@@ -48,17 +48,41 @@ export function fetchAir(point) {
   return fetchJson(`${AIR_URL}?${query}`);
 }
 
+function cityDetail(result) {
+  return [...new Set([result.admin3, result.admin2, result.admin1, result.country].filter(Boolean))]
+    .join(" · ");
+}
+
+function cityIdentity(place) {
+  return `${place.name}|${place.detail}|${Number(place.lat).toFixed(3)}|${Number(place.lon).toFixed(3)}`;
+}
+
 export async function searchCities(query) {
   const normalized = query.trim();
   if (normalized.length < 2) return [];
-  const params = new URLSearchParams({ name: normalized, count: "6", language: "zh", format: "json" });
+  const params = new URLSearchParams({ name: normalized, count: "12", language: "zh", format: "json" });
   const data = await fetchJson(`${GEOCODE_URL}?${params}`);
-  return (data.results ?? []).map((result) => ({
-    name: result.name,
-    detail: [result.admin1, result.country].filter(Boolean).join(" · "),
-    lat: result.latitude,
-    lon: result.longitude
-  }));
+  const unique = new Map();
+  for (const result of data.results ?? []) {
+    const place = {
+      name: result.name,
+      detail: cityDetail(result),
+      lat: result.latitude,
+      lon: result.longitude,
+      population: Number(result.population) || 0
+    };
+    const identity = cityIdentity(place);
+    const existing = unique.get(identity);
+    if (!existing || place.population > existing.population) unique.set(identity, place);
+  }
+  return [...unique.values()]
+    .sort((left, right) => {
+      const leftExact = left.name.localeCompare(normalized, "zh-CN", { sensitivity: "base" }) === 0;
+      const rightExact = right.name.localeCompare(normalized, "zh-CN", { sensitivity: "base" }) === 0;
+      return Number(rightExact) - Number(leftExact) || right.population - left.population;
+    })
+    .slice(0, 6)
+    .map(({ population: _population, ...place }) => place);
 }
 
 export async function reverseGeocode(point) {
