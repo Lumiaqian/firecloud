@@ -5,7 +5,9 @@ import {
   atmosphereDriveFor,
   clearEnergyFor,
   collisionPlane,
+  hailMotionFor,
   listenToMediaQuery,
+  overlayStarfieldFor,
   particleBudget,
   weatherDynamicsFor,
   weatherEffectFor,
@@ -22,6 +24,8 @@ test("天气主题映射到真实粒子效果", () => {
   assert.equal(weatherEffectFor({ weather: "overcast", storm: "severe", windSpeed: 0, windGust: "0" }), null);
   assert.equal(weatherEffectFor({ weather: "clear", light: "night" }), "stars");
   assert.equal(weatherEffectFor({ weather: "partly", light: "night" }), "stars");
+  assert.equal(weatherEffectFor({ weather: "fog", light: "day" }), "fog");
+  assert.equal(weatherEffectFor({ weather: "fog", storm: "severe", windSpeed: 80 }), "fog");
   assert.equal(weatherEffectFor({ weather: "overcast", light: "day", storm: "calm" }), null);
 });
 
@@ -31,6 +35,7 @@ test("粒子数量随画布面积变化且受上限保护", () => {
   assert.equal(particleBudget("hail", 390, 844), 55);
   assert.equal(particleBudget("wind", 390, 844), 18);
   assert.equal(particleBudget("stars", 390, 844), 24);
+  assert.equal(particleBudget("fog", 390, 844), 37);
   assert.equal(particleBudget("hail", 8_000, 8_000), 140);
   assert.equal(particleBudget("wind", 8_000, 8_000), 64);
   assert.equal(particleBudget(null, 390, 844), 0);
@@ -71,8 +76,24 @@ test("雷暴雨强于同降水普通雨，并输出统一大气强度驱动", ()
     atmosphereDriveFor({ weather: "clear", windSpeed: 10 }),
     { precipIntensity: 0, fxDensity: 0, densityScale: 1 }
   );
-  const windDrive = atmosphereDriveFor({ weather: "clear", windSpeed: 48, windDirection: 90 });
+  assert.deepEqual(
+    atmosphereDriveFor({ weather: "clear", light: "night", windSpeed: 48, windDirection: 90 }),
+    { precipIntensity: 0, fxDensity: 0, densityScale: 1 }
+  );
+  assert.deepEqual(
+    atmosphereDriveFor({ weather: "clear", windSpeed: 48, windDirection: 90 }),
+    { precipIntensity: 0, fxDensity: 0, densityScale: 1 }
+  );
+  const windDrive = atmosphereDriveFor({
+    weather: "clear",
+    storm: "strong",
+    windSpeed: 48,
+    windDirection: 90
+  });
   assert.ok(windDrive.fxDensity > 0);
+  const thinFog = atmosphereDriveFor({ weather: "fog", visibility: 18_000 });
+  const thickFog = atmosphereDriveFor({ weather: "fog", visibility: 400 });
+  assert.ok(thickFog.fxDensity > thinFog.fxDensity);
 });
 
 test("冰雹和干燥强风分别随降水及阵风增强", () => {
@@ -164,6 +185,32 @@ test("晴天日照热闹度随霞光指数与晨昏窗口变化", () => {
     clearEnergyFor({ twilightWarmth: 0, tier: "unknown" })
   );
   assert.ok(clearEnergyFor({ twilightWarmth: 2, tier: "epic" }) <= 1);
+});
+
+test("冰雹运动学同时吃下落倍率与侧风", () => {
+  const calm = hailMotionFor(0.6, { densityScale: 1, windX: 0, windY: 0, fallSpeedScale: 1 });
+  const fast = hailMotionFor(0.6, { densityScale: 1, windX: 0, windY: 0, fallSpeedScale: 1.3 });
+  const blown = hailMotionFor(0.6, { densityScale: 1, windX: -40, windY: 10, fallSpeedScale: 1 });
+  assert.equal(calm.velocityX, 0);
+  assert.ok(fast.velocityY > calm.velocityY);
+  assert.ok(blown.velocityX < 0);
+  assert.ok(blown.velocityY > calm.velocityY);
+});
+
+test("夜雨和夜风叠一层暗星，阴天与雾不透星", () => {
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "rain" }), true);
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "thunder" }), true);
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "snow" }), true);
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "clear", effect: "wind" }), true);
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "clear" }), false);
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "partly" }), false);
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "overcast" }), false);
+  assert.equal(
+    overlayStarfieldFor({ light: "night", weather: "overcast", storm: "severe", windSpeed: 80 }),
+    false
+  );
+  assert.equal(overlayStarfieldFor({ light: "night", weather: "fog" }), false);
+  assert.equal(overlayStarfieldFor({ light: "day", weather: "rain" }), false);
 });
 
 test("动态偏好监听兼容现代与旧版 Safari 接口", () => {

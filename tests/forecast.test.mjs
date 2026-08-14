@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildSamplingPoints,
   indexBand,
+  lightFromSunClock,
   metricsAt,
   nextEvent,
   scoreSky,
@@ -129,6 +130,16 @@ test("风暴等级覆盖边界、缺失字段与低气压增强", () => {
   assert.equal(stormLevelFor({ pressure: 999 }), "breezy");
   assert.equal(stormLevelFor({ pressure: 984 }), "strong");
   assert.equal(stormLevelFor({ pressure: 969 }), "severe");
+});
+
+test("本地太阳钟覆盖过期的 is_day，极昼极夜回退 API 昼夜", () => {
+  const sunrise = new Date("2026-06-21T04:00:00Z");
+  const sunset = new Date("2026-06-21T18:00:00Z");
+  assert.equal(lightFromSunClock(new Date("2026-06-21T12:00:00Z"), { sunrise, sunset }, "night"), "day");
+  assert.equal(lightFromSunClock(new Date("2026-06-21T20:00:00Z"), { sunrise, sunset }, "day"), "night");
+  assert.equal(lightFromSunClock(new Date("2026-06-21T03:00:00Z"), { sunrise, sunset }, "day"), "night");
+  assert.equal(lightFromSunClock(new Date("2026-06-21T12:00:00Z"), {}, "night"), "night");
+  assert.equal(lightFromSunClock(new Date("2026-06-21T12:00:00Z"), { sunrise: null, sunset: null }, "day"), "day");
 });
 
 test("旧缓存缺少 current 字段时回退到当前小时云量与本地昼夜", () => {

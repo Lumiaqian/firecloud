@@ -3,8 +3,12 @@ const PARTICLE_LIMITS = {
   snow: { divisor: 7_000, min: 46, max: 120 },
   hail: { divisor: 6_000, min: 52, max: 140 },
   wind: { divisor: 18_000, min: 18, max: 64 },
-  stars: { divisor: 14_000, min: 24, max: 72 }
+  stars: { divisor: 14_000, min: 24, max: 72 },
+  fog: { divisor: 9_000, min: 24, max: 72 }
 };
+
+const CONTACT_EFFECTS = new Set(["rain", "snow", "hail"]);
+const DRIVEN_EFFECTS = new Set(["rain", "snow", "hail", "wind", "fog"]);
 
 const COLLISION_BANDS = {
   rain: [0.93, 1.015],
@@ -28,6 +32,7 @@ function clamp(value, min, max) {
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
 }
+
 export function weatherEffectFor({
   weather,
   light,
@@ -37,10 +42,36 @@ export function weatherEffectFor({
 } = {}) {
   if (weather === "rain" || weather === "thunder") return "rain";
   if (weather === "snow" || weather === "hail") return weather;
+  if (weather === "fog") return "fog";
   const windDrive = Math.max(finiteMetric(windSpeed) ?? 0, finiteMetric(windGust) ?? 0);
   if ((storm === "strong" || storm === "severe") && windDrive >= 40) return "wind";
   if (light === "night" && (weather === "clear" || weather === "partly")) return "stars";
   return null;
+}
+
+/** Dim stars behind rain/snow/wind at night. Overcast and fog stay closed. */
+export function overlayStarfieldFor({
+  weather,
+  light,
+  storm,
+  windSpeed,
+  windGust,
+  effect
+} = {}) {
+  if (light !== "night" || weather === "overcast" || weather === "fog") return false;
+  const primary = effect === undefined
+    ? weatherEffectFor({ weather, light, storm, windSpeed, windGust })
+    : effect;
+  return Boolean(primary) && primary !== "stars";
+}
+
+export function hailMotionFor(depth, dynamics = DEFAULT_DYNAMICS) {
+  const safeDepth = clamp(Number(depth) || 0, 0, 1);
+  return {
+    velocityX: dynamics.windX * (0.3 + safeDepth * 0.7),
+    velocityY: (520 + safeDepth * 920) * dynamics.fallSpeedScale
+      + dynamics.windY * (0.25 + safeDepth * 0.35)
+  };
 }
 
 export function particleBudget(effect, width, height, densityScale = 1) {
@@ -70,8 +101,10 @@ export function weatherDynamicsFor({
   snowfall,
   windSpeed,
   windDirection,
-  windGust
+  windGust,
+  visibility
 } = {}) {
+  if (effect === "fog") return fogDynamicsFor({ windSpeed, windDirection, windGust, visibility });
   if (effect !== "rain" && effect !== "snow" && effect !== "hail" && effect !== "wind") {
     return DEFAULT_DYNAMICS;
   }
@@ -120,23 +153,44 @@ export function weatherDynamicsFor({
   };
 }
 
+function fogDynamicsFor({ windSpeed, windDirection, windGust, visibility } = {}) {
+  const vis = finiteMetric(visibility);
+  const measuredWindSpeed = finiteMetric(windSpeed);
+  const measuredWindGust = finiteMetric(windGust);
+  const windDrive = Math.max(measuredWindSpeed ?? 0, measuredWindGust ?? 0);
+  const safeWindSpeed = clamp(windDrive, 0, 160);
+  const direction = finiteMetric(windDirection);
+  const hasMeasuredWind = measuredWindSpeed != null || measuredWindGust != null;
+  return {
+    densityScale: vis == null
+      ? 1
+      : clamp(0.55 + (1 - clamp(vis, 200, 20_000) / 20_000) * 0.9, 0.5, 1.5),
+    windX: !hasMeasuredWind
+      ? 12
+      : direction == null
+        ? safeWindSpeed * 0.25
+        : -Math.sin(direction * Math.PI / 180) * safeWindSpeed * 0.55,
+    windY: !hasMeasuredWind || direction == null
+      ? 0
+      : Math.cos(direction * Math.PI / 180) * safeWindSpeed * 0.35,
+    fallSpeedScale: 1
+  };
+}
+
 /** Normalize dynamics into 0–1 CSS drivers shared with atmosphere wash/cloud opacity. */
 export function atmosphereDriveFor({
   weather,
+  light,
+  storm,
   precipitation,
   snowfall,
   windSpeed,
   windDirection,
-  windGust
+  windGust,
+  visibility
 } = {}) {
-  let effect = null;
-  if (weather === "rain" || weather === "thunder") effect = "rain";
-  else if (weather === "snow" || weather === "hail") effect = weather;
-  else {
-    const windDrive = Math.max(finiteMetric(windSpeed) ?? 0, finiteMetric(windGust) ?? 0);
-    if (windDrive >= 40) effect = "wind";
-  }
-  if (!effect) {
+  const effect = weatherEffectFor({ weather, light, storm, windSpeed, windGust });
+  if (!DRIVEN_EFFECTS.has(effect)) {
     return { precipIntensity: 0, fxDensity: 0, densityScale: 1 };
   }
   const dynamics = weatherDynamicsFor({
@@ -146,7 +200,8 @@ export function atmosphereDriveFor({
     snowfall,
     windSpeed,
     windDirection,
-    windGust
+    windGust,
+    visibility
   });
   return {
     precipIntensity: clamp((dynamics.densityScale - 0.5) / 1.3, 0, 1),
@@ -252,8 +307,7 @@ function createHailstone(width, height, initial = true, dynamics = DEFAULT_DYNAM
     impactY,
     depth,
     size,
-    velocityX: dynamics.windX * (0.3 + depth * 0.7),
-    velocityY: (520 + depth * 920) * dynamics.fallSpeedScale + dynamics.windY * (0.25 + depth * 0.35),
+    ...hailMotionFor(depth, dynamics),
     gravity: 1_080,
     bounces: 0,
     alpha: 0.24 + depth * 0.5
@@ -285,6 +339,56 @@ function createWindGust(width, height, initial = true, dynamics = DEFAULT_DYNAMI
   };
 }
 
+function createFogWisp(width, height, initial = true, dynamics = DEFAULT_DYNAMICS) {
+  const depth = 0.18 + Math.pow(Math.random(), 1.15) * 0.82;
+  return {
+    x: initial
+      ? randomBetween(-width * 0.15, width * 1.05)
+      : dynamics.windX >= 0 ? -width * 0.2 : width * 1.12,
+    y: randomBetween(height * 0.16, height * 1.02),
+    rx: 36 + depth * 88,
+    ry: 12 + depth * 26,
+    depth,
+    drift: dynamics.windX * (0.12 + depth * 0.18) + randomBetween(-5, 5),
+    lift: dynamics.windY * 0.15 + randomBetween(-3.5, 2.5),
+    phase: randomBetween(0, Math.PI * 2),
+    turn: randomBetween(0.12, 0.38),
+    alpha: 0.028 + depth * 0.055
+  };
+}
+
+function createLightningBolt(width, height) {
+  const segments = [];
+  let x = randomBetween(width * 0.12, width * 0.88);
+  let y = randomBetween(-12, height * 0.06);
+  const endY = randomBetween(height * 0.26, height * 0.52);
+  let branchesLeft = 2;
+  while (y < endY && segments.length < 18) {
+    const nextY = y + randomBetween(16, 38);
+    const nextX = x + randomBetween(-32, 32);
+    segments.push({ x1: x, y1: y, x2: nextX, y2: nextY, width: 1.15 });
+    if (branchesLeft > 0 && segments.length > 2 && Math.random() < 0.28) {
+      branchesLeft -= 1;
+      const side = Math.random() < 0.5 ? -1 : 1;
+      segments.push({
+        x1: nextX,
+        y1: nextY,
+        x2: nextX + randomBetween(18, 48) * side,
+        y2: nextY + randomBetween(22, 56),
+        width: 0.55
+      });
+    }
+    x = nextX;
+    y = nextY;
+  }
+  return {
+    segments,
+    age: 0,
+    life: randomBetween(0.06, 0.14),
+    alpha: randomBetween(0.5, 0.85)
+  };
+}
+
 function createStar(width, height) {
   const roll = Math.random();
   const layer = roll < 0.34 ? 0 : roll < 0.72 ? 1 : 2;
@@ -310,6 +414,7 @@ function createParticle(effect, width, height, initial = true, dynamics = DEFAUL
   if (effect === "snow") return createSnowflake(width, height, initial, dynamics);
   if (effect === "hail") return createHailstone(width, height, initial, dynamics);
   if (effect === "wind") return createWindGust(width, height, initial, dynamics);
+  if (effect === "fog") return createFogWisp(width, height, initial, dynamics);
   return createStar(width, height);
 }
 
@@ -508,17 +613,53 @@ function updateStars(particles, elapsed) {
   for (const star of particles) star.phase += star.twinkle * elapsed;
 }
 
+function updateFog(particles, width, height, elapsed, dynamics) {
+  for (let index = 0; index < particles.length; index += 1) {
+    const wisp = particles[index];
+    wisp.phase += wisp.turn * elapsed;
+    wisp.x += (wisp.drift + Math.sin(wisp.phase) * 6) * elapsed;
+    wisp.y += (wisp.lift + Math.cos(wisp.phase * 0.7) * 3) * elapsed;
+    if (wisp.x < -wisp.rx * 2 || wisp.x > width + wisp.rx * 2
+      || wisp.y < -wisp.ry * 2 || wisp.y > height + wisp.ry * 2) {
+      particles[index] = createFogWisp(width, height, false, dynamics);
+    }
+  }
+}
+
+function updateLightning(bolts, elapsed) {
+  let activeCount = 0;
+  for (const bolt of bolts) {
+    bolt.age += elapsed;
+    if (bolt.age >= bolt.life) continue;
+    bolts[activeCount] = bolt;
+    activeCount += 1;
+  }
+  bolts.length = activeCount;
+}
+
 function drawRain(context, particles) {
   context.lineCap = "round";
+  const buckets = new Map();
   for (const drop of particles) {
-    const fall = Math.max(40, drop.speed + (drop.windY ?? 0));
-    const tailX = drop.x - (drop.wind / fall) * drop.length;
-    const tailY = drop.y - drop.length;
+    const widthKey = Math.round(drop.width * 4) / 4;
+    const alphaKey = Math.round(drop.alpha * 20) / 20;
+    const key = `${widthKey}:${alphaKey}`;
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = { width: widthKey, alpha: alphaKey, drops: [] };
+      buckets.set(key, bucket);
+    }
+    bucket.drops.push(drop);
+  }
+  for (const bucket of buckets.values()) {
     context.beginPath();
-    context.moveTo(tailX, tailY);
-    context.lineTo(drop.x, drop.y);
-    context.lineWidth = drop.width;
-    context.strokeStyle = `rgba(207, 227, 238, ${drop.alpha})`;
+    context.lineWidth = bucket.width;
+    context.strokeStyle = `rgba(207, 227, 238, ${bucket.alpha})`;
+    for (const drop of bucket.drops) {
+      const fall = Math.max(40, drop.speed + (drop.windY ?? 0));
+      context.moveTo(drop.x - (drop.wind / fall) * drop.length, drop.y - drop.length);
+      context.lineTo(drop.x, drop.y);
+    }
     context.stroke();
   }
 }
@@ -666,10 +807,38 @@ function drawSnowContacts(context, contacts) {
   }
 }
 
-function drawStars(context, particles) {
+function drawFog(context, particles) {
+  for (const wisp of particles) {
+    const pulse = 0.82 + Math.sin(wisp.phase) * 0.18;
+    context.beginPath();
+    context.ellipse(wisp.x, wisp.y, wisp.rx, wisp.ry, 0, 0, Math.PI * 2);
+    context.fillStyle = `rgba(214, 226, 228, ${wisp.alpha * pulse})`;
+    context.fill();
+  }
+}
+
+function drawLightning(context, bolts) {
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  for (const bolt of bolts) {
+    const progress = clamp(bolt.age / bolt.life, 0, 1);
+    const flash = progress < 0.18 ? 1 : 1 - (progress - 0.18) / 0.82;
+    const alpha = bolt.alpha * flash;
+    for (const segment of bolt.segments) {
+      context.beginPath();
+      context.moveTo(segment.x1, segment.y1);
+      context.lineTo(segment.x2, segment.y2);
+      context.lineWidth = segment.width + (1 - progress) * 0.8;
+      context.strokeStyle = `rgba(228, 242, 255, ${alpha})`;
+      context.stroke();
+    }
+  }
+}
+
+function drawStars(context, particles, alphaScale = 1) {
   for (const star of particles) {
     const shimmer = 0.58 + Math.sin(star.phase) * 0.42;
-    const alpha = star.alpha * shimmer;
+    const alpha = star.alpha * shimmer * alphaScale;
     if (star.layer === 0) {
       context.beginPath();
       context.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -712,6 +881,10 @@ export function createWeatherFx(canvas, {
   const snowContacts = [];
   const surfaces = [];
   const hailContacts = [];
+  const starfield = [];
+  const lightningBolts = [];
+  let lightningWait = 0;
+  let contactDirty = false;
   let width = 0;
   let height = 0;
   let animationFrame = null;
@@ -726,11 +899,36 @@ export function createWeatherFx(canvas, {
     snowContacts.length = 0;
     hailContacts.length = 0;
   }
+
+  function syncStarfield() {
+    if (!overlayStarfieldFor({
+      weather: root.dataset.weather,
+      light: root.dataset.light,
+      storm: root.dataset.storm,
+      windSpeed: root.dataset.windSpeed,
+      windGust: root.dataset.windGust,
+      effect
+    })) {
+      starfield.length = 0;
+      return;
+    }
+    const count = Math.max(10, Math.round(particleBudget("stars", width, height) * 0.42));
+    if (count > starfield.length) {
+      while (starfield.length < count) starfield.push(createStar(width, height));
+    } else if (count < starfield.length) {
+      starfield.length = count;
+    }
+  }
+
   function rebuildParticles() {
     const count = particleBudget(effect, width, height, dynamics.densityScale);
     particles = Array.from({ length: count }, () => createParticle(effect, width, height, true, dynamics));
     groundImpacts.length = 0;
+    lightningBolts.length = 0;
+    lightningWait = 0;
+    starfield.length = 0;
     clearContactEffects();
+    syncStarfield();
   }
 
   function retargetDynamics() {
@@ -744,12 +942,17 @@ export function createWeatherFx(canvas, {
         particle.velocityY = (18 + particle.depth * 66) * dynamics.fallSpeedScale
           + dynamics.windY * (0.2 + particle.depth * 0.25);
       } else if (effect === "hail") {
-        particle.velocityX = dynamics.windX * (0.3 + particle.depth * 0.7);
+        const motion = hailMotionFor(particle.depth, dynamics);
+        particle.velocityX = motion.velocityX;
+        if ((particle.bounces ?? 0) === 0) particle.velocityY = motion.velocityY;
       } else if (effect === "wind") {
         const speed = Math.hypot(dynamics.windX, dynamics.windY) || Math.hypot(DEFAULT_DYNAMICS.windX, DEFAULT_DYNAMICS.windY);
         const scale = Math.hypot(particle.velocityX, particle.velocityY) / Math.max(speed, 1);
         particle.velocityX = dynamics.windX * Math.max(0.72, scale || 1);
         particle.velocityY = dynamics.windY * Math.max(0.72, scale || 1);
+      } else if (effect === "fog") {
+        particle.drift = dynamics.windX * (0.12 + particle.depth * 0.18);
+        particle.lift = dynamics.windY * 0.15;
       }
     }
   }
@@ -803,9 +1006,35 @@ export function createWeatherFx(canvas, {
     rebuildParticles();
   }
 
+  function clearContactLayer() {
+    if (!contactContext) return;
+    contactContext.clearRect(0, 0, width, height);
+    contactDirty = false;
+  }
+
   function clearCanvases() {
     context.clearRect(0, 0, width, height);
-    contactContext?.clearRect(0, 0, width, height);
+    if (CONTACT_EFFECTS.has(effect) || contactDirty) clearContactLayer();
+  }
+
+  function markContactDrawn() {
+    if (contactContext) contactDirty = true;
+  }
+
+  function maybeSpawnLightning(elapsed) {
+    if (root.dataset.lightning !== "true") {
+      lightningBolts.length = 0;
+      lightningWait = 0;
+      return;
+    }
+    lightningWait -= elapsed;
+    if (lightningWait > 0) return;
+    const thunder = root.dataset.weather === "thunder";
+    lightningWait = thunder ? randomBetween(2.4, 7.2) : randomBetween(6.5, 14);
+    if (Math.random() < (thunder ? 0.72 : 0.4)) {
+      lightningBolts.push(createLightningBolt(width, height));
+      if (thunder && Math.random() < 0.28) lightningBolts.push(createLightningBolt(width, height));
+    }
   }
 
   function drawFrame(timestamp) {
@@ -813,26 +1042,41 @@ export function createWeatherFx(canvas, {
     previousTime = timestamp;
     clearCanvases();
     context.globalCompositeOperation = "screen";
-    if (contactContext) contactContext.globalCompositeOperation = "screen";
+    if (contactContext && CONTACT_EFFECTS.has(effect)) contactContext.globalCompositeOperation = "screen";
+    if (starfield.length) {
+      updateStars(starfield, elapsed);
+      drawStars(context, starfield, 0.38);
+    }
     if (effect === "rain") {
       updateRain(particles, groundImpacts, contactImpacts, surfaces, width, height, elapsed, dynamics);
       drawRain(context, particles);
       drawRainImpacts(context, groundImpacts);
       drawRainImpacts(contactContext ?? context, contactImpacts);
+      markContactDrawn();
     } else if (effect === "snow") {
       updateSnow(particles, snowContacts, surfaces, width, height, elapsed, dynamics);
       drawSnow(context, particles);
       drawSnowContacts(contactContext ?? context, snowContacts);
+      markContactDrawn();
     } else if (effect === "hail") {
       updateHail(particles, hailContacts, surfaces, width, height, elapsed, dynamics);
       drawHail(context, particles);
       drawHailContacts(contactContext ?? context, hailContacts);
+      markContactDrawn();
     } else if (effect === "wind") {
       updateWind(particles, width, height, elapsed, dynamics);
       drawWind(context, particles);
+    } else if (effect === "fog") {
+      updateFog(particles, width, height, elapsed, dynamics);
+      drawFog(context, particles);
     } else if (effect === "stars") {
       updateStars(particles, elapsed);
       drawStars(context, particles);
+    }
+    if (root.dataset.lightning === "true") {
+      maybeSpawnLightning(elapsed);
+      updateLightning(lightningBolts, elapsed);
+      drawLightning(context, lightningBolts);
     }
     animationFrame = window.requestAnimationFrame(drawFrame);
   }
@@ -869,6 +1113,7 @@ export function createWeatherFx(canvas, {
       adjustParticleCount();
       retargetDynamics();
     }
+    syncStarfield();
     if (effect) root.dataset.fx = effect;
     else delete root.dataset.fx;
     queueSurfaceMeasure();
@@ -899,8 +1144,7 @@ export function createWeatherFx(canvas, {
   const layoutObserver = layoutRoot ? new MutationObserver(queueSurfaceMeasure) : null;
   layoutObserver?.observe(layoutRoot, {
     childList: true,
-    subtree: true,
-    characterData: true
+    subtree: true
   });
   themeObserver.observe(root, {
     attributes: true,
@@ -913,7 +1157,9 @@ export function createWeatherFx(canvas, {
       "data-wind-speed",
       "data-wind-direction",
       "data-wind-gust",
-      "data-storm"
+      "data-storm",
+      "data-visibility",
+      "data-lightning"
     ]
   });
   window.addEventListener("resize", queueResize, { passive: true });

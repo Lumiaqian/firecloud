@@ -1,6 +1,7 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=6";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=7";
 import {
   indexBand,
+  lightFromSunClock,
   metricsAt,
   nextEvent,
   reasonsFor,
@@ -12,8 +13,8 @@ import {
   sunTimes,
   waitAdvice,
   weatherTheme
-} from "./forecast.mjs?v=5";
-import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=7";
+} from "./forecast.mjs?v=6";
+import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=8";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -196,6 +197,7 @@ function updateTicker(eventTime) {
   stopTicker();
   const tick = () => {
     elements.countdown.textContent = formatCountdown(eventTime);
+    if (state.bundle && state.place) applyWeatherBackground(state.bundle);
   };
   tick();
   state.ticker = setInterval(tick, 30_000);
@@ -241,15 +243,16 @@ function applyWeatherBackground(bundle) {
   const cloudLayers = [metrics.low, metrics.mid, metrics.high].filter(Number.isFinite);
   const sun = sunTimes(now, state.place.lat, state.place.lon);
   const { sunrise, sunset } = sun;
-  const fallbackLight = sunrise && sunset && (now < sunrise || now > sunset) ? "night" : "day";
+  const apiLight = current.is_day === 0 ? "night" : current.is_day === 1 ? "day" : "day";
+  const light = lightFromSunClock(now, sun, apiLight);
   const precipitation = current.precipitation ?? metrics.precip;
   const theme = weatherTheme({
     weatherCode: current.weather_code,
-    isDay: current.is_day,
+    isDay: light === "night" ? 0 : 1,
     cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
     precipitation,
     snowfall: current.snowfall,
-    fallbackLight
+    fallbackLight: light
   });
   const windSpeed = current.wind_speed_10m;
   const windDirection = current.wind_direction_10m;
@@ -268,11 +271,14 @@ function applyWeatherBackground(bundle) {
   };
   const drive = atmosphereDriveFor({
     weather: theme.weather,
+    light: theme.light,
+    storm,
     precipitation,
     snowfall: current.snowfall,
     windSpeed,
     windDirection,
-    windGust
+    windGust,
+    visibility
   });
   const windStrength = Math.min(1, Math.max(0, Math.max(windSpeed ?? 0, windGust ?? 0) / 100));
   const fogDensity = Number.isFinite(visibility)

@@ -771,6 +771,10 @@ body[data-state="ready"][data-fx="stars"] .weather-canvas {
   opacity: 0.74;
 }
 
+body[data-state="ready"][data-fx="fog"] .weather-canvas {
+  opacity: calc(0.34 + var(--fx-density) * 0.28);
+}
+
 body[data-state="ready"][data-light="night"][data-weather="partly"][data-fx="stars"] .weather-canvas {
   opacity: 0.52;
 }
@@ -2639,7 +2643,8 @@ body[data-state="ready"] .ready {
   body[data-state="ready"][data-weather="partly"] .weather-atmosphere,
   body[data-state="ready"][data-weather="overcast"] .weather-atmosphere,
   body[data-state="ready"][data-weather="rain"] .weather-atmosphere,
-  body[data-state="ready"][data-weather="snow"] .weather-atmosphere {
+  body[data-state="ready"][data-weather="snow"] .weather-atmosphere,
+  body[data-state="ready"][data-fx="fog"] .weather-atmosphere {
     --atmosphere-back-animation: none;
     --atmosphere-front-animation: none;
     --atmosphere-light-animation: none;

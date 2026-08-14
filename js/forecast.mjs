@@ -44,6 +44,14 @@ export function weatherTheme({
   return { weather, light };
 }
 
+/** Prefer local sunrise/sunset over a stale API is_day once the page has been sitting open. */
+export function lightFromSunClock(now, { sunrise, sunset } = {}, fallbackLight = "day") {
+  if (now instanceof Date && !Number.isNaN(now.valueOf()) && sunrise && sunset) {
+    return now < sunrise || now > sunset ? "night" : "day";
+  }
+  return fallbackLight === "night" ? "night" : "day";
+}
+
 export function stormLevelFor({ windSpeed, windGust, pressure } = {}) {
   const speed = Number.isFinite(windSpeed) ? windSpeed : 0;
   const gust = Number.isFinite(windGust) ? windGust : 0;

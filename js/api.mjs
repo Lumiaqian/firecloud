@@ -1,4 +1,4 @@
-import { buildSamplingPoints, solarAzimuth } from "./forecast.mjs?v=4";
+import { buildSamplingPoints, solarAzimuth } from "./forecast.mjs?v=6";
 
 export const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 export const AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
