@@ -476,7 +476,12 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
 
 function openPlaces() {
   renderFavorites();
-  if (!elements.dialog.open) elements.dialog.showModal();
+  if (!elements.dialog.open) {
+    elements.dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
+    elements.dialog.style.removeProperty("--sheet-translate-y");
+    elements.dialog.style.removeProperty("--backdrop-opacity");
+    elements.dialog.showModal();
+  }
 }
 
 async function locate() {
@@ -632,6 +637,161 @@ function toggleFavorite() {
   updateFavoriteButton();
   renderFavorites();
 }
+
+function initFluidDrawer(dialog) {
+  if (!dialog) return;
+
+  const handle = dialog.querySelector("#drawer-handle") || dialog.querySelector(".drawer-handle");
+  const head = dialog.querySelector(".dialog-head");
+
+  let isDragging = false;
+  let startY = 0;
+  let currentY = 0;
+  let currentTranslateY = 0;
+  let activePointerId = null;
+  let history = [];
+
+  function rubberband(overshoot, dimension = 350, constant = 0.45) {
+    return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
+  }
+
+  function project(velocity, decelerationRate = 0.992) {
+    return (velocity / 1000) * decelerationRate / (1 - decelerationRate);
+  }
+
+  function setTranslateY(y) {
+    currentTranslateY = y;
+    dialog.style.setProperty("--sheet-translate-y", `${y}px`);
+    const height = dialog.offsetHeight || 500;
+    const progress = Math.min(1, Math.max(0, 1 - (Math.max(0, y) / height)));
+    dialog.style.setProperty("--backdrop-opacity", String(progress));
+  }
+
+  function resetDialogStyles() {
+    dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
+    dialog.style.removeProperty("--sheet-translate-y");
+    dialog.style.removeProperty("--backdrop-opacity");
+    currentTranslateY = 0;
+    isDragging = false;
+    activePointerId = null;
+  }
+
+  function dismissDrawer() {
+    dialog.classList.remove("is-dragging", "is-settling");
+    dialog.classList.add("is-dismissing");
+    let closed = false;
+    const onEnd = () => {
+      if (closed) return;
+      closed = true;
+      dialog.removeEventListener("transitionend", onEnd);
+      if (dialog.open) dialog.close();
+      resetDialogStyles();
+    };
+    dialog.addEventListener("transitionend", onEnd, { once: true });
+    setTimeout(onEnd, 240);
+  }
+
+  function springBack() {
+    dialog.classList.remove("is-dragging");
+    dialog.classList.add("is-settling");
+    setTranslateY(0);
+    let settled = false;
+    const onEnd = () => {
+      if (settled) return;
+      settled = true;
+      dialog.removeEventListener("transitionend", onEnd);
+      resetDialogStyles();
+    };
+    dialog.addEventListener("transitionend", onEnd, { once: true });
+    setTimeout(onEnd, 320);
+  }
+
+  function canStartDrag(e) {
+    if (!dialog.open) return false;
+    if (handle && (e.target === handle || handle.contains(e.target))) return true;
+    if (head && (e.target === head || head.contains(e.target))) {
+      if (e.target.closest("button, a, input")) return false;
+      return true;
+    }
+    if (dialog.scrollTop <= 0) {
+      if (e.target.closest("button, a, input")) return false;
+      return true;
+    }
+    return false;
+  }
+
+  dialog.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    if (!canStartDrag(e)) return;
+
+    if (dialog.classList.contains("is-settling")) {
+      const matrix = new DOMMatrix(getComputedStyle(dialog).transform);
+      currentTranslateY = matrix.m42 || currentTranslateY;
+      dialog.classList.remove("is-settling");
+    }
+
+    isDragging = true;
+    activePointerId = e.pointerId;
+    startY = e.clientY - currentTranslateY;
+    currentY = e.clientY;
+    history = [{ y: e.clientY, t: performance.now() }];
+
+    dialog.classList.add("is-dragging");
+    try { dialog.setPointerCapture(e.pointerId); } catch {}
+
+    if (document.activeElement && document.activeElement.tagName === "INPUT") {
+      document.activeElement.blur();
+    }
+  });
+
+  dialog.addEventListener("pointermove", (e) => {
+    if (!isDragging || e.pointerId !== activePointerId) return;
+
+    currentY = e.clientY;
+    const now = performance.now();
+    history.push({ y: currentY, t: now });
+    while (history.length > 2 && now - history[0].t > 100) {
+      history.shift();
+    }
+
+    const deltaY = currentY - startY;
+    let appliedY;
+    if (deltaY < 0) {
+      appliedY = rubberband(deltaY, 300, 0.4);
+    } else {
+      appliedY = deltaY;
+    }
+
+    setTranslateY(appliedY);
+  });
+
+  function handlePointerEnd(e) {
+    if (!isDragging || e.pointerId !== activePointerId) return;
+    isDragging = false;
+    try { dialog.releasePointerCapture(e.pointerId); } catch {}
+
+    const now = performance.now();
+    const recent = history.filter((p) => now - p.t < 120);
+    const first = recent[0] || history[0] || { y: currentY, t: now - 16 };
+    const dt = Math.max(0.016, (now - first.t) / 1000);
+    const releaseVelocity = (currentY - first.y) / dt;
+
+    const projectedY = currentTranslateY + project(releaseVelocity, 0.992);
+    const dialogHeight = dialog.offsetHeight || 400;
+
+    if (projectedY > dialogHeight * 0.35 || (releaseVelocity > 550 && currentTranslateY > 30)) {
+      dismissDrawer();
+    } else {
+      springBack();
+    }
+  }
+
+  dialog.addEventListener("pointerup", handlePointerEnd);
+  dialog.addEventListener("pointercancel", handlePointerEnd);
+  dialog.addEventListener("close", resetDialogStyles);
+}
+
+initFluidDrawer(elements.dialog);
 
 elements.openPlaces.addEventListener("click", openPlaces);
 elements.welcomeSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });

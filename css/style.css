@@ -2039,6 +2039,30 @@ body[data-state="ready"] .top-actions.liquid-glass {
   transition-duration: 80ms;
 }
 
+.drawer-handle {
+  width: 36px;
+  height: 4.5px;
+  margin: -4px auto 14px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+
+.drawer-handle:hover {
+  opacity: 0.9;
+  background: var(--signal);
+}
+
+dialog.is-dragging .drawer-handle {
+  cursor: grabbing;
+  opacity: 1;
+  background: var(--signal);
+  transform: scaleX(1.15);
+}
+
 dialog.liquid-glass {
   --glass-base: rgba(19, 29, 40, 0.84);
   --glass-blur: 18px;
@@ -2048,16 +2072,39 @@ dialog.liquid-glass {
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(255, 255, 255, 0.05),
     0 34px 90px rgba(2, 8, 14, 0.5);
+  transform: translateY(var(--sheet-translate-y, 0px));
+  will-change: transform;
 }
 
 dialog.liquid-glass[open] {
   animation: glass-sheet-in 280ms var(--ease-drawer) both;
 }
 
+dialog.is-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+  animation: none !important;
+  transition: none !important;
+}
+
+dialog.is-settling {
+  animation: none !important;
+  transition: transform 300ms var(--ease-drawer) !important;
+}
+
+dialog.is-dismissing {
+  animation: none !important;
+  transition: transform 220ms var(--ease-drawer), opacity 200ms ease-out !important;
+  transform: translateY(100%) !important;
+  opacity: 0 !important;
+}
+
 dialog.liquid-glass::backdrop {
   background: rgba(4, 10, 16, 0.56);
   -webkit-backdrop-filter: blur(5px) brightness(0.72);
   backdrop-filter: blur(5px) brightness(0.72);
+  opacity: var(--backdrop-opacity, 1);
+  transition: opacity 200ms var(--ease-out);
 }
 
 .glass-sheet .location-row,
@@ -2549,7 +2596,7 @@ body[data-state="ready"] .ready {
     max-height: 86vh;
     max-height: 86svh;
     margin: auto 12px max(12px, env(safe-area-inset-bottom));
-    padding: 24px 20px 22px;
+    padding: 16px 20px 22px;
     overscroll-behavior: contain;
     border-radius: 24px;
     -webkit-overflow-scrolling: touch;
