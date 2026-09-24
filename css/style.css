@@ -1289,66 +1289,180 @@ body[data-state="ready"] .top-actions {
   }
 }
 
-/* Celestial Twilight Corona Loader */
-.celestial-loader {
-  position: relative;
-  width: 88px;
-  height: 88px;
+/* Dynamic Multi-Style Loader Stage */
+.loader-stage {
   display: grid;
   place-items: center;
+  min-height: 88px;
   margin: 0 auto;
 }
 
-.loader-ambient {
+/* 1. Horizon Twilight Scanner (Default) */
+.loader-horizon {
+  position: relative;
+  width: 148px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.horizon-glow {
   position: absolute;
-  inset: -16px;
+  top: 6px;
+  left: 50%;
+  width: 82px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgba(255, 185, 110, 0.45) 0%,
+    rgba(255, 126, 74, 0.22) 50%,
+    transparent 80%
+  );
+  filter: blur(14px);
+  animation: horizon-glow-breathe 2.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.horizon-svg {
+  width: 148px;
+  height: 48px;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px rgba(237, 181, 111, 0.42));
+}
+
+.horizon-track {
+  stroke: rgba(247, 241, 231, 0.16);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.horizon-beam {
+  stroke: url(#horizon-beam-grad);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-dasharray: 46 180;
+  animation: horizon-scan 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+}
+
+.horizon-vapors {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.horizon-vapor {
+  position: absolute;
+  bottom: 14px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffd07c;
+  box-shadow: 0 0 6px #ffd07c;
+  opacity: 0;
+}
+
+.horizon-vapor.v1 {
+  left: 36%;
+  animation: vapor-rise 2.1s ease-out infinite 0.2s;
+}
+
+.horizon-vapor.v2 {
+  left: 50%;
+  animation: vapor-rise 2.4s ease-out infinite 0.9s;
+}
+
+.horizon-vapor.v3 {
+  left: 64%;
+  animation: vapor-rise 2.2s ease-out infinite 1.5s;
+}
+
+@keyframes horizon-scan {
+  0% {
+    stroke-dashoffset: 70;
+  }
+  100% {
+    stroke-dashoffset: -70;
+  }
+}
+
+@keyframes horizon-glow-breathe {
+  0% {
+    transform: translateX(calc(-50% - 24px)) scale(0.9);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(calc(-50% + 24px)) scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+@keyframes vapor-rise {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-22px) translateX(3px) scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* 2. Keplerian Slingshot Orbit */
+.loader-kepler {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+
+.kepler-ambient {
+  position: absolute;
+  inset: -14px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(237, 181, 111, 0.32) 0%,
-    rgba(255, 140, 80, 0.14) 44%,
+    rgba(237, 181, 111, 0.35) 0%,
+    rgba(255, 126, 74, 0.15) 45%,
     transparent 72%
   );
-  filter: blur(20px);
-  animation: celestial-ambient-pulse 3s var(--ease-in-out) infinite alternate;
+  filter: blur(18px);
+  animation: kepler-ambient-pulse 2.8s var(--ease-in-out) infinite alternate;
   pointer-events: none;
-  will-change: transform, opacity;
 }
 
-.loader-rings {
-  width: 88px;
-  height: 88px;
+.kepler-svg {
+  width: 96px;
+  height: 96px;
   overflow: visible;
   filter: drop-shadow(0 0 8px rgba(237, 181, 111, 0.45));
 }
 
-.ring-track {
-  stroke: rgba(247, 241, 231, 0.1);
-  stroke-width: 1.5;
-}
-
-.ring-orbit {
-  stroke: rgba(247, 241, 231, 0.22);
-  stroke-width: 1.2;
+.kepler-orbit {
+  stroke: rgba(247, 241, 231, 0.12);
+  stroke-width: 1.4;
   stroke-dasharray: 4 6;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: celestial-orbit-spin 3.6s linear infinite;
-  will-change: transform;
 }
 
-.ring-comet {
-  stroke: url(#comet-grad);
-  stroke-width: 2.5;
+.kepler-sun-ring {
+  stroke: rgba(247, 241, 231, 0.2);
+  stroke-width: 1.2;
+}
+
+.kepler-comet {
+  stroke: url(#kepler-grad);
+  stroke-width: 2.8;
   stroke-linecap: round;
-  stroke-dasharray: 68 172;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: celestial-comet-spin 0.95s linear infinite;
-  will-change: transform;
+  stroke-dasharray: 56 180;
+  animation: kepler-slingshot 1.7s cubic-bezier(0.65, 0.05, 0.2, 0.95) infinite;
 }
 
-.loader-core {
+.kepler-core {
   position: absolute;
   top: calc(50% - 6px);
   left: calc(50% - 6px);
@@ -1365,48 +1479,116 @@ body[data-state="ready"] .top-actions {
   box-shadow:
     0 0 12px rgba(255, 218, 153, 0.85),
     0 0 24px rgba(237, 181, 111, 0.4);
-  animation: celestial-core-pulse 2s var(--ease-in-out) infinite alternate;
-  will-change: transform, opacity;
+  animation: kepler-core-breathe 2s var(--ease-in-out) infinite alternate;
 }
 
-@keyframes celestial-ambient-pulse {
+@keyframes kepler-slingshot {
   0% {
-    transform: scale(0.88);
-    opacity: 0.55;
+    stroke-dashoffset: 0;
   }
   100% {
-    transform: scale(1.18);
-    opacity: 0.95;
+    stroke-dashoffset: -236;
   }
 }
 
-@keyframes celestial-comet-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+@keyframes kepler-ambient-pulse {
+  0% { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(1.15); opacity: 0.95; }
 }
 
-@keyframes celestial-orbit-spin {
-  0% {
-    transform: rotate(360deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
+@keyframes kepler-core-breathe {
+  0% { transform: scale(0.92); }
+  100% { transform: scale(1.08); }
 }
 
-@keyframes celestial-core-pulse {
-  0% {
-    transform: scale(0.88);
-    opacity: 0.85;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
+/* 3. Prismatic Twilight Dispersion */
+.loader-prismatic {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+}
+
+.prism-ambient {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 208, 124, 0.28) 0%,
+    rgba(196, 138, 255, 0.16) 48%,
+    transparent 72%
+  );
+  filter: blur(18px);
+  animation: prism-glow 3s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.prism-svg {
+  width: 92px;
+  height: 92px;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(237, 181, 111, 0.35));
+}
+
+.prism-track-outer {
+  stroke: rgba(247, 241, 231, 0.1);
+  stroke-width: 1.5;
+}
+
+.prism-track-inner {
+  stroke: rgba(247, 241, 231, 0.08);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 4;
+}
+
+.prism-ring-outer {
+  stroke: url(#prism-gold);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 74 165;
+  transform-origin: center;
+  animation: prism-spin-ccw 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.prism-ring-inner {
+  stroke: url(#prism-violet);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 48 115;
+  transform-origin: center;
+  animation: prism-spin-cw 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.prism-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 208, 124, 0.6);
+  animation: prism-sparkle-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes prism-spin-ccw {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes prism-spin-cw {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes prism-glow {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes prism-sparkle-pulse {
+  0% { transform: scale(0.7); opacity: 0.4; }
+  100% { transform: scale(1.3); opacity: 1; }
 }
 
 .loading h1,
@@ -3385,6 +3567,178 @@ body[data-state="ready"] .ready {
     --atmosphere-back-animation: none;
     --atmosphere-front-animation: none;
     --atmosphere-light-animation: none;
+  }
+/* Dev Lab Dialog & Controls */
+.dev-lab-dialog {
+  width: min(calc(100% - 32px), 520px);
+}
+
+.dev-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--signal);
+  background: rgba(237, 181, 111, 0.12);
+  border: 1px solid rgba(237, 181, 111, 0.28);
+  margin-bottom: 6px;
+}
+
+.dev-preview-box {
+  margin: 16px 0 20px;
+  padding: 24px 20px 14px;
+  border-radius: var(--radius-card);
+  background: rgba(8, 16, 26, 0.52);
+  border: 1px solid var(--line-strong);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 124px;
+}
+
+.dev-preview-stage {
+  min-height: 80px;
+  display: grid;
+  place-items: center;
+}
+
+.dev-preview-label {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--faint);
+  letter-spacing: 0.08em;
+}
+
+.dev-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.dev-option-card {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: rgba(16, 27, 40, 0.4);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dev-option-card:hover {
+    background: rgba(24, 38, 54, 0.55);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+}
+
+.dev-option-card:active {
+  transform: scale(0.985);
+}
+
+.dev-option-card[aria-checked="true"] {
+  border-color: var(--signal);
+  background: rgba(237, 181, 111, 0.12);
+  box-shadow: inset 0 0 16px rgba(237, 181, 111, 0.08);
+}
+
+.dev-option-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dev-option-header strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dev-pill-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--signal);
+  color: #101821;
+  font-weight: 700;
+}
+
+.dev-option-info p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--faint);
+  line-height: 1.4;
+}
+
+.dev-radio-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out);
+}
+
+.dev-option-card[aria-checked="true"] .dev-radio-check {
+  border-color: var(--signal);
+  background: var(--signal);
+  box-shadow: 0 0 8px rgba(237, 181, 111, 0.6);
+}
+
+.dev-option-card[aria-checked="true"] .dev-radio-check::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: #101821;
+}
+
+.dev-lab-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dev-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dev-hint {
+  font-size: 11px;
+  color: var(--faint);
+  text-align: center;
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horizon-beam,
+  .horizon-glow,
+  .horizon-vapor,
+  .kepler-comet,
+  .kepler-ambient,
+  .kepler-core,
+  .prism-ring-outer,
+  .prism-ring-inner,
+  .prism-ambient,
+  .prism-sparkle {
+    animation: none !important;
   }
 }
 

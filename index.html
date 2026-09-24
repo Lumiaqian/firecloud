@@ -12,7 +12,7 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=36">
+  <link rel="stylesheet" href="css/style.css?v=37">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
@@ -67,21 +67,7 @@
     </section>
 
     <section class="panel loading" id="panel-loading" hidden aria-live="polite">
-      <div class="celestial-loader" aria-hidden="true">
-        <span class="loader-ambient"></span>
-        <svg class="loader-rings" viewBox="0 0 88 88" fill="none">
-          <defs>
-            <linearGradient id="comet-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#edb56f" stop-opacity="1"/>
-              <stop offset="100%" stop-color="#ffd07c" stop-opacity="0.15"/>
-            </linearGradient>
-          </defs>
-          <circle class="ring-track" cx="44" cy="44" r="38" />
-          <circle class="ring-orbit" cx="44" cy="44" r="26" />
-          <circle class="ring-comet" cx="44" cy="44" r="38" />
-        </svg>
-        <span class="loader-core"></span>
-      </div>
+      <div class="loader-stage" id="loader-stage" aria-hidden="true"></div>
       <h1>正在读取天空</h1>
       <p id="loading-text">连接气象数据…</p>
     </section>
@@ -160,6 +146,70 @@
     <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">还没有收藏地点</p></section>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=23"></script>
+  <dialog class="liquid-glass glass-sheet dev-lab-dialog" id="dev-lab-dialog" aria-labelledby="dev-lab-title">
+    <div class="drawer-handle" id="dev-lab-handle" aria-hidden="true"></div>
+    <form method="dialog" class="dialog-head">
+      <div>
+        <p class="dev-badge">LABS · 动效实验室</p>
+        <h2 id="dev-lab-title">Loading 动效配置</h2>
+      </div>
+      <button class="icon-button dialog-close" value="cancel" aria-label="关闭">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </form>
+    
+    <div class="dev-lab-content">
+      <div class="dev-preview-box">
+        <div class="dev-preview-stage" id="dev-preview-stage"></div>
+        <span class="dev-preview-label">实时效果预览</span>
+      </div>
+
+      <div class="dev-options" role="radiogroup" aria-label="选择Loading动效风格">
+        <button class="dev-option-card" type="button" data-loader-style="horizon" aria-checked="true">
+          <div class="dev-option-info">
+            <div class="dev-option-header">
+              <strong>地平线霞光探测仪</strong>
+              <span class="dev-pill-badge">默认</span>
+            </div>
+            <p>晨昏弧线巡扫、余晖漫射与气流升腾，沉静克制</p>
+          </div>
+          <span class="dev-radio-check" aria-hidden="true"></span>
+        </button>
+
+        <button class="dev-option-card" type="button" data-loader-style="kepler" aria-checked="false">
+          <div class="dev-option-info">
+            <div class="dev-option-header">
+              <strong>天体开普勒引力流</strong>
+            </div>
+            <p>物理级非线性引力弹弓加速，等离子彗芒长拖尾</p>
+          </div>
+          <span class="dev-radio-check" aria-hidden="true"></span>
+        </button>
+
+        <button class="dev-option-card" type="button" data-loader-style="prismatic" aria-checked="false">
+          <div class="dev-option-info">
+            <div class="dev-option-header">
+              <strong>霞光分光色散环</strong>
+            </div>
+            <p>双层同心环对向互质旋动，交叠处激发暮色光谱</p>
+          </div>
+          <span class="dev-radio-check" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="dev-lab-actions">
+        <button class="secondary liquid-glass dev-btn" id="dev-btn-test-loading" type="button">
+          <span>全屏触发 Loading (3秒)</span>
+        </button>
+        <button class="primary liquid-glass glass-tint dev-btn" id="dev-btn-save-default" type="button">
+          <span>设为默认</span>
+        </button>
+      </div>
+      
+      <p class="dev-hint">提示：连续点击顶部 Logo 3 次或按快捷键 Shift + D 即可随时唤起此面板</p>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/app.mjs?v=24"></script>
 </body>
 </html>

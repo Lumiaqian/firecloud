@@ -30,6 +30,8 @@ const elements = {
   themeColor: $("theme-color"), placeName: $("place-name"), openPlaces: $("open-places"),
   favorite: $("favorite-button"), refresh: $("refresh-button"), locate: $("locate-button"),
   welcomeSearch: $("welcome-search"), geoNotice: $("geo-notice"), loadingText: $("loading-text"),
+  loaderStage: $("loader-stage"), devDialog: $("dev-lab-dialog"), devPreviewStage: $("dev-preview-stage"),
+  devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
   source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
@@ -867,8 +869,159 @@ function initFluidDrawer(dialog) {
 }
 
 initFluidDrawer(elements.dialog);
+initFluidDrawer(elements.devDialog);
 
-elements.openPlaces.addEventListener("click", openPlaces);
+const LOADER_STORAGE_KEY = "firecloud:loader_style:v1";
+let currentLoaderStyle = storage.get(LOADER_STORAGE_KEY, "horizon");
+
+function getLoaderHTML(style) {
+  if (style === "kepler") {
+    return `
+      <div class="loader-kepler" aria-hidden="true">
+        <span class="kepler-ambient"></span>
+        <svg class="kepler-svg" viewBox="0 0 96 96" fill="none">
+          <defs>
+            <linearGradient id="kepler-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffd07c" stop-opacity="1"/>
+              <stop offset="50%" stop-color="#edb56f" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#ff7e4a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <ellipse class="kepler-orbit" cx="48" cy="48" rx="42" ry="26" transform="rotate(-15 48 48)" />
+          <circle class="kepler-sun-ring" cx="48" cy="48" r="14" />
+          <ellipse class="kepler-comet" cx="48" cy="48" rx="42" ry="26" transform="rotate(-15 48 48)" />
+        </svg>
+        <span class="kepler-core"></span>
+      </div>
+    `;
+  }
+  if (style === "prismatic") {
+    return `
+      <div class="loader-prismatic" aria-hidden="true">
+        <span class="prism-ambient"></span>
+        <svg class="prism-svg" viewBox="0 0 92 92" fill="none">
+          <defs>
+            <linearGradient id="prism-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffd07c"/>
+              <stop offset="60%" stop-color="#edb56f"/>
+              <stop offset="100%" stop-color="#edb56f" stop-opacity="0.1"/>
+            </linearGradient>
+            <linearGradient id="prism-violet" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#9ebbf8"/>
+              <stop offset="50%" stop-color="#c48aff"/>
+              <stop offset="100%" stop-color="#ff75a0" stop-opacity="0.1"/>
+            </linearGradient>
+          </defs>
+          <circle class="prism-track-outer" cx="46" cy="46" r="38" />
+          <circle class="prism-track-inner" cx="46" cy="46" r="26" />
+          <circle class="prism-ring-outer" cx="46" cy="46" r="38" />
+          <circle class="prism-ring-inner" cx="46" cy="46" r="26" />
+        </svg>
+        <span class="prism-sparkle"></span>
+      </div>
+    `;
+  }
+  // 默认：horizon (地平线霞光探测仪)
+  return `
+    <div class="loader-horizon" aria-hidden="true">
+      <span class="horizon-glow"></span>
+      <svg class="horizon-svg" viewBox="0 0 148 48" fill="none">
+        <defs>
+          <linearGradient id="horizon-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#edb56f" stop-opacity="0"/>
+            <stop offset="30%" stop-color="#ffd07c" stop-opacity="0.95"/>
+            <stop offset="65%" stop-color="#ff7e4a" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#edb56f" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path class="horizon-track" d="M14 36 Q 74 22 134 36" />
+        <path class="horizon-beam" d="M14 36 Q 74 22 134 36" />
+      </svg>
+      <div class="horizon-vapors">
+        <span class="horizon-vapor v1"></span>
+        <span class="horizon-vapor v2"></span>
+        <span class="horizon-vapor v3"></span>
+      </div>
+    </div>
+  `;
+}
+
+function applyLoaderStyle(style) {
+  currentLoaderStyle = style;
+  if (elements.loaderStage) {
+    elements.loaderStage.innerHTML = getLoaderHTML(style);
+  }
+  if (elements.devPreviewStage) {
+    elements.devPreviewStage.innerHTML = getLoaderHTML(style);
+  }
+  document.querySelectorAll(".dev-option-card").forEach((card) => {
+    card.setAttribute("aria-checked", String(card.dataset.loaderStyle === style));
+  });
+}
+
+function openDevLab() {
+  applyLoaderStyle(currentLoaderStyle);
+  if (!elements.devDialog.open) {
+    elements.devDialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
+    elements.devDialog.style.removeProperty("--sheet-translate-y");
+    elements.devDialog.style.removeProperty("--backdrop-opacity");
+    elements.devDialog.showModal();
+    if (navigator.vibrate) try { navigator.vibrate(14); } catch {}
+  }
+}
+
+let brandClickCount = 0;
+let brandClickTimer = null;
+elements.openPlaces.addEventListener("click", (e) => {
+  brandClickCount++;
+  clearTimeout(brandClickTimer);
+  brandClickTimer = setTimeout(() => { brandClickCount = 0; }, 600);
+  if (brandClickCount >= 3) {
+    brandClickCount = 0;
+    e.preventDefault();
+    e.stopPropagation();
+    openDevLab();
+    return;
+  }
+  openPlaces();
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "D" && e.shiftKey && !e.metaKey && !e.ctrlKey) {
+    e.preventDefault();
+    openDevLab();
+  }
+});
+
+document.querySelectorAll(".dev-option-card").forEach((card) => {
+  card.addEventListener("click", () => {
+    applyLoaderStyle(card.dataset.loaderStyle);
+  });
+});
+
+elements.devBtnSaveDefault.addEventListener("click", () => {
+  storage.set(LOADER_STORAGE_KEY, currentLoaderStyle);
+  const btn = elements.devBtnSaveDefault;
+  const label = btn.firstElementChild;
+  const original = label.textContent;
+  label.textContent = "已设为默认 ✓";
+  btn.disabled = true;
+  setTimeout(() => {
+    label.textContent = original;
+    btn.disabled = false;
+  }, 1600);
+});
+
+elements.devBtnTestLoading.addEventListener("click", () => {
+  elements.devDialog.close();
+  setPanel("loading");
+  elements.loadingText.textContent = "正在模拟计算霞光云层…";
+  setTimeout(() => {
+    if (state.bundle) renderReady();
+    else setPanel("welcome");
+  }, 3000);
+});
+
 elements.welcomeSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
 elements.errorSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
 elements.locate.addEventListener("click", locate);
@@ -886,6 +1039,7 @@ for (const tab of elements.tabs) {
 
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
 
+applyLoaderStyle(currentLoaderStyle);
 renderFavorites();
 const lastPlace = normalizePlace(storage.get(PLACE_KEY));
 if (lastPlace) loadPlace(lastPlace);
