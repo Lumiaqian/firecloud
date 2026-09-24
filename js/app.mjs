@@ -396,6 +396,9 @@ function renderReady(cacheAge = 0) {
   elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime, timeZone)}`;
   elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
   elements.score.textContent = String(score);
+  elements.score.classList.remove("is-updating");
+  void elements.score.offsetWidth;
+  elements.score.classList.add("is-updating");
   elements.band.textContent = indexBand(score);
   elements.verdict.textContent = waitAdvice(score);
   elements.source.textContent = state.stale ? "缓存数据" : "实时数据";
@@ -591,10 +594,19 @@ function renderFavorites() {
     remove.setAttribute("aria-label", `删除收藏 ${place.name}`);
     remove.textContent = "×";
     remove.addEventListener("click", () => {
-      state.favorites = state.favorites.filter((candidate) => placeIdentity(candidate) !== placeIdentity(place));
-      storage.set(FAVORITES_KEY, state.favorites);
-      renderFavorites();
-      updateFavoriteButton();
+      if (item.classList.contains("is-removing")) return;
+      item.classList.add("is-removing");
+      let finished = false;
+      const finalize = () => {
+        if (finished) return;
+        finished = true;
+        state.favorites = state.favorites.filter((candidate) => placeIdentity(candidate) !== placeIdentity(place));
+        storage.set(FAVORITES_KEY, state.favorites);
+        renderFavorites();
+        updateFavoriteButton();
+      };
+      item.addEventListener("transitionend", finalize, { once: true });
+      setTimeout(finalize, 200);
     });
     item.append(choose, remove);
     return item;
