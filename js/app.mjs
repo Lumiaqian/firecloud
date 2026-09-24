@@ -953,27 +953,37 @@ function getLoaderHTML(style) {
       </div>
     `;
   }
-  // 默认：horizon (地平线霞光探测仪)
+  // 默认：horizon (地平线霞光探测仪 2.0 大气分层与宽银幕耀斑)
   return `
     <div class="loader-horizon" aria-hidden="true">
       <span class="horizon-glow"></span>
-      <svg class="horizon-svg" viewBox="0 0 148 48" fill="none">
+      <span class="horizon-aerosol-mist"></span>
+      <span class="horizon-evening-star"></span>
+      <div class="horizon-glint">
+        <span class="horizon-glint-streak"></span>
+        <span class="horizon-glint-core"></span>
+      </div>
+      <svg class="horizon-svg" viewBox="0 0 160 56" fill="none">
         <defs>
           <linearGradient id="horizon-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#edb56f" stop-opacity="0"/>
-            <stop offset="30%" stop-color="#ffd07c" stop-opacity="0.95"/>
-            <stop offset="65%" stop-color="#ff7e4a" stop-opacity="0.9"/>
+            <stop offset="25%" stop-color="#ffd07c" stop-opacity="0.95"/>
+            <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
+            <stop offset="75%" stop-color="#ff6e38" stop-opacity="0.9"/>
             <stop offset="100%" stop-color="#edb56f" stop-opacity="0"/>
           </linearGradient>
+          <linearGradient id="horizon-stratosphere-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#9ebbf8" stop-opacity="0"/>
+            <stop offset="35%" stop-color="#9ebbf8" stop-opacity="0.8"/>
+            <stop offset="70%" stop-color="#c48aff" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#c48aff" stop-opacity="0"/>
+          </linearGradient>
         </defs>
-        <path class="horizon-track" d="M14 36 Q 74 22 134 36" />
-        <path class="horizon-beam" d="M14 36 Q 74 22 134 36" />
+        <path class="horizon-track-stratosphere" d="M 22 36 Q 80 16 138 36" />
+        <path class="horizon-stratosphere-glow" d="M 22 36 Q 80 16 138 36" />
+        <path class="horizon-track-troposphere" d="M 16 42 Q 80 22 144 42" />
+        <path class="horizon-beam" d="M 16 42 Q 80 22 144 42" />
       </svg>
-      <div class="horizon-vapors">
-        <span class="horizon-vapor v1"></span>
-        <span class="horizon-vapor v2"></span>
-        <span class="horizon-vapor v3"></span>
-      </div>
     </div>
   `;
 }

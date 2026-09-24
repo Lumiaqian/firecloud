@@ -1297,11 +1297,11 @@ body[data-state="ready"] .top-actions {
   margin: 0 auto;
 }
 
-/* 1. Horizon Twilight Scanner (Default) */
+/* 1. Horizon Twilight Scanner 2.0 (Atmospheric Stratification & Anamorphic Flare) */
 .loader-horizon {
   position: relative;
-  width: 148px;
-  height: 52px;
+  width: 160px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1309,106 +1309,201 @@ body[data-state="ready"] .top-actions {
 
 .horizon-glow {
   position: absolute;
-  top: 6px;
+  top: 4px;
   left: 50%;
-  width: 82px;
-  height: 28px;
+  width: 96px;
+  height: 32px;
   border-radius: 50%;
   background: radial-gradient(
-    ellipse at 50% 60%,
-    rgba(255, 185, 110, 0.45) 0%,
-    rgba(255, 126, 74, 0.22) 50%,
+    ellipse at 50% 65%,
+    rgba(255, 185, 110, 0.48) 0%,
+    rgba(255, 126, 74, 0.25) 50%,
     transparent 80%
   );
-  filter: blur(14px);
+  filter: blur(16px);
   animation: horizon-glow-breathe 2.4s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
 .horizon-svg {
-  width: 148px;
-  height: 48px;
+  width: 160px;
+  height: 56px;
   overflow: visible;
-  filter: drop-shadow(0 0 10px rgba(237, 181, 111, 0.42));
+  filter: drop-shadow(0 0 12px rgba(237, 181, 111, 0.45));
 }
 
-.horizon-track {
+/* Layer 1: Tropospheric Limb Track (对流层主地平底轨) */
+.horizon-track-troposphere {
   stroke: rgba(247, 241, 231, 0.16);
-  stroke-width: 1.5;
+  stroke-width: 1.4;
   stroke-linecap: round;
+  fill: none;
 }
 
+/* Layer 2: Stratospheric Cold Arc Track (平流层冷色维纳斯带底轨) */
+.horizon-track-stratosphere {
+  stroke: rgba(158, 187, 248, 0.16);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-dasharray: 2 5;
+  fill: none;
+}
+
+/* Stratospheric Rayleigh/Violet sub-beam (平流层冷光微巡游) */
+.horizon-stratosphere-glow {
+  stroke: url(#horizon-stratosphere-grad);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 32 140;
+  fill: none;
+  animation: horizon-stratosphere-scan 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+}
+
+/* Tropospheric Sunset Gold/Crimson Plasma Beam (主对流层晚霞等离子光束) */
 .horizon-beam {
   stroke: url(#horizon-beam-grad);
-  stroke-width: 3.2;
+  stroke-width: 3.4;
   stroke-linecap: round;
-  stroke-dasharray: 46 180;
+  stroke-dasharray: 52 180;
+  fill: none;
   animation: horizon-scan 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
 }
 
-.horizon-vapors {
+/* Anamorphic Flare System at culmination (中天宽银幕变形耀斑系统) */
+.horizon-glint {
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.horizon-vapor {
-  position: absolute;
-  bottom: 14px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #ffd07c;
-  box-shadow: 0 0 6px #ffd07c;
-  opacity: 0;
-}
-
-.horizon-vapor.v1 {
-  left: 36%;
-  animation: vapor-rise 2.1s ease-out infinite 0.2s;
-}
-
-.horizon-vapor.v2 {
+  top: 14px;
   left: 50%;
-  animation: vapor-rise 2.4s ease-out infinite 0.9s;
+  transform: translate(-50%, -50%);
+  width: 54px;
+  height: 12px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: horizon-glint-pulse 2.4s ease-in-out infinite alternate;
 }
 
-.horizon-vapor.v3 {
-  left: 64%;
-  animation: vapor-rise 2.2s ease-out infinite 1.5s;
+.horizon-glint-streak {
+  position: absolute;
+  width: 52px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.95) 50%, transparent 100%);
+  filter: drop-shadow(0 0 3px rgba(255, 208, 124, 0.9));
+}
+
+.horizon-glint-core {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 6px #ffffff,
+    0 0 14px #ffd07c,
+    0 0 24px #ff7e4a;
+}
+
+/* The Evening Star / Venus (深空暮星长庚孤辉) */
+.horizon-evening-star {
+  position: absolute;
+  top: 6px;
+  right: 28px;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 4px #ffffff, 0 0 10px rgba(158, 187, 248, 0.8);
+  pointer-events: none;
+  animation: horizon-star-twinkle 3.2s ease-in-out infinite;
+}
+
+/* Aerosol Atmospheric Mist (漫过山脊的山岚霞光薄雾) */
+.horizon-aerosol-mist {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 108px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 208, 124, 0.22) 0%, rgba(255, 126, 74, 0.08) 60%, transparent 85%);
+  filter: blur(8px);
+  pointer-events: none;
+  animation: horizon-mist-drift 2.4s ease-in-out infinite alternate;
 }
 
 @keyframes horizon-scan {
   0% {
-    stroke-dashoffset: 70;
+    stroke-dashoffset: 75;
   }
   100% {
-    stroke-dashoffset: -70;
+    stroke-dashoffset: -75;
+  }
+}
+
+@keyframes horizon-stratosphere-scan {
+  0% {
+    stroke-dashoffset: -65;
+  }
+  100% {
+    stroke-dashoffset: 65;
+  }
+}
+
+@keyframes horizon-glint-pulse {
+  0% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scaleX(0.4);
+  }
+  45% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scaleX(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scaleX(1.15);
+  }
+  55% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scaleX(0.7);
+  }
+  100% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scaleX(0.4);
   }
 }
 
 @keyframes horizon-glow-breathe {
   0% {
-    transform: translateX(calc(-50% - 24px)) scale(0.9);
+    transform: translateX(calc(-50% - 28px)) scale(0.9);
     opacity: 0.55;
   }
   100% {
-    transform: translateX(calc(-50% + 24px)) scale(1.15);
+    transform: translateX(calc(-50% + 28px)) scale(1.15);
     opacity: 0.95;
   }
 }
 
-@keyframes vapor-rise {
+@keyframes horizon-mist-drift {
   0% {
-    transform: translateY(0) scale(0.8);
-    opacity: 0;
-  }
-  30% {
-    opacity: 0.8;
+    transform: translateX(calc(-50% - 18px)) scaleY(0.85);
+    opacity: 0.45;
   }
   100% {
-    transform: translateY(-22px) translateX(3px) scale(1.3);
-    opacity: 0;
+    transform: translateX(calc(-50% + 18px)) scaleY(1.15);
+    opacity: 0.85;
+  }
+}
+
+@keyframes horizon-star-twinkle {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.2);
+    box-shadow: 0 0 6px #ffffff, 0 0 14px rgba(158, 187, 248, 0.95);
   }
 }
 
@@ -3943,8 +4038,11 @@ body[data-state="ready"] .ready {
 
 @media (prefers-reduced-motion: reduce) {
   .horizon-beam,
+  .horizon-stratosphere-glow,
+  .horizon-glint,
+  .horizon-evening-star,
+  .horizon-aerosol-mist,
   .horizon-glow,
-  .horizon-vapor,
   .kepler-plasma-comet,
   .kepler-dust-stream,
   .kepler-shockwave,
