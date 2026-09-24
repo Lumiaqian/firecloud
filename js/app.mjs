@@ -173,7 +173,13 @@ function formatCountdown(target) {
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
-  return days ? `还有 ${days} 天 ${hours} 小时` : `还有 ${hours} 小时 ${minutes} 分钟`;
+  if (days) {
+    return hours ? `还有 ${days} 天 ${hours} 小时` : `还有 ${days} 天`;
+  }
+  if (hours) {
+    return minutes ? `还有 ${hours} 小时 ${minutes} 分钟` : `还有 ${hours} 小时`;
+  }
+  return `还有 ${minutes} 分钟`;
 }
 
 function currentEventTime() {
@@ -341,8 +347,11 @@ function updateHorizontalScrollRegions() {
   for (const region of document.querySelectorAll("[data-scroll-region]")) {
     const scroller = region.firstElementChild;
     const canScroll = scroller.scrollWidth > scroller.clientWidth + 1;
+    const isAtStart = scroller.scrollLeft <= 2;
+    const isAtEnd = !canScroll || scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2;
     region.classList.toggle("can-scroll", canScroll);
-    region.classList.toggle("is-at-end", !canScroll || scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2);
+    region.classList.toggle("is-at-start", isAtStart);
+    region.classList.toggle("is-at-end", isAtEnd);
   }
 }
 
@@ -461,6 +470,7 @@ function renderReady(cacheAge = 0) {
   elements.band.textContent = indexBand(score);
   elements.verdict.textContent = waitAdvice(score);
   elements.source.textContent = state.stale ? "缓存数据" : "实时数据";
+  elements.source.dataset.status = state.stale ? "stale" : "live";
   elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt)}`;
   elements.reasons.replaceChildren(...reasonsFor(metrics).map((reason) => {
     const chip = document.createElement("span");
@@ -767,6 +777,7 @@ function initFluidDrawer(dialog) {
 
   function canStartDrag(e) {
     if (!dialog.open) return false;
+    if (window.matchMedia("(min-width: 681px)").matches) return false;
     if (handle && (e.target === handle || handle.contains(e.target))) return true;
     if (head && (e.target === head || head.contains(e.target))) {
       if (e.target.closest("button, a, input")) return false;
