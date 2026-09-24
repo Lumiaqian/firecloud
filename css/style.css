@@ -1264,25 +1264,25 @@ body[data-state="error"] .sky {
 }
 
 .panel.loading:not([hidden]) {
-  animation: panel-fade-in 280ms var(--ease-out) both;
+  animation: panel-fade-in 260ms var(--ease-out) both;
 }
 
 @keyframes panel-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: scale(0.97) translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 
 /* Celestial Twilight Corona Loader */
 .celestial-loader {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 88px;
+  height: 88px;
   display: grid;
   place-items: center;
   margin: 0 auto;
@@ -1290,74 +1290,72 @@ body[data-state="error"] .sky {
 
 .loader-ambient {
   position: absolute;
-  inset: -14px;
+  inset: -16px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
     rgba(237, 181, 111, 0.32) 0%,
-    rgba(255, 140, 80, 0.16) 42%,
+    rgba(255, 140, 80, 0.14) 44%,
     transparent 72%
   );
   filter: blur(20px);
-  animation: celestial-ambient-pulse 3.6s ease-in-out infinite alternate;
+  animation: celestial-ambient-pulse 3s var(--ease-in-out) infinite alternate;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
-.loader-ring--outer {
-  position: absolute;
-  width: 82px;
-  height: 82px;
-  border-radius: 50%;
-  border: 1.5px solid transparent;
-  border-top-color: var(--signal);
-  border-right-color: rgba(237, 181, 111, 0.5);
-  filter: drop-shadow(0 0 6px rgba(237, 181, 111, 0.6));
-  animation: celestial-spin-clockwise 2.2s linear infinite;
+.loader-rings {
+  width: 88px;
+  height: 88px;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(237, 181, 111, 0.45));
 }
 
-@supports (background: conic-gradient(from 0deg, red, blue)) and (-webkit-mask: radial-gradient(white, black)) {
-  .loader-ring--outer {
-    border: 0;
-    padding: 1.5px;
-    background: conic-gradient(
-      from 0deg,
-      transparent 0%,
-      rgba(237, 181, 111, 0.08) 35%,
-      rgba(237, 181, 111, 0.45) 75%,
-      var(--signal) 100%
-    );
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
-  }
+.ring-track {
+  stroke: rgba(247, 241, 231, 0.1);
+  stroke-width: 1.5;
 }
 
-.loader-ring--inner {
-  position: absolute;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  border: 1px dashed rgba(247, 241, 231, 0.22);
-  border-top-color: rgba(255, 255, 255, 0.72);
-  border-bottom-color: rgba(237, 181, 111, 0.55);
-  animation: celestial-spin-counter 4.5s linear infinite;
+.ring-orbit {
+  stroke: rgba(247, 241, 231, 0.22);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 6;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: celestial-orbit-spin 3.6s linear infinite;
+  will-change: transform;
+}
+
+.ring-comet {
+  stroke: url(#comet-grad);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 68 172;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: celestial-comet-spin 0.95s linear infinite;
+  will-change: transform;
 }
 
 .loader-core {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  top: calc(50% - 6px);
+  left: calc(50% - 6px);
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: radial-gradient(
     circle at 35% 35%,
     #ffffff 0%,
-    #ffe8be 35%,
-    var(--signal) 70%,
-    rgba(255, 126, 74, 0.9) 100%
+    #ffe2aa 40%,
+    var(--signal) 75%,
+    rgba(255, 126, 74, 0.95) 100%
   );
   box-shadow:
     0 0 12px rgba(255, 218, 153, 0.85),
     0 0 24px rgba(237, 181, 111, 0.4);
-  animation: celestial-core-glow 2.4s ease-in-out infinite alternate;
+  animation: celestial-core-pulse 2s var(--ease-in-out) infinite alternate;
+  will-change: transform, opacity;
 }
 
 @keyframes celestial-ambient-pulse {
@@ -1371,7 +1369,7 @@ body[data-state="error"] .sky {
   }
 }
 
-@keyframes celestial-spin-clockwise {
+@keyframes celestial-comet-spin {
   0% {
     transform: rotate(0deg);
   }
@@ -1380,7 +1378,7 @@ body[data-state="error"] .sky {
   }
 }
 
-@keyframes celestial-spin-counter {
+@keyframes celestial-orbit-spin {
   0% {
     transform: rotate(360deg);
   }
@@ -1389,18 +1387,14 @@ body[data-state="error"] .sky {
   }
 }
 
-@keyframes celestial-core-glow {
+@keyframes celestial-core-pulse {
   0% {
-    transform: scale(0.9);
-    box-shadow:
-      0 0 10px rgba(255, 218, 153, 0.7),
-      0 0 18px rgba(237, 181, 111, 0.35);
+    transform: scale(0.88);
+    opacity: 0.85;
   }
   100% {
-    transform: scale(1.12);
-    box-shadow:
-      0 0 16px rgba(255, 235, 190, 0.95),
-      0 0 32px rgba(237, 181, 111, 0.65);
+    transform: scale(1.15);
+    opacity: 1;
   }
 }
 
@@ -3302,6 +3296,11 @@ body[data-state="ready"] .ready {
   .weather-canvas,
   .weather-contact-canvas {
     opacity: 0 !important;
+  }
+
+  .ring-comet {
+    stroke-dasharray: 238;
+    opacity: 0.75;
   }
 
   body[data-state="ready"][data-weather="thunder"] .weather-atmosphere {

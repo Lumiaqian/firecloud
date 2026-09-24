@@ -148,13 +148,14 @@ flowchart TD
     - 未达到阈值 $\to$ 应用 `--ease-drawer` 平滑弹回原位（Settling）。
 
 ### 3.4 天体日冕加载器规范 (Celestial Twilight Corona Loader)
-告别生硬机械的通用 1px CSS 细圈 Spinner，构建具有天体物理学美感的霞光透光加载体系：
-- **地平线暮光氛围场 (`.loader-ambient`)**：在天体背部叠加柔和漫射的径向渐变辉光（`filter: blur(20px)`），打破黑色背景的冰冷感，带来黎明或暮光即将来临的温润微光感。
-- **双重天体轨道环 (`.loader-ring--outer` / `.loader-ring--inner`)**：
-  - **外环日冕彗尾 (`--outer`)**：82px 直径，通过 `conic-gradient` 顺时针旋转，形成无接缝的渐进衰减光芒彗尾，伴随柔和的 drop-shadow 投影。
-  - **内环星盘刻度 (`--inner`)**：54px 直径，虚线发丝逆时针匀速旋转，形成内外反向共振的精密切割感。
-- **中央脉冲日核 (`.loader-core`)**：中心 14px 微型日轮，具备高饱和日核高光（`radial-gradient`）与柔和的脉冲呼吸缩放（Scale: 0.9 ~ 1.12），赋予加载过程“生命跳动”感。
-- **文字与呼吸动效**：标题 `正在读取天空` 采用古典宋体微光渐变，副标题 `loading-text` 配置优雅呼吸淡入，且支持 `@media (prefers-reduced-motion: reduce)` 无障碍静态降级。
+告别生硬机械的通用 1px CSS 细圈 Spinner，严格遵循 Emil Kowalski 动效哲学与 Apple 界面物理学构建具有天体美感的霞光透光加载体系：
+- **感知性能法则 (Perceived Performance)**：根据 `emil-design-eng` 规范，过慢的转圈会直接放大用户对卡顿的心理感知；外轨日冕彗尾采用 `0.95s` 匀速旋转，赋予界面敏捷、充满活力的实时响应感。
+- **100% GPU 合成层加速 (Strict GPU-Only Motion)**：严格禁绝在 `@keyframes` 中直接动画改变 `box-shadow` 或 `filter`（防止浏览器逐帧触发 CPU 重绘与 Layout Thrashing）；全量动效仅作用于 `transform` 与 `opacity`。
+- **高保真矢量双天体轨道 (`.loader-rings`)**：采用精细 SVG 矢量绘制，杜绝圆角 Mask 在特定浏览器上的边缘方形伪影（Mask Corner Glitch）：
+  - **外轨日冕彗尾 (`.ring-comet`)**：88px 矢量环，采用渐变彗尾与圆润端头（`stroke-linecap: round`），搭配微弱落日光晕（`drop-shadow`）顺时针巡弋。
+  - **内轨星盘刻度 (`.ring-orbit`)**：52px 虚线同心圆环，以 3.6s 逆时针匀速旋转，营造天文仪器般的深邃天体韵律。
+  - **微型日核与地平线辉光 (`.loader-core` / `.loader-ambient`)**：中心 12px 金色日核与背衬柔和漫射光晕，仅通过 `scale` 和 `opacity` 进行 2~3s 的呼吸起伏。
+- **无障碍降级与进场收敛**：面板进场严格遵循“禁止 `scale(0)`”规则，从 `scale(0.96) translateY(4px)` 平滑展开；在 `@media (prefers-reduced-motion: reduce)` 下暂停旋转，日冕彗尾自动合拢为纯净静态光环。
 
 ---
 
