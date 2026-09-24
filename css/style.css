@@ -1,35 +1,4 @@
-@property --sky-top {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #101b2c;
-}
-
-@property --sky-mid {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #35434d;
-}
-
-@property --sky-horizon {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #b37e61;
-}
-
-@property --sky-glow {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: rgba(241, 183, 115, 0.42);
-}
-
-@property --signal {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #edb56f;
-}
-
 :root {
-  view-transition-name: none;
   color-scheme: dark;
   --ink: #f7f1e7;
   --muted: rgba(247, 241, 231, 0.86);
@@ -352,13 +321,6 @@ body {
   overflow-x: hidden;
   color: var(--ink);
   background: var(--sky-top);
-  transition:
-    --sky-top 600ms var(--ease-out),
-    --sky-mid 600ms var(--ease-out),
-    --sky-horizon 600ms var(--ease-out),
-    --sky-glow 600ms var(--ease-out),
-    --signal 400ms var(--ease-out),
-    background-color 600ms var(--ease-out);
 }
 
 body::after {
@@ -417,13 +379,7 @@ a {
       transparent 70%
     ),
     linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 58%, var(--sky-horizon) 100%);
-  transition:
-    --sky-top 600ms var(--ease-out),
-    --sky-mid 600ms var(--ease-out),
-    --sky-horizon 600ms var(--ease-out),
-    --sky-glow 600ms var(--ease-out),
-    background 600ms var(--ease-out),
-    filter 500ms var(--ease-out);
+  transition: background 600ms var(--ease-out), filter 500ms var(--ease-out);
 }
 
 .sky::before {
@@ -1132,53 +1088,6 @@ body[data-state="ready"] .top-actions {
   flex: 1;
 }
 
-.panel:not([hidden]) {
-  view-transition-name: app-panel;
-}
-
-html[data-transitioning="panel"] .panel {
-  animation: none !important;
-}
-
-::view-transition-group(app-panel) {
-  animation-duration: 220ms;
-  animation-timing-function: var(--ease-out);
-}
-
-::view-transition-old(app-panel) {
-  animation: panel-vt-out 160ms var(--ease-out) both;
-}
-
-::view-transition-new(app-panel) {
-  animation: panel-vt-in 220ms var(--ease-out) both;
-}
-
-@keyframes panel-vt-out {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.99);
-    filter: blur(2px);
-  }
-}
-
-@keyframes panel-vt-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.99) translateY(4px);
-    filter: blur(2px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0);
-  }
-}
-
 .welcome {
   padding: clamp(76px, 13vh, 144px) 0 92px;
   display: grid;
@@ -1368,17 +1277,15 @@ html[data-transitioning="panel"] .panel {
 }
 
 .panel.loading:not([hidden]) {
-  animation: panel-fade-in 260ms var(--ease-out) both;
+  animation: panel-fade-in 180ms var(--ease-out) both;
 }
 
 @keyframes panel-fade-in {
   from {
-    opacity: 0.15;
-    transform: scale(0.99) translateY(4px);
+    opacity: 0;
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
   }
 }
 
@@ -2826,16 +2733,6 @@ dialog.liquid-glass::backdrop {
   }
 }
 
-@keyframes panel-enter {
-  from {
-    opacity: 0.15;
-    transform: scale(0.99) translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
 
 @keyframes glass-sheet-in {
   from {
@@ -3040,7 +2937,7 @@ dialog.liquid-glass::backdrop {
 
 body[data-state="welcome"] .welcome,
 body[data-state="ready"] .ready {
-  animation: panel-enter 260ms var(--ease-spring) both;
+  animation: panel-fade-in 200ms var(--ease-out) both;
 }
 
 :focus-visible {
@@ -3446,15 +3343,6 @@ body[data-state="ready"] .ready {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-
-  ::view-transition-group(app-panel),
-  ::view-transition-old(app-panel),
-  ::view-transition-new(app-panel) {
-    animation: none !important;
-    animation-duration: 0.01ms !important;
-  }
-
   .sky::before,
   .sky::after {
     animation: none !important;

@@ -111,35 +111,13 @@ function writeCache(bundle) {
   storage.set(DATA_KEY, Object.fromEntries(newest));
 }
 
-let activeTransitionId = 0;
 function setPanel(name) {
   if (name !== "ready") stopTicker();
-  const updateDOM = () => {
-    document.body.dataset.state = name;
-    for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
-    const ready = name === "ready";
-    elements.favorite.hidden = !ready;
-    elements.refresh.hidden = !ready;
-  };
-
-  const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-  if (!prefersReduced && typeof document.startViewTransition === "function") {
-    const transitionId = ++activeTransitionId;
-    document.documentElement.dataset.transitioning = "panel";
-    try {
-      const transition = document.startViewTransition(updateDOM);
-      transition.finished.finally(() => {
-        if (activeTransitionId === transitionId) {
-          delete document.documentElement.dataset.transitioning;
-        }
-      });
-    } catch {
-      delete document.documentElement.dataset.transitioning;
-      updateDOM();
-    }
-  } else {
-    updateDOM();
-  }
+  document.body.dataset.state = name;
+  for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
+  const ready = name === "ready";
+  elements.favorite.hidden = !ready;
+  elements.refresh.hidden = !ready;
 }
 
 function setBusy(busy) {
