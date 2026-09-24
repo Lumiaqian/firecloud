@@ -12,7 +12,7 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=38">
+  <link rel="stylesheet" href="css/style.css?v=39">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
@@ -150,8 +150,8 @@
     <div class="drawer-handle" id="dev-lab-handle" aria-hidden="true"></div>
     <form method="dialog" class="dialog-head">
       <div>
-        <p class="dev-badge">LABS · 动效实验室</p>
-        <h2 id="dev-lab-title">Loading 动效配置</h2>
+        <p class="dev-badge">LABS · LIQUID GLASS</p>
+        <h2 id="dev-lab-title">天体穹顶观测台</h2>
       </div>
       <button class="icon-button dialog-close" value="cancel" aria-label="关闭">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -159,57 +159,37 @@
     </form>
     
     <div class="dev-lab-content">
-      <div class="dev-preview-box">
-        <div class="dev-preview-stage" id="dev-preview-stage"></div>
-        <span class="dev-preview-label">实时效果预览</span>
+      <div class="lens-liquid-dome" id="dev-preview-stage"></div>
+
+      <div class="lens-liquid-capsule" role="tablist" aria-label="选择动效风格">
+        <div class="lens-liquid-slider" id="dev-lens-slider"></div>
+        <button class="lens-tab" type="button" role="tab" data-active="true" data-style="horizon" data-idx="0" id="tab-horizon">地平线</button>
+        <button class="lens-tab" type="button" role="tab" data-active="false" data-style="kepler" data-idx="1" id="tab-kepler">开普勒</button>
+        <button class="lens-tab" type="button" role="tab" data-active="false" data-style="prismatic" data-idx="2" id="tab-prismatic">色散环</button>
       </div>
 
-      <div class="dev-options" role="radiogroup" aria-label="选择Loading动效风格">
-        <button class="dev-option-card" type="button" data-loader-style="horizon" aria-checked="true">
-          <div class="dev-option-info">
-            <div class="dev-option-header">
-              <strong>地平线霞光探测仪</strong>
-              <span class="dev-pill-badge">默认</span>
-            </div>
-            <p>晨昏弧线巡扫、余晖漫射与气流升腾，沉静克制</p>
-          </div>
-          <span class="dev-radio-check" aria-hidden="true"></span>
-        </button>
-
-        <button class="dev-option-card" type="button" data-loader-style="kepler" aria-checked="false">
-          <div class="dev-option-info">
-            <div class="dev-option-header">
-              <strong>天体开普勒引力流</strong>
-            </div>
-            <p>物理级非线性引力弹弓加速，等离子彗芒长拖尾</p>
-          </div>
-          <span class="dev-radio-check" aria-hidden="true"></span>
-        </button>
-
-        <button class="dev-option-card" type="button" data-loader-style="prismatic" aria-checked="false">
-          <div class="dev-option-info">
-            <div class="dev-option-header">
-              <strong>霞光分光色散环</strong>
-            </div>
-            <p>双层同心环对向互质旋动，交叠处激发暮色光谱</p>
-          </div>
-          <span class="dev-radio-check" aria-hidden="true"></span>
-        </button>
+      <div class="lens-liquid-toolbar">
+        <span>动效速率调控</span>
+        <div class="lens-speed-options">
+          <button class="lens-speed-btn" type="button" data-speed="2">0.5x</button>
+          <button class="lens-speed-btn" type="button" data-speed="1" data-active="true">1x</button>
+          <button class="lens-speed-btn" type="button" data-speed="0.5">2x</button>
+        </div>
       </div>
 
       <div class="dev-lab-actions">
-        <button class="dev-btn" id="dev-btn-test-loading" type="button">
-          <span>全屏测试 Loading (3秒)</span>
+        <button class="btn-liquid-secondary" id="dev-btn-test-loading" type="button">
+          <span>全屏实测 3s</span>
         </button>
-        <button class="dev-btn is-primary" id="dev-btn-save-default" type="button">
-          <span>设为默认</span>
+        <button class="btn-liquid-primary" id="dev-btn-save-default" type="button">
+          <span>设为全局默认</span>
         </button>
       </div>
       
-      <p class="dev-hint">提示：连续点击顶部 Logo 3 次或按快捷键 Shift + D 即可随时唤起此面板</p>
+      <p class="dev-hint">提示：连续点击顶部 Logo 3 次或按快捷键 Shift + D 即可随时唤起此观测台</p>
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=24"></script>
+  <script type="module" src="js/app.mjs?v=25"></script>
 </body>
 </html>

@@ -31,6 +31,7 @@ const elements = {
   favorite: $("favorite-button"), refresh: $("refresh-button"), locate: $("locate-button"),
   welcomeSearch: $("welcome-search"), geoNotice: $("geo-notice"), loadingText: $("loading-text"),
   loaderStage: $("loader-stage"), devDialog: $("dev-lab-dialog"), devPreviewStage: $("dev-preview-stage"),
+  devLensSlider: $("dev-lens-slider"),
   devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
@@ -873,25 +874,38 @@ initFluidDrawer(elements.devDialog);
 
 const LOADER_STORAGE_KEY = "firecloud:loader_style:v1";
 let currentLoaderStyle = storage.get(LOADER_STORAGE_KEY, "horizon");
+let currentSpeedFactor = 1;
 
 function getLoaderHTML(style) {
   if (style === "kepler") {
     return `
       <div class="loader-kepler" aria-hidden="true">
         <span class="kepler-ambient"></span>
-        <svg class="kepler-svg" viewBox="0 0 96 96" fill="none">
+        <span class="kepler-shockwave"></span>
+        <svg class="kepler-svg" viewBox="0 0 104 104" fill="none">
           <defs>
-            <linearGradient id="kepler-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffd07c" stop-opacity="1"/>
-              <stop offset="50%" stop-color="#edb56f" stop-opacity="0.6"/>
+            <linearGradient id="kepler-plasma-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+              <stop offset="25%" stop-color="#ffd07c" stop-opacity="1"/>
+              <stop offset="65%" stop-color="#ff7e4a" stop-opacity="0.8"/>
               <stop offset="100%" stop-color="#ff7e4a" stop-opacity="0"/>
             </linearGradient>
+            <linearGradient id="kepler-dust-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#a855f7" stop-opacity="0"/>
+              <stop offset="40%" stop-color="#a855f7" stop-opacity="0.5"/>
+              <stop offset="80%" stop-color="#9ebbf8" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#9ebbf8" stop-opacity="0"/>
+            </linearGradient>
           </defs>
-          <ellipse class="kepler-orbit" cx="48" cy="48" rx="42" ry="26" transform="rotate(-15 48 48)" />
-          <circle class="kepler-sun-ring" cx="48" cy="48" r="14" />
-          <ellipse class="kepler-comet" cx="48" cy="48" rx="42" ry="26" transform="rotate(-15 48 48)" />
+          <ellipse class="kepler-orbit-cross" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
+          <ellipse class="kepler-dust-stream" stroke="url(#kepler-dust-grad)" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
+          <ellipse class="kepler-orbit-guide" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
+          <ellipse class="kepler-plasma-comet" stroke="url(#kepler-plasma-grad)" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
         </svg>
-        <span class="kepler-core"></span>
+        <div class="kepler-star-system">
+          <span class="kepler-corona-outer"></span>
+          <span class="kepler-photosphere"></span>
+        </div>
       </div>
     `;
   }
@@ -899,25 +913,43 @@ function getLoaderHTML(style) {
     return `
       <div class="loader-prismatic" aria-hidden="true">
         <span class="prism-ambient"></span>
-        <svg class="prism-svg" viewBox="0 0 92 92" fill="none">
+        <div class="prism-diffraction-rays">
+          <span class="prism-ray r1"></span>
+          <span class="prism-ray r2"></span>
+          <span class="prism-ray r3"></span>
+        </div>
+        <svg class="prism-svg" viewBox="0 0 104 104" fill="none">
           <defs>
-            <linearGradient id="prism-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffd07c"/>
-              <stop offset="60%" stop-color="#edb56f"/>
-              <stop offset="100%" stop-color="#edb56f" stop-opacity="0.1"/>
+            <linearGradient id="prism-twilight-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="30%" stop-color="#ffd07c"/>
+              <stop offset="75%" stop-color="#edb56f"/>
+              <stop offset="100%" stop-color="#edb56f" stop-opacity="0.05"/>
             </linearGradient>
-            <linearGradient id="prism-violet" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#9ebbf8"/>
-              <stop offset="50%" stop-color="#c48aff"/>
-              <stop offset="100%" stop-color="#ff75a0" stop-opacity="0.1"/>
+            <linearGradient id="prism-twilight-aurora" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="35%" stop-color="#9ebbf8"/>
+              <stop offset="70%" stop-color="#c48aff"/>
+              <stop offset="100%" stop-color="#c48aff" stop-opacity="0.05"/>
+            </linearGradient>
+            <linearGradient id="prism-solar-ring" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#fff5e0"/>
+              <stop offset="45%" stop-color="#ff9f43"/>
+              <stop offset="90%" stop-color="#ee5253"/>
+              <stop offset="100%" stop-color="#ee5253" stop-opacity="0"/>
             </linearGradient>
           </defs>
-          <circle class="prism-track-outer" cx="46" cy="46" r="38" />
-          <circle class="prism-track-inner" cx="46" cy="46" r="26" />
-          <circle class="prism-ring-outer" cx="46" cy="46" r="38" />
-          <circle class="prism-ring-inner" cx="46" cy="46" r="26" />
+          <circle class="prism-track-outer" cx="52" cy="52" r="42" />
+          <circle class="prism-track-middle" cx="52" cy="52" r="30" />
+          <circle class="prism-track-inner" cx="52" cy="52" r="18" />
+          <circle class="prism-ring-outer" stroke="url(#prism-twilight-gold)" cx="52" cy="52" r="42" />
+          <circle class="prism-ring-middle" stroke="url(#prism-twilight-aurora)" cx="52" cy="52" r="30" />
+          <circle class="prism-ring-inner" stroke="url(#prism-solar-ring)" cx="52" cy="52" r="18" />
         </svg>
-        <span class="prism-sparkle"></span>
+        <div class="prism-stellar-core">
+          <span class="prism-core-glow"></span>
+          <span class="prism-core-spark"></span>
+        </div>
       </div>
     `;
   }
@@ -946,6 +978,22 @@ function getLoaderHTML(style) {
   `;
 }
 
+function applySpeedToStage(stageEl, factor) {
+  if (!stageEl) return;
+  const anims = stageEl.querySelectorAll('[class*="kepler"], [class*="prism"], [class*="horizon"]');
+  anims.forEach((el) => {
+    if (!el.hasAttribute("data-orig-duration")) {
+      const cs = window.getComputedStyle(el);
+      const dur = parseFloat(cs.animationDuration);
+      if (dur > 0) el.setAttribute("data-orig-duration", dur);
+    }
+    const orig = parseFloat(el.getAttribute("data-orig-duration"));
+    if (orig && orig > 0) {
+      el.style.animationDuration = `${orig * factor}s`;
+    }
+  });
+}
+
 function applyLoaderStyle(style) {
   currentLoaderStyle = style;
   if (elements.loaderStage) {
@@ -953,9 +1001,16 @@ function applyLoaderStyle(style) {
   }
   if (elements.devPreviewStage) {
     elements.devPreviewStage.innerHTML = getLoaderHTML(style);
+    if (currentSpeedFactor !== 1) applySpeedToStage(elements.devPreviewStage, currentSpeedFactor);
   }
-  document.querySelectorAll(".dev-option-card").forEach((card) => {
-    card.setAttribute("aria-checked", String(card.dataset.loaderStyle === style));
+  const tabs = document.querySelectorAll(".lens-tab");
+  tabs.forEach((tab) => {
+    const active = tab.dataset.style === style;
+    tab.setAttribute("data-active", String(active));
+    if (active && elements.devLensSlider) {
+      const idx = parseInt(tab.dataset.idx, 10);
+      elements.devLensSlider.style.transform = `translateX(${idx * 100}%)`;
+    }
   });
 }
 
@@ -993,9 +1048,22 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-document.querySelectorAll(".dev-option-card").forEach((card) => {
-  card.addEventListener("click", () => {
-    applyLoaderStyle(card.dataset.loaderStyle);
+document.querySelectorAll(".lens-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    applyLoaderStyle(tab.dataset.style);
+    if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+  });
+});
+
+document.querySelectorAll(".lens-speed-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".lens-speed-btn").forEach(b => b.removeAttribute("data-active"));
+    btn.setAttribute("data-active", "true");
+    currentSpeedFactor = parseFloat(btn.dataset.speed) || 1;
+    if (elements.devPreviewStage) {
+      applySpeedToStage(elements.devPreviewStage, currentSpeedFactor);
+    }
+    if (navigator.vibrate) try { navigator.vibrate(10); } catch {}
   });
 });
 

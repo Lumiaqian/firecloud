@@ -1412,82 +1412,153 @@ body[data-state="ready"] .top-actions {
   }
 }
 
-/* 2. Keplerian Slingshot Orbit */
+/* 2. Kepler Relativistic Slingshot & Solar Ripple */
 .loader-kepler {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 104px;
+  height: 104px;
   display: grid;
   place-items: center;
 }
 
 .kepler-ambient {
   position: absolute;
-  inset: -14px;
+  inset: -16px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(237, 181, 111, 0.35) 0%,
-    rgba(255, 126, 74, 0.15) 45%,
-    transparent 72%
+    rgba(237, 181, 111, 0.38) 0%,
+    rgba(255, 126, 74, 0.16) 45%,
+    rgba(168, 85, 247, 0.08) 65%,
+    transparent 78%
   );
-  filter: blur(18px);
+  filter: blur(20px);
   animation: kepler-ambient-pulse 2.8s var(--ease-in-out) infinite alternate;
   pointer-events: none;
 }
 
-.kepler-svg {
-  width: 96px;
-  height: 96px;
-  overflow: visible;
-  filter: drop-shadow(0 0 8px rgba(237, 181, 111, 0.45));
-}
-
-.kepler-orbit {
-  stroke: rgba(247, 241, 231, 0.12);
-  stroke-width: 1.4;
-  stroke-dasharray: 4 6;
-}
-
-.kepler-sun-ring {
-  stroke: rgba(247, 241, 231, 0.2);
-  stroke-width: 1.2;
-}
-
-.kepler-comet {
-  stroke: url(#kepler-grad);
-  stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-dasharray: 56 180;
-  animation: kepler-slingshot 1.7s cubic-bezier(0.65, 0.05, 0.2, 0.95) infinite;
-}
-
-.kepler-core {
+/* Gravitational shockwave expanding at perihelion */
+.kepler-shockwave {
   position: absolute;
-  top: calc(50% - 6px);
-  left: calc(50% - 6px);
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  margin-left: -22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 208, 124, 0.85);
+  box-shadow: 0 0 16px rgba(255, 208, 124, 0.6), inset 0 0 10px rgba(255, 126, 74, 0.4);
+  pointer-events: none;
+  animation: kepler-shockwave-pulse 2.2s cubic-bezier(0.1, 0.8, 0.25, 1) infinite;
+}
+
+.kepler-svg {
+  width: 104px;
+  height: 104px;
+  overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(237, 181, 111, 0.5));
+}
+
+.kepler-orbit-guide {
+  stroke: rgba(247, 241, 231, 0.12);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 6;
+  fill: none;
+}
+
+.kepler-orbit-cross {
+  stroke: rgba(168, 85, 247, 0.2);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  fill: none;
+}
+
+.kepler-dust-stream {
+  stroke: url(#kepler-dust-grad);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 45 140;
+  fill: none;
+  animation: kepler-dust-drift 3.2s linear infinite reverse;
+}
+
+.kepler-plasma-comet {
+  stroke: url(#kepler-plasma-grad);
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  stroke-dasharray: 75 200;
+  fill: none;
+  animation: kepler-slingshot 2.2s cubic-bezier(0.8, 0.05, 0.2, 0.95) infinite;
+}
+
+/* Multi-tier Stellar Core */
+.kepler-star-system {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -12px;
+  margin-left: -12px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.kepler-corona-outer {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 208, 124, 0.7) 0%, rgba(255, 126, 74, 0.3) 60%, transparent 100%);
+  filter: blur(5px);
+  animation: kepler-corona-pulse 2.2s ease-in-out infinite alternate;
+}
+
+.kepler-photosphere {
+  position: absolute;
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background: radial-gradient(
     circle at 35% 35%,
     #ffffff 0%,
-    #ffe2aa 40%,
-    var(--signal) 75%,
-    rgba(255, 126, 74, 0.95) 100%
+    #fff3d1 30%,
+    #ffd07c 65%,
+    #ff6e38 100%
   );
   box-shadow:
-    0 0 12px rgba(255, 218, 153, 0.85),
-    0 0 24px rgba(237, 181, 111, 0.4);
-  animation: kepler-core-breathe 2s var(--ease-in-out) infinite alternate;
+    0 0 12px rgba(255, 255, 255, 0.95),
+    0 0 24px rgba(255, 208, 124, 0.8),
+    0 0 40px rgba(255, 110, 56, 0.5);
 }
 
 @keyframes kepler-slingshot {
+  0% { stroke-dashoffset: 40; }
+  100% { stroke-dashoffset: -235; }
+}
+
+@keyframes kepler-dust-drift {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 185; }
+}
+
+@keyframes kepler-shockwave-pulse {
   0% {
-    stroke-dashoffset: 0;
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  75% {
+    transform: scale(2.0);
+    opacity: 0;
   }
   100% {
-    stroke-dashoffset: -236;
+    transform: scale(2.2);
+    opacity: 0;
   }
 }
 
@@ -1496,79 +1567,144 @@ body[data-state="ready"] .top-actions {
   100% { transform: scale(1.15); opacity: 0.95; }
 }
 
-@keyframes kepler-core-breathe {
-  0% { transform: scale(0.92); }
-  100% { transform: scale(1.08); }
+@keyframes kepler-corona-pulse {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  100% { transform: scale(1.25); opacity: 0.95; }
 }
 
-/* 3. Prismatic Twilight Dispersion */
+/* 3. Prismatic Twilight Diffraction & Fresnel Halo */
 .loader-prismatic {
   position: relative;
-  width: 92px;
-  height: 92px;
+  width: 104px;
+  height: 104px;
   display: grid;
   place-items: center;
 }
 
 .prism-ambient {
   position: absolute;
-  inset: -12px;
+  inset: -14px;
   border-radius: 50%;
   background: radial-gradient(
     circle,
     rgba(255, 208, 124, 0.28) 0%,
-    rgba(196, 138, 255, 0.16) 48%,
-    transparent 72%
+    rgba(196, 138, 255, 0.22) 45%,
+    rgba(99, 102, 241, 0.14) 65%,
+    transparent 80%
   );
-  filter: blur(18px);
+  filter: blur(20px);
   animation: prism-glow 3s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
+/* Hexagonal astronomical diffraction spikes */
+.prism-diffraction-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -48px;
+  margin-left: -48px;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: prism-diffraction-spin 20s linear infinite;
+}
+
+.prism-ray {
+  position: absolute;
+  width: 94px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(158, 187, 248, 0.35) 25%, #ffffff 50%, rgba(255, 208, 124, 0.35) 75%, transparent 100%);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+}
+
+.prism-ray.r1 { transform: rotate(0deg); }
+.prism-ray.r2 { transform: rotate(60deg); }
+.prism-ray.r3 { transform: rotate(120deg); }
+
 .prism-svg {
-  width: 92px;
-  height: 92px;
+  width: 104px;
+  height: 104px;
   overflow: visible;
-  filter: drop-shadow(0 0 8px rgba(237, 181, 111, 0.35));
+  filter: drop-shadow(0 0 10px rgba(237, 181, 111, 0.35));
 }
 
-.prism-track-outer {
-  stroke: rgba(247, 241, 231, 0.1);
-  stroke-width: 1.5;
-}
-
+.prism-track-outer,
+.prism-track-middle,
 .prism-track-inner {
-  stroke: rgba(247, 241, 231, 0.08);
-  stroke-width: 1.2;
-  stroke-dasharray: 2 4;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
 }
+.prism-track-outer { stroke-width: 1; stroke-dasharray: 2 4; }
+.prism-track-middle { stroke-width: 0.8; stroke-dasharray: 1 3; }
+.prism-track-inner { stroke-width: 0.8; stroke-dasharray: 2 6; }
 
 .prism-ring-outer {
-  stroke: url(#prism-gold);
-  stroke-width: 2.6;
+  fill: none;
+  stroke: url(#prism-twilight-gold);
+  stroke-width: 2.8;
   stroke-linecap: round;
-  stroke-dasharray: 74 165;
-  transform-origin: center;
-  animation: prism-spin-ccw 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  stroke-dasharray: 84 190;
+  transform-origin: 52px 52px;
+  animation: prism-spin-ccw 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.prism-ring-middle {
+  fill: none;
+  stroke: url(#prism-twilight-aurora);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 58 140;
+  transform-origin: 52px 52px;
+  animation: prism-spin-cw 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .prism-ring-inner {
-  stroke: url(#prism-violet);
-  stroke-width: 2.2;
+  fill: none;
+  stroke: url(#prism-solar-ring);
+  stroke-width: 2;
   stroke-linecap: round;
-  stroke-dasharray: 48 115;
-  transform-origin: center;
-  animation: prism-spin-cw 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  stroke-dasharray: 42 110;
+  transform-origin: 52px 52px;
+  animation: prism-spin-ccw 1.8s linear infinite;
 }
 
-.prism-sparkle {
+.prism-stellar-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -7px;
+  margin-left: -7px;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.prism-core-glow {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 208, 124, 0.5) 50%, transparent 100%);
+  filter: blur(4px);
+  animation: prism-sparkle-pulse 1.6s ease-in-out infinite alternate;
+}
+
+.prism-core-spark {
   position: absolute;
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 208, 124, 0.6);
-  animation: prism-sparkle-pulse 1.4s ease-in-out infinite alternate;
+  box-shadow:
+    0 0 10px #ffffff,
+    0 0 20px #ffd07c,
+    0 0 35px #a855f7;
+  animation: prism-sparkle-pulse 1.6s ease-in-out infinite alternate;
 }
 
 @keyframes prism-spin-ccw {
@@ -1577,6 +1713,21 @@ body[data-state="ready"] .top-actions {
 }
 
 @keyframes prism-spin-cw {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes prism-breathe-outer {
+  0% { transform: scale(0.94); }
+  100% { transform: scale(1.06); }
+}
+
+@keyframes prism-breathe-middle {
+  0% { transform: scale(1.08); }
+  100% { transform: scale(0.92); }
+}
+
+@keyframes prism-diffraction-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
@@ -3572,9 +3723,18 @@ body[data-state="ready"] .ready {
   }
 }
 
-/* Dev Lab Dialog & Controls */
+/* Dev Lab Dialog & Controls (iOS Liquid Glass Lens Observatory) */
 .dev-lab-dialog {
-  width: min(calc(100% - 32px), 520px);
+  width: min(calc(100% - 32px), 480px);
+  background: rgba(14, 23, 36, 0.65) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(210%) brightness(1.08) !important;
+  backdrop-filter: blur(36px) saturate(210%) brightness(1.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow:
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 0.45),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.35),
+    0 28px 80px rgba(0, 0, 0, 0.68),
+    0 0 45px rgba(237, 181, 111, 0.12) !important;
 }
 
 .dev-badge {
@@ -3584,205 +3744,222 @@ body[data-state="ready"] .ready {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: var(--signal);
-  background: rgba(237, 181, 111, 0.12);
-  border: 1px solid rgba(237, 181, 111, 0.28);
+  color: #ffd07c;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   margin-bottom: 6px;
 }
 
-.dev-preview-box {
-  margin: 16px 0 20px;
-  padding: 24px 20px 14px;
-  border-radius: var(--radius-card);
-  background: rgba(8, 16, 26, 0.52);
-  border: 1px solid var(--line-strong);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 124px;
-}
-
-.dev-preview-stage {
-  min-height: 80px;
+.lens-liquid-dome {
+  position: relative;
+  width: 100%;
+  height: 168px;
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: grid;
   place-items: center;
+  margin: 16px 0 18px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.32),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
 }
 
-.dev-preview-label {
-  margin-top: 10px;
-  font-size: 11px;
-  color: var(--faint);
-  letter-spacing: 0.08em;
+.lens-liquid-dome::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.02) 28%, transparent 60%);
+  pointer-events: none;
 }
 
-.dev-options {
+.lens-liquid-capsule {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 22px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  gap: 2px;
+  margin-bottom: 14px;
 }
 
-.dev-option-card {
+/* Genuine Apple translucent neutral glass thumb */
+.lens-liquid-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc((100% - 10px) / 3);
+  height: calc(100% - 6px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 0.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.25),
+    0 1px 1px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1), width 280ms cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
+}
+
+.lens-tab {
   appearance: none;
-  -webkit-appearance: none;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.52);
   font: inherit;
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: var(--radius-control);
-  background: rgba(16, 27, 40, 0.55);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 0;
+  border-radius: 999px;
+  cursor: pointer;
+  text-align: center;
+  transition: color 160ms ease-out, transform 80ms ease-out;
+}
+.lens-tab:active { transform: scale(0.97); }
+
+.lens-tab[data-active="true"] {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.lens-liquid-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  cursor: pointer;
-  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out), transform 160ms var(--ease-out);
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 18px;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .dev-option-card:hover {
-    background: rgba(24, 38, 54, 0.7);
-    border-color: rgba(255, 255, 255, 0.22);
-  }
-}
-
-.dev-option-card:active {
-  transform: scale(0.985);
-}
-
-.dev-option-card[aria-checked="true"] {
-  border-color: var(--signal);
-  background: rgba(237, 181, 111, 0.12);
-  box-shadow: inset 0 0 16px rgba(237, 181, 111, 0.08);
-}
-
-.dev-option-header {
+.lens-speed-options {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.dev-option-header strong {
-  font-size: 14px;
+.lens-speed-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--ink);
+  cursor: pointer;
+  transition: all 140ms ease-out;
 }
+.lens-speed-btn:active { transform: scale(0.95); }
 
-.dev-pill-badge {
-  font-size: 10px;
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  background: var(--signal);
-  color: #101821;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-}
-
-.dev-option-info p {
-  margin: 5px 0 0;
-  font-size: 12px;
-  color: var(--faint);
-  line-height: 1.45;
-}
-
-.dev-radio-check {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1.5px solid var(--faint);
-  position: relative;
-  flex-shrink: 0;
-  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out);
-}
-
-.dev-option-card[aria-checked="true"] .dev-radio-check {
-  border-color: var(--signal);
-  background: var(--signal);
-  box-shadow: 0 0 8px rgba(237, 181, 111, 0.6);
-}
-
-.dev-option-card[aria-checked="true"] .dev-radio-check::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: #101821;
+.lens-speed-btn[data-active="true"] {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-weight: 600;
 }
 
 .dev-lab-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-.dev-btn {
+.btn-liquid-secondary {
   appearance: none;
-  -webkit-appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
   font: inherit;
-  min-height: 44px;
-  padding: 0 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
+  height: 46px;
   border-radius: var(--radius-control);
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--ink);
-  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out), transform 120ms var(--ease-out);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  transition: all 140ms ease-out;
 }
+.btn-liquid-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+.btn-liquid-secondary:active { transform: scale(0.97); }
 
-@media (hover: hover) and (pointer: fine) {
-  .dev-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.28);
-  }
+.btn-liquid-primary {
+  appearance: none;
+  border: 0;
+  background: #ffffff;
+  color: #0c1520;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  height: 46px;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transition: all 140ms ease-out;
 }
-
-.dev-btn:active {
-  transform: scale(0.98);
+.btn-liquid-primary:hover {
+  background: #f4f6f8;
+  transform: translateY(-0.5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
-
-.dev-btn.is-primary {
-  border-color: var(--signal);
-  background: var(--signal);
-  color: #101821;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .dev-btn.is-primary:hover {
-    background: #f7c586;
-    border-color: #f7c586;
-  }
-}
+.btn-liquid-primary:active { transform: scale(0.97); }
 
 .dev-hint {
   font-size: 11px;
   color: var(--faint);
   text-align: center;
   line-height: 1.5;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .horizon-beam,
   .horizon-glow,
   .horizon-vapor,
-  .kepler-comet,
+  .kepler-plasma-comet,
+  .kepler-dust-stream,
+  .kepler-shockwave,
   .kepler-ambient,
-  .kepler-core,
+  .kepler-corona-outer,
   .prism-ring-outer,
+  .prism-ring-middle,
   .prism-ring-inner,
+  .prism-diffraction-rays,
   .prism-ambient,
-  .prism-sparkle {
+  .prism-core-glow,
+  .prism-core-spark,
+  .lens-liquid-slider {
     animation: none !important;
+    transition: none !important;
   }
 }
 
