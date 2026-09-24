@@ -1,8 +1,8 @@
-const SHELL_CACHE = "firecloud-shell-v33";
+const SHELL_CACHE = "firecloud-shell-v34";
 const SHELL = [
   "./",
   "./index.html",
-  "./css/style.css?v=33",
+  "./css/style.css?v=34",
   "./js/forecast.mjs?v=6",
   "./js/api.mjs?v=7",
   "./js/weather-fx.mjs?v=8",

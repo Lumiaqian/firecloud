@@ -1415,7 +1415,7 @@ body[data-state="error"] .sky {
   color: var(--faint);
   font-size: 13px;
   letter-spacing: 0.04em;
-  animation: loading-text-pulse 2.6s ease-in-out infinite alternate;
+  animation: loading-text-pulse 2.6s var(--ease-in-out) infinite alternate;
 }
 
 @keyframes loading-text-pulse {
@@ -1480,6 +1480,11 @@ body[data-state="error"] .sky {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: color 160ms var(--ease-out), transform 140ms var(--ease-out);
+}
+
+.event-tabs button:active {
+  transform: scale(0.97);
 }
 
 .event-tabs button::after {
@@ -1491,9 +1496,14 @@ body[data-state="error"] .sky {
   border-bottom: 2px solid transparent;
 }
 
-.event-tabs button:hover,
 .event-tabs button[aria-pressed="true"] {
   color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .event-tabs button:hover {
+    color: var(--ink);
+  }
 }
 
 .event-tabs button[aria-pressed="true"]::after {
@@ -1924,16 +1934,39 @@ body[data-state="error"] .sky {
 
 @media (hover: hover) and (pointer: fine) {
   .day-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-4px) !important;
     border-color: rgba(255, 255, 255, 0.32);
     box-shadow: 0 14px 32px rgba(2, 8, 14, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 }
 
 .day-card:active {
-  transform: scale(0.985);
+  transform: scale(0.985) !important;
   transition-duration: 90ms;
 }
+
+@keyframes day-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+body[data-state="ready"] .day-card {
+  animation: day-card-in 260ms var(--ease-out) both;
+}
+
+body[data-state="ready"] .day-card:nth-child(1) { animation-delay: 30ms; }
+body[data-state="ready"] .day-card:nth-child(2) { animation-delay: 65ms; }
+body[data-state="ready"] .day-card:nth-child(3) { animation-delay: 100ms; }
+body[data-state="ready"] .day-card:nth-child(4) { animation-delay: 135ms; }
+body[data-state="ready"] .day-card:nth-child(5) { animation-delay: 170ms; }
+body[data-state="ready"] .day-card:nth-child(6) { animation-delay: 205ms; }
+body[data-state="ready"] .day-card:nth-child(7) { animation-delay: 240ms; }
 
 /* Atmospheric mood gradients inside the glass */
 .day-card[data-tier="epic"] {
@@ -2107,6 +2140,13 @@ footer div {
 footer a {
   color: var(--muted);
   text-underline-offset: 3px;
+  transition: color 140ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  footer a:hover {
+    color: var(--signal);
+  }
 }
 
 footer p {
@@ -2253,7 +2293,7 @@ dialog::backdrop {
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-control);
   background: rgba(255, 255, 255, 0.04);
-  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
 }
 
 .search-field:focus-within {
@@ -2324,6 +2364,29 @@ dialog::backdrop {
   padding: 0;
   list-style: none;
 }
+
+@keyframes search-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-results li,
+#favorites-list li {
+  animation: search-item-in 160ms var(--ease-out) both;
+}
+
+.search-results li:nth-child(1), #favorites-list li:nth-child(1) { animation-delay: 20ms; }
+.search-results li:nth-child(2), #favorites-list li:nth-child(2) { animation-delay: 45ms; }
+.search-results li:nth-child(3), #favorites-list li:nth-child(3) { animation-delay: 70ms; }
+.search-results li:nth-child(4), #favorites-list li:nth-child(4) { animation-delay: 95ms; }
+.search-results li:nth-child(5), #favorites-list li:nth-child(5) { animation-delay: 120ms; }
+.search-results li:nth-child(6), #favorites-list li:nth-child(6) { animation-delay: 145ms; }
 
 .search-results li button,
 .favorite-place {
@@ -2662,18 +2725,18 @@ dialog.liquid-glass::backdrop {
 @keyframes panel-enter {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: scale(0.98) translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 
 @keyframes glass-sheet-in {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.96);
+    transform: translateY(42px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -2873,7 +2936,7 @@ dialog.liquid-glass::backdrop {
 
 body[data-state="welcome"] .welcome,
 body[data-state="ready"] .ready {
-  animation: panel-enter 320ms var(--ease-spring) both;
+  animation: panel-enter 260ms var(--ease-spring) both;
 }
 
 :focus-visible {
