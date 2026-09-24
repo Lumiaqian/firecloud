@@ -351,6 +351,27 @@ for (const region of document.querySelectorAll("[data-scroll-region]")) {
 }
 window.addEventListener("resize", updateHorizontalScrollRegions, { passive: true });
 
+function weatherSymbolFor(metrics) {
+  const precip = metrics.precip ?? 0;
+  const low = metrics.low ?? 0;
+  const high = metrics.high ?? 0;
+  const mid = metrics.mid ?? 0;
+  if (precip > 0.5) return "🌧️";
+  if (low > 60) return "☁️";
+  if (high > 60) return "🌤️";
+  if (high + mid > 40) return "⛅";
+  return "☀️";
+}
+
+function photographicAdviceFor(metrics, score) {
+  if (metrics.precip != null && metrics.precip > 0.2) return "降水与低层云层遮蔽光路，观测受限";
+  if (score >= 80) return "透光高空卷云，年度级火烧云概率极高，建议守候";
+  if (score >= 65) return "中高云分层丰富，地平线光路良好，适宜摄影取景";
+  if (score >= 45) return "有柔和暮光漫射，可记录层次渐变天色";
+  if ((metrics.low ?? 0) > 50) return "本地低层云偏厚压制，晚霞显现几率偏低";
+  return "云层染色条件不足，整体天色趋于平淡";
+}
+
 function renderWeek(bundle) {
   elements.week.replaceChildren();
   const base = currentEventTime();
@@ -362,17 +383,55 @@ function renderWeek(bundle) {
     weekday: "short",
     timeZone
   });
+  const eventLabel = state.event === "sunset" ? "日落" : "日出";
+
   for (let day = 0; day < 7; day += 1) {
     const probe = new Date(base.getTime() + day * 86_400_000);
     const eventTime = sunTimes(probe, state.place.lat, state.place.lon)[state.event];
     const card = document.createElement("article");
     card.className = "day-card";
+
     if (!eventTime) {
-      card.innerHTML = `<span>${formatter.format(probe)}</span><strong>—</strong><small>无事件</small>`;
+      card.dataset.tier = "dull";
+      card.innerHTML = `
+        <div class="day-card-top">
+          <span class="day-card-date">${formatter.format(probe)}</span>
+          <span class="day-card-weather">🌑</span>
+        </div>
+        <div class="day-card-score-box">
+          <strong>—</strong>
+          <span class="day-card-band">极昼或无事件</span>
+        </div>
+        <div class="day-card-footer">
+          <p class="day-card-advice">当前纬度此日期无对应晨昏事件</p>
+        </div>
+      `;
     } else {
       const metrics = metricsAt(bundle, eventTime);
       const score = scoreSky(metrics);
-      card.innerHTML = `<span>${formatter.format(eventTime)}</span><strong>${score}</strong><small>${formatClock(eventTime, timeZone)} · ${indexBand(score)}</small>`;
+      const tier = tierFor(score);
+      const weatherEmoji = weatherSymbolFor(metrics);
+      const advice = photographicAdviceFor(metrics, score);
+      const formattedDate = formatter.format(eventTime);
+
+      card.dataset.tier = tier;
+      card.innerHTML = `
+        <div class="day-card-top">
+          <span class="day-card-date">${formattedDate}</span>
+          <span class="day-card-weather" aria-hidden="true">${weatherEmoji}</span>
+        </div>
+        <div class="day-card-score-box">
+          <strong>${score}</strong>
+          <span class="day-card-band">${indexBand(score)}</span>
+        </div>
+        <div class="day-card-footer">
+          <div class="day-card-time">
+            <span>${eventLabel}时刻</span>
+            <strong>${formatClock(eventTime, timeZone)}</strong>
+          </div>
+          <p class="day-card-advice">${advice}</p>
+        </div>
+      `;
     }
     elements.week.append(card);
   }
