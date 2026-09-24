@@ -876,7 +876,32 @@ const LOADER_STORAGE_KEY = "firecloud:loader_style:v1";
 let currentLoaderStyle = storage.get(LOADER_STORAGE_KEY, "horizon");
 let currentSpeedFactor = 1;
 
-function getLoaderHTML(style) {
+function getLoaderHTML(style, prefix = "") {
+  if (style === "horizon-classic") {
+    return `
+      <div class="loader-horizon-classic" aria-hidden="true">
+        <span class="horizon-classic-glow"></span>
+        <svg class="horizon-classic-svg" viewBox="0 0 160 52" fill="none">
+          <defs>
+            <linearGradient id="${prefix}horizon-classic-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#edb56f" stop-opacity="0"/>
+              <stop offset="25%" stop-color="#ffd07c" stop-opacity="0.95"/>
+              <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
+              <stop offset="75%" stop-color="#ff6e38" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#edb56f" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path class="horizon-classic-track" d="M 16 38 Q 80 18 144 38" />
+          <path class="horizon-classic-beam" stroke="url(#${prefix}horizon-classic-beam-grad)" d="M 16 38 Q 80 18 144 38" />
+        </svg>
+        <div class="horizon-classic-vapors">
+          <span class="horizon-classic-vapor v1"></span>
+          <span class="horizon-classic-vapor v2"></span>
+          <span class="horizon-classic-vapor v3"></span>
+        </div>
+      </div>
+    `;
+  }
   if (style === "kepler") {
     return `
       <div class="loader-kepler" aria-hidden="true">
@@ -884,13 +909,13 @@ function getLoaderHTML(style) {
         <span class="kepler-shockwave"></span>
         <svg class="kepler-svg" viewBox="0 0 104 104" fill="none">
           <defs>
-            <linearGradient id="kepler-plasma-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="${prefix}kepler-plasma-grad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
               <stop offset="25%" stop-color="#ffd07c" stop-opacity="1"/>
               <stop offset="65%" stop-color="#ff7e4a" stop-opacity="0.8"/>
               <stop offset="100%" stop-color="#ff7e4a" stop-opacity="0"/>
             </linearGradient>
-            <linearGradient id="kepler-dust-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="${prefix}kepler-dust-grad" x1="100%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stop-color="#a855f7" stop-opacity="0"/>
               <stop offset="40%" stop-color="#a855f7" stop-opacity="0.5"/>
               <stop offset="80%" stop-color="#9ebbf8" stop-opacity="0.8"/>
@@ -898,9 +923,9 @@ function getLoaderHTML(style) {
             </linearGradient>
           </defs>
           <ellipse class="kepler-orbit-cross" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
-          <ellipse class="kepler-dust-stream" stroke="url(#kepler-dust-grad)" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
+          <ellipse class="kepler-dust-stream" stroke="url(#${prefix}kepler-dust-grad)" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
           <ellipse class="kepler-orbit-guide" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
-          <ellipse class="kepler-plasma-comet" stroke="url(#kepler-plasma-grad)" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
+          <ellipse class="kepler-plasma-comet" stroke="url(#${prefix}kepler-plasma-grad)" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
         </svg>
         <div class="kepler-star-system">
           <span class="kepler-corona-outer"></span>
@@ -912,44 +937,37 @@ function getLoaderHTML(style) {
   if (style === "prismatic") {
     return `
       <div class="loader-prismatic" aria-hidden="true">
-        <span class="prism-ambient"></span>
-        <div class="prism-diffraction-rays">
-          <span class="prism-ray r1"></span>
-          <span class="prism-ray r2"></span>
-          <span class="prism-ray r3"></span>
-        </div>
-        <svg class="prism-svg" viewBox="0 0 104 104" fill="none">
+        <span class="chromatic-glow-bg"></span>
+        <svg class="chromatic-svg" viewBox="0 0 104 104" fill="none">
           <defs>
-            <linearGradient id="prism-twilight-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffffff"/>
-              <stop offset="30%" stop-color="#ffd07c"/>
-              <stop offset="75%" stop-color="#edb56f"/>
-              <stop offset="100%" stop-color="#edb56f" stop-opacity="0.05"/>
+            <linearGradient id="${prefix}chroma-grad-red" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff4757" stop-opacity="1"/>
+              <stop offset="50%" stop-color="#ff7e4a" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#ff7e4a" stop-opacity="0"/>
             </linearGradient>
-            <linearGradient id="prism-twilight-aurora" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#ffffff"/>
-              <stop offset="35%" stop-color="#9ebbf8"/>
-              <stop offset="70%" stop-color="#c48aff"/>
-              <stop offset="100%" stop-color="#c48aff" stop-opacity="0.05"/>
+            <linearGradient id="${prefix}chroma-grad-green" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2ed573" stop-opacity="1"/>
+              <stop offset="40%" stop-color="#ffd07c" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#ffd07c" stop-opacity="0"/>
             </linearGradient>
-            <linearGradient id="prism-solar-ring" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#fff5e0"/>
-              <stop offset="45%" stop-color="#ff9f43"/>
-              <stop offset="90%" stop-color="#ee5253"/>
-              <stop offset="100%" stop-color="#ee5253" stop-opacity="0"/>
+            <linearGradient id="${prefix}chroma-grad-blue" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#1e90ff" stop-opacity="1"/>
+              <stop offset="50%" stop-color="#c48aff" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#c48aff" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="${prefix}chroma-laser" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+              <stop offset="35%" stop-color="#ffffff" stop-opacity="0.95"/>
+              <stop offset="70%" stop-color="#ffd07c" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#ffd07c" stop-opacity="0"/>
             </linearGradient>
           </defs>
-          <circle class="prism-track-outer" cx="52" cy="52" r="42" />
-          <circle class="prism-track-middle" cx="52" cy="52" r="30" />
-          <circle class="prism-track-inner" cx="52" cy="52" r="18" />
-          <circle class="prism-ring-outer" stroke="url(#prism-twilight-gold)" cx="52" cy="52" r="42" />
-          <circle class="prism-ring-middle" stroke="url(#prism-twilight-aurora)" cx="52" cy="52" r="30" />
-          <circle class="prism-ring-inner" stroke="url(#prism-solar-ring)" cx="52" cy="52" r="18" />
+          <circle class="chroma-track" cx="52" cy="52" r="38" />
+          <circle class="chroma-arc arc-red" stroke="url(#${prefix}chroma-grad-red)" cx="52" cy="52" r="38" />
+          <circle class="chroma-arc arc-green" stroke="url(#${prefix}chroma-grad-green)" cx="52" cy="52" r="38" />
+          <circle class="chroma-arc arc-blue" stroke="url(#${prefix}chroma-grad-blue)" cx="52" cy="52" r="38" />
+          <circle class="chroma-arc arc-core" stroke="url(#${prefix}chroma-laser)" cx="52" cy="52" r="38" />
         </svg>
-        <div class="prism-stellar-core">
-          <span class="prism-core-glow"></span>
-          <span class="prism-core-spark"></span>
-        </div>
       </div>
     `;
   }
@@ -965,14 +983,14 @@ function getLoaderHTML(style) {
       </div>
       <svg class="horizon-svg" viewBox="0 0 160 56" fill="none">
         <defs>
-          <linearGradient id="horizon-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="${prefix}horizon-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#edb56f" stop-opacity="0"/>
             <stop offset="25%" stop-color="#ffd07c" stop-opacity="0.95"/>
             <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
             <stop offset="75%" stop-color="#ff6e38" stop-opacity="0.9"/>
             <stop offset="100%" stop-color="#edb56f" stop-opacity="0"/>
           </linearGradient>
-          <linearGradient id="horizon-stratosphere-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="${prefix}horizon-stratosphere-grad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#9ebbf8" stop-opacity="0"/>
             <stop offset="35%" stop-color="#9ebbf8" stop-opacity="0.8"/>
             <stop offset="70%" stop-color="#c48aff" stop-opacity="0.7"/>
@@ -980,9 +998,9 @@ function getLoaderHTML(style) {
           </linearGradient>
         </defs>
         <path class="horizon-track-stratosphere" d="M 22 36 Q 80 16 138 36" />
-        <path class="horizon-stratosphere-glow" d="M 22 36 Q 80 16 138 36" />
+        <path class="horizon-stratosphere-glow" stroke="url(#${prefix}horizon-stratosphere-grad)" d="M 22 36 Q 80 16 138 36" />
         <path class="horizon-track-troposphere" d="M 16 42 Q 80 22 144 42" />
-        <path class="horizon-beam" d="M 16 42 Q 80 22 144 42" />
+        <path class="horizon-beam" stroke="url(#${prefix}horizon-beam-grad)" d="M 16 42 Q 80 22 144 42" />
       </svg>
     </div>
   `;
@@ -990,7 +1008,7 @@ function getLoaderHTML(style) {
 
 function applySpeedToStage(stageEl, factor) {
   if (!stageEl) return;
-  const anims = stageEl.querySelectorAll('[class*="kepler"], [class*="prism"], [class*="horizon"]');
+  const anims = stageEl.querySelectorAll('[class*="kepler"], [class*="prism"], [class*="chroma"], [class*="horizon"]');
   anims.forEach((el) => {
     if (!el.hasAttribute("data-orig-duration")) {
       const cs = window.getComputedStyle(el);
@@ -1007,10 +1025,10 @@ function applySpeedToStage(stageEl, factor) {
 function applyLoaderStyle(style) {
   currentLoaderStyle = style;
   if (elements.loaderStage) {
-    elements.loaderStage.innerHTML = getLoaderHTML(style);
+    elements.loaderStage.innerHTML = getLoaderHTML(style, "main-");
   }
   if (elements.devPreviewStage) {
-    elements.devPreviewStage.innerHTML = getLoaderHTML(style);
+    elements.devPreviewStage.innerHTML = getLoaderHTML(style, "prev-");
     if (currentSpeedFactor !== 1) applySpeedToStage(elements.devPreviewStage, currentSpeedFactor);
   }
   const tabs = document.querySelectorAll(".lens-tab");
@@ -1019,7 +1037,7 @@ function applyLoaderStyle(style) {
     tab.setAttribute("data-active", String(active));
     if (active && elements.devLensSlider) {
       const idx = parseInt(tab.dataset.idx, 10);
-      elements.devLensSlider.style.transform = `translateX(${idx * 100}%)`;
+      elements.devLensSlider.style.transform = `translateX(calc(${idx} * (100% + 2px)))`;
     }
   });
 }

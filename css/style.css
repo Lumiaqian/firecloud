@@ -1507,6 +1507,119 @@ body[data-state="ready"] .top-actions {
   }
 }
 
+/* 1.1 Horizon Classic (地平线 1.0 经典单轨微巡版) */
+.loader-horizon-classic {
+  position: relative;
+  width: 148px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.horizon-classic-glow {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 82px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 60%,
+    rgba(255, 185, 110, 0.45) 0%,
+    rgba(255, 126, 74, 0.22) 50%,
+    transparent 80%
+  );
+  filter: blur(14px);
+  animation: horizon-classic-glow-breathe 2.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.horizon-classic-svg {
+  width: 148px;
+  height: 48px;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px rgba(237, 181, 111, 0.42));
+}
+
+.horizon-classic-track {
+  stroke: rgba(247, 241, 231, 0.16);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.horizon-classic-beam {
+  stroke: url(#horizon-classic-beam-grad);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-dasharray: 46 180;
+  fill: none;
+  animation: horizon-classic-scan 2.4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+}
+
+.horizon-classic-vapors {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.horizon-classic-vapor {
+  position: absolute;
+  bottom: 14px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffd07c;
+  box-shadow: 0 0 6px #ffd07c;
+  opacity: 0;
+}
+
+.horizon-classic-vapor.v1 {
+  left: 36%;
+  animation: horizon-classic-vapor-rise 2.1s ease-out infinite 0.2s;
+}
+
+.horizon-classic-vapor.v2 {
+  left: 50%;
+  animation: horizon-classic-vapor-rise 2.4s ease-out infinite 0.9s;
+}
+
+.horizon-classic-vapor.v3 {
+  left: 64%;
+  animation: horizon-classic-vapor-rise 2.2s ease-out infinite 1.5s;
+}
+
+@keyframes horizon-classic-scan {
+  0% { stroke-dashoffset: 70; }
+  100% { stroke-dashoffset: -70; }
+}
+
+@keyframes horizon-classic-glow-breathe {
+  0% {
+    transform: translateX(calc(-50% - 24px)) scale(0.9);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(calc(-50% + 24px)) scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+@keyframes horizon-classic-vapor-rise {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-22px) translateX(3px) scale(1.3);
+    opacity: 0;
+  }
+}
+
 /* 2. Kepler Relativistic Slingshot & Solar Ripple */
 .loader-kepler {
   position: relative;
@@ -1667,7 +1780,7 @@ body[data-state="ready"] .top-actions {
   100% { transform: scale(1.25); opacity: 0.95; }
 }
 
-/* 3. Prismatic Twilight Diffraction & Fresnel Halo */
+/* 3. Liquid Chromatic Aberration (方案 B：液态物理色差流光环) */
 .loader-prismatic {
   position: relative;
   width: 104px;
@@ -1676,165 +1789,72 @@ body[data-state="ready"] .top-actions {
   place-items: center;
 }
 
-.prism-ambient {
+.chromatic-glow-bg {
   position: absolute;
   inset: -14px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 208, 124, 0.28) 0%,
-    rgba(196, 138, 255, 0.22) 45%,
-    rgba(99, 102, 241, 0.14) 65%,
-    transparent 80%
-  );
-  filter: blur(20px);
-  animation: prism-glow 3s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(255, 71, 87, 0.16) 0%, rgba(30, 144, 255, 0.16) 50%, transparent 75%);
+  filter: blur(18px);
   pointer-events: none;
+  animation: chroma-bg-pulse 2.8s ease-in-out infinite alternate;
 }
 
-/* Hexagonal astronomical diffraction spikes */
-.prism-diffraction-rays {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-top: -48px;
-  margin-left: -48px;
-  width: 96px;
-  height: 96px;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  animation: prism-diffraction-spin 20s linear infinite;
-}
-
-.prism-ray {
-  position: absolute;
-  width: 94px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(158, 187, 248, 0.35) 25%, #ffffff 50%, rgba(255, 208, 124, 0.35) 75%, transparent 100%);
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
-}
-
-.prism-ray.r1 { transform: rotate(0deg); }
-.prism-ray.r2 { transform: rotate(60deg); }
-.prism-ray.r3 { transform: rotate(120deg); }
-
-.prism-svg {
+.chromatic-svg {
   width: 104px;
   height: 104px;
   overflow: visible;
-  filter: drop-shadow(0 0 10px rgba(237, 181, 111, 0.35));
+  filter: drop-shadow(0 0 12px rgba(255, 208, 124, 0.45));
 }
 
-.prism-track-outer,
-.prism-track-middle,
-.prism-track-inner {
+.chroma-track {
   fill: none;
   stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
 }
-.prism-track-outer { stroke-width: 1; stroke-dasharray: 2 4; }
-.prism-track-middle { stroke-width: 0.8; stroke-dasharray: 1 3; }
-.prism-track-inner { stroke-width: 0.8; stroke-dasharray: 2 6; }
 
-.prism-ring-outer {
+.chroma-arc {
   fill: none;
-  stroke: url(#prism-twilight-gold);
+  stroke-linecap: round;
+  transform-origin: 52px 52px;
+}
+
+/* Red Channel Dispersion (长波红霓通道) */
+.arc-red {
+  stroke-width: 3.5;
+  stroke-dasharray: 75 180;
+  animation: chroma-spin-red 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Green Channel Dispersion (中波翡翠通道) */
+.arc-green {
   stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-dasharray: 84 190;
-  transform-origin: 52px 52px;
-  animation: prism-spin-ccw 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  stroke-dasharray: 60 180;
+  animation: chroma-spin-green 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.08s;
 }
 
-.prism-ring-middle {
-  fill: none;
-  stroke: url(#prism-twilight-aurora);
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-dasharray: 58 140;
-  transform-origin: 52px 52px;
-  animation: prism-spin-cw 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+/* Blue Channel Dispersion (短波极光青紫通道) */
+.arc-blue {
+  stroke-width: 3.2;
+  stroke-dasharray: 70 180;
+  animation: chroma-spin-blue 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.16s;
 }
 
-.prism-ring-inner {
-  fill: none;
-  stroke: url(#prism-solar-ring);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-dasharray: 42 110;
-  transform-origin: 52px 52px;
-  animation: prism-spin-ccw 1.8s linear infinite;
+/* Coherent Laser Core (三色交汇高能白炽激光核) */
+.arc-core {
+  stroke-width: 4;
+  stroke-dasharray: 38 200;
+  filter: drop-shadow(0 0 6px #ffffff);
+  animation: chroma-spin-core 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.04s;
 }
 
-.prism-stellar-core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-top: -7px;
-  margin-left: -7px;
-  width: 14px;
-  height: 14px;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-
-.prism-core-glow {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 208, 124, 0.5) 50%, transparent 100%);
-  filter: blur(4px);
-  animation: prism-sparkle-pulse 1.6s ease-in-out infinite alternate;
-}
-
-.prism-core-spark {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow:
-    0 0 10px #ffffff,
-    0 0 20px #ffd07c,
-    0 0 35px #a855f7;
-  animation: prism-sparkle-pulse 1.6s ease-in-out infinite alternate;
-}
-
-@keyframes prism-spin-ccw {
-  0% { transform: rotate(360deg); }
-  100% { transform: rotate(0deg); }
-}
-
-@keyframes prism-spin-cw {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes prism-breathe-outer {
-  0% { transform: scale(0.94); }
-  100% { transform: scale(1.06); }
-}
-
-@keyframes prism-breathe-middle {
-  0% { transform: scale(1.08); }
-  100% { transform: scale(0.92); }
-}
-
-@keyframes prism-diffraction-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes prism-glow {
-  0% { transform: scale(0.9); opacity: 0.6; }
-  100% { transform: scale(1.15); opacity: 1; }
-}
-
-@keyframes prism-sparkle-pulse {
-  0% { transform: scale(0.7); opacity: 0.4; }
-  100% { transform: scale(1.3); opacity: 1; }
+@keyframes chroma-spin-red   { 0% { transform: rotate(0deg); }   100% { transform: rotate(360deg); } }
+@keyframes chroma-spin-green { 0% { transform: rotate(-5deg); } 100% { transform: rotate(355deg); } }
+@keyframes chroma-spin-blue  { 0% { transform: rotate(-10deg); } 100% { transform: rotate(350deg); } }
+@keyframes chroma-spin-core  { 0% { transform: rotate(-3deg); } 100% { transform: rotate(357deg); } }
+@keyframes chroma-bg-pulse {
+  0% { transform: scale(0.9); opacity: 0.5; filter: hue-rotate(0deg) blur(18px); }
+  100% { transform: scale(1.15); opacity: 0.95; filter: hue-rotate(60deg) blur(18px); }
 }
 
 .loading h1,
@@ -3892,7 +3912,7 @@ body[data-state="ready"] .ready {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: calc((100% - 10px) / 3);
+  width: calc((100% - 12px) / 4);
   height: calc(100% - 6px);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
@@ -3916,13 +3936,15 @@ body[data-state="ready"] .ready {
   background: transparent;
   color: rgba(255, 255, 255, 0.52);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 9px 0;
+  letter-spacing: 0.01em;
+  padding: 8px 0;
   border-radius: 999px;
   cursor: pointer;
   text-align: center;
   transition: color 160ms ease-out, transform 80ms ease-out;
+  white-space: nowrap;
 }
 .lens-tab:active { transform: scale(0.97); }
 
