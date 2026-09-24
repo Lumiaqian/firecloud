@@ -13,6 +13,10 @@
   --sky-glow: rgba(241, 183, 115, 0.42);
   --sky-cloud-opacity: 0.28;
   --sky-texture-opacity: 0.2;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --sun-x: 78%;
   --sun-y: 19%;
   --sun-elevation: 35;
@@ -346,7 +350,7 @@ a {
       transparent 70%
     ),
     linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 58%, var(--sky-horizon) 100%);
-  transition: background 900ms ease, filter 600ms ease;
+  transition: background 600ms var(--ease-out), filter 500ms var(--ease-out);
 }
 
 .sky::before {
@@ -365,7 +369,7 @@ a {
     radial-gradient(ellipse 50% 12% at 28% 72%, rgba(225, 233, 236, 0.28) 0 18%, transparent 72%),
     radial-gradient(ellipse 62% 15% at 31% 79%, rgba(10, 23, 34, 0.32) 0 16%, transparent 74%);
   filter: blur(5px);
-  transition: opacity 900ms ease;
+  transition: opacity 500ms var(--ease-out);
 }
 
 .sky::after {
@@ -382,7 +386,7 @@ a {
     transparent 4px
   );
   mix-blend-mode: soft-light;
-  transition: opacity 900ms ease;
+  transition: opacity 500ms var(--ease-out);
 }
 
 .weather-atmosphere {
@@ -444,7 +448,7 @@ a {
   isolation: isolate;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 800ms ease;
+  transition: opacity 500ms var(--ease-out);
 }
 
 .weather-atmosphere,
@@ -723,7 +727,7 @@ body[data-state="ready"][data-weather="hail"] .weather-atmosphere {
   height: 100%;
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity 800ms ease;
+  transition: opacity 500ms var(--ease-out);
 }
 
 .weather-contact-canvas {
@@ -736,7 +740,7 @@ body[data-state="ready"][data-weather="hail"] .weather-atmosphere {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  transition: opacity 800ms ease;
+  transition: opacity 500ms var(--ease-out);
 }
 
 body[data-state="ready"][data-weather="rain"] .weather-contact-canvas,
@@ -893,7 +897,7 @@ body[data-state="error"] .sky {
   flex: 0 0 auto;
   border: 1px solid var(--line-strong);
   border-radius: 50%;
-  transition: border-color 180ms ease, transform 180ms ease;
+  transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
 }
 
 .brand-mark::before {
@@ -919,7 +923,7 @@ body[data-state="error"] .sky {
 
 .brand:hover .brand-mark {
   border-color: var(--signal);
-  transform: rotate(8deg);
+  box-shadow: 0 0 12px rgba(237, 181, 111, 0.25);
 }
 
 .brand-copy {
@@ -965,7 +969,7 @@ body[data-state="error"] .sky {
   background: rgba(12, 21, 31, 0.2);
   color: var(--ink);
   cursor: pointer;
-  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
 .icon-button svg {
@@ -984,7 +988,8 @@ body[data-state="error"] .sky {
 }
 
 .icon-button:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
+  transition-duration: 80ms;
 }
 
 .icon-button:disabled {
@@ -1051,6 +1056,7 @@ body[data-state="error"] .sky {
   color: var(--muted);
   font-size: 15px;
   line-height: 1.85;
+  text-wrap: pretty;
 }
 
 .welcome-actions {
@@ -1067,7 +1073,7 @@ body[data-state="error"] .sky {
   font-size: 13px;
   font-weight: 650;
   cursor: pointer;
-  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
+  transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out), color 160ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
 .primary {
@@ -1099,7 +1105,8 @@ body[data-state="error"] .sky {
 
 .primary:active,
 .text-button:active {
-  transform: translateY(1px);
+  transform: scale(0.98);
+  transition-duration: 80ms;
 }
 
 .primary:disabled,
@@ -1790,12 +1797,12 @@ dialog::backdrop {
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: padding-left 180ms ease, color 180ms ease;
+  transition: transform 160ms var(--ease-out), color 160ms var(--ease-out);
 }
 
 .search-results li button:hover,
 .favorite-place:hover {
-  padding-left: 10px;
+  transform: translateX(5px);
   color: var(--signal);
 }
 
@@ -1906,7 +1913,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   min-height: 44px;
   padding: 0 12px;
   border-radius: 999px;
-  transition: color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: color 160ms var(--ease-out), background 160ms var(--ease-out), box-shadow 160ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
 .event-tabs.liquid-glass button::after {
@@ -1927,7 +1934,8 @@ body[data-state="ready"] .top-actions.liquid-glass {
 }
 
 .event-tabs.liquid-glass button:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 
 .liquid-glass.glass-tint {
@@ -1952,7 +1960,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   filter: blur(16px);
   opacity: 0.55;
   pointer-events: none;
-  transition: opacity 180ms ease, transform 240ms ease;
+  transition: opacity 180ms var(--ease-out), transform 280ms var(--ease-spring);
 }
 
 .liquid-glass.glass-tint > span {
@@ -1967,11 +1975,12 @@ body[data-state="ready"] .top-actions.liquid-glass {
 
 .liquid-glass.glass-tint:hover::before {
   opacity: 0.78;
-  transform: translateX(14px);
+  transform: translateX(16px);
 }
 
 .liquid-glass.glass-tint:active {
-  transform: translateY(1px) scale(0.985);
+  transform: scale(0.98);
+  transition-duration: 80ms;
 }
 
 dialog.liquid-glass {
@@ -1986,7 +1995,7 @@ dialog.liquid-glass {
 }
 
 dialog.liquid-glass[open] {
-  animation: glass-sheet-in 260ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  animation: glass-sheet-in 280ms var(--ease-drawer) both;
 }
 
 dialog.liquid-glass::backdrop {
@@ -2032,7 +2041,7 @@ dialog.liquid-glass::backdrop {
 @keyframes panel-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -2043,7 +2052,7 @@ dialog.liquid-glass::backdrop {
 @keyframes glass-sheet-in {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(12px) scale(0.96);
   }
   to {
     opacity: 1;
@@ -2243,7 +2252,7 @@ dialog.liquid-glass::backdrop {
 
 body[data-state="welcome"] .welcome,
 body[data-state="ready"] .ready {
-  animation: panel-enter 480ms ease both;
+  animation: panel-enter 320ms var(--ease-spring) both;
 }
 
 :focus-visible {
@@ -2327,9 +2336,9 @@ body[data-state="ready"] .ready {
   }
 
   .ready-toolbar > p {
-    max-width: 92px;
     margin-bottom: 11px;
     line-height: 1.5;
+    white-space: nowrap;
   }
 
   .event-tabs {
