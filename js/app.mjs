@@ -111,13 +111,35 @@ function writeCache(bundle) {
   storage.set(DATA_KEY, Object.fromEntries(newest));
 }
 
+let activeTransitionId = 0;
 function setPanel(name) {
   if (name !== "ready") stopTicker();
-  document.body.dataset.state = name;
-  for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
-  const ready = name === "ready";
-  elements.favorite.hidden = !ready;
-  elements.refresh.hidden = !ready;
+  const updateDOM = () => {
+    document.body.dataset.state = name;
+    for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
+    const ready = name === "ready";
+    elements.favorite.hidden = !ready;
+    elements.refresh.hidden = !ready;
+  };
+
+  const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (!prefersReduced && typeof document.startViewTransition === "function") {
+    const transitionId = ++activeTransitionId;
+    document.documentElement.dataset.transitioning = "panel";
+    try {
+      const transition = document.startViewTransition(updateDOM);
+      transition.finished.finally(() => {
+        if (activeTransitionId === transitionId) {
+          delete document.documentElement.dataset.transitioning;
+        }
+      });
+    } catch {
+      delete document.documentElement.dataset.transitioning;
+      updateDOM();
+    }
+  } else {
+    updateDOM();
+  }
 }
 
 function setBusy(busy) {
@@ -463,10 +485,15 @@ function renderReady(cacheAge = 0) {
   elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${state.place.name}`);
   elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime, timeZone)}`;
   elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
+  const wasReady = document.body.dataset.state === "ready";
   elements.score.textContent = String(score);
-  elements.score.classList.remove("is-updating");
-  void elements.score.offsetWidth;
-  elements.score.classList.add("is-updating");
+  if (wasReady) {
+    elements.score.classList.remove("is-updating");
+    void elements.score.offsetWidth;
+    elements.score.classList.add("is-updating");
+  } else {
+    elements.score.classList.remove("is-updating");
+  }
   elements.band.textContent = indexBand(score);
   elements.verdict.textContent = waitAdvice(score);
   elements.source.textContent = state.stale ? "缓存数据" : "实时数据";
