@@ -64,7 +64,19 @@
   --atmosphere-lightning-core: rgba(224, 238, 255, 0.54);
   --atmosphere-lightning-wash: rgba(163, 191, 222, 0.2);
   --atmosphere-wind-sweep: rgba(218, 235, 240, 0.09);
-  font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+
+  /* Design Tokens: Unified Radii Scale */
+  --radius-control: 12px;
+  --radius-card: 18px;
+  --radius-pill: 999px;
+
+  /* Design Tokens: Unified Typography Stacks */
+  --font-serif-title: "Hiragino Mincho ProN", "Songti SC", "STSong", serif;
+  --font-serif-num: "Baskerville", "Iowan Old Style", "Times New Roman", serif;
+  --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+
+  font-family: var(--font-sans);
 }
 
 body[data-storm="strong"] {
@@ -883,11 +895,22 @@ body[data-state="error"] .sky {
   align-items: center;
   gap: 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
+  transition: transform 120ms var(--ease-out);
+}
+
+.brand:active {
+  transform: scale(0.975);
+}
+
+.brand:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+  border-radius: var(--radius-pill);
 }
 
 .brand-mark {
@@ -921,9 +944,11 @@ body[data-state="error"] .sky {
   border-top: 1px solid var(--line-strong);
 }
 
-.brand:hover .brand-mark {
-  border-color: var(--signal);
-  box-shadow: 0 0 12px rgba(237, 181, 111, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .brand:hover .brand-mark {
+    border-color: var(--signal);
+    box-shadow: 0 0 12px rgba(237, 181, 111, 0.25);
+  }
 }
 
 .brand-copy {
@@ -936,7 +961,7 @@ body[data-state="error"] .sky {
 }
 
 .brand-copy strong {
-  font-family: "Hiragino Mincho ProN", "Songti SC", "STSong", serif;
+  font-family: var(--font-serif-title);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -982,9 +1007,11 @@ body[data-state="error"] .sky {
   stroke-linejoin: round;
 }
 
-.icon-button:hover {
-  border-color: var(--line-strong);
-  background: rgba(247, 241, 231, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    border-color: var(--line-strong);
+    background: rgba(247, 241, 231, 0.08);
+  }
 }
 
 .icon-button:active {
@@ -1063,7 +1090,7 @@ body[data-state="error"] .sky {
 .welcome h1 {
   max-width: 700px;
   margin: 0;
-  font-family: "Hiragino Mincho ProN", "Songti SC", "STSong", serif;
+  font-family: var(--font-serif-title);
   font-size: clamp(52px, 6.6vw, 76px);
   font-weight: 400;
   line-height: 1.08;
@@ -1090,7 +1117,7 @@ body[data-state="error"] .sky {
 .text-button {
   min-height: 50px;
   padding: 0 18px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   font-size: 13px;
   font-weight: 650;
   cursor: pointer;
@@ -1108,9 +1135,11 @@ body[data-state="error"] .sky {
   color: #17202a;
 }
 
-.primary:hover {
-  background: #f7c586;
-  border-color: #f7c586;
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover {
+    background: #f7c586;
+    border-color: #f7c586;
+  }
 }
 
 .text-button {
@@ -1119,9 +1148,11 @@ body[data-state="error"] .sky {
   color: var(--ink);
 }
 
-.text-button:hover {
-  border-color: var(--line-strong);
-  background: rgba(247, 241, 231, 0.07);
+@media (hover: hover) and (pointer: fine) {
+  .text-button:hover {
+    border-color: var(--line-strong);
+    background: rgba(247, 241, 231, 0.07);
+  }
 }
 
 .primary:active,
@@ -1178,7 +1209,7 @@ body[data-state="error"] .sky {
 
 .method-note dt {
   color: var(--signal);
-  font-family: "SFMono-Regular", Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
@@ -1192,7 +1223,7 @@ body[data-state="error"] .sky {
 }
 
 .method-note strong {
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: 14px;
   font-weight: 600;
 }
@@ -1225,7 +1256,7 @@ body[data-state="error"] .sky {
 .loading h1,
 .error h1 {
   margin: 24px 0 8px;
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: 28px;
   font-weight: 400;
 }
@@ -1237,7 +1268,7 @@ body[data-state="error"] .sky {
 
 .error-symbol {
   color: var(--signal);
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: 44px;
 }
 
@@ -1334,10 +1365,11 @@ body[data-state="error"] .sky {
 
 .event-time {
   margin: 18px 0 0;
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: clamp(28px, 3.4vw, 38px);
   font-weight: 400;
   letter-spacing: 0.04em;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .event-date {
@@ -1345,12 +1377,15 @@ body[data-state="error"] .sky {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
+  font-variant-numeric: lining-nums tabular-nums;
+  text-wrap: balance;
 }
 
 .countdown {
   margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .data-meta {
@@ -1361,7 +1396,7 @@ body[data-state="error"] .sky {
   flex-wrap: wrap;
   gap: 8px 18px;
   color: var(--faint);
-  font-family: "SFMono-Regular", Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
 }
 
@@ -1383,7 +1418,7 @@ body[data-state="error"] .sky {
 }
 
 .score-row strong {
-  font-family: "Baskerville", "Iowan Old Style", "Times New Roman", serif;
+  font-family: var(--font-serif-num);
   font-size: clamp(124px, 14vw, 176px);
   font-weight: 400;
   font-variant-numeric: lining-nums tabular-nums;
@@ -1415,16 +1450,18 @@ body[data-state="error"] .sky {
   align-items: center;
   gap: 10px;
   color: var(--ink);
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: 20px;
   letter-spacing: 0.12em;
 }
+
 .verdict {
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.04em;
+  text-wrap: pretty;
 }
 
 
@@ -1456,16 +1493,17 @@ body[data-state="error"] .sky {
 
 .section-head span {
   color: var(--signal);
-  font-family: "SFMono-Regular", Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
 .section-head h2 {
   margin: 0;
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.08em;
+  text-wrap: balance;
 }
 
 .section-head > p {
@@ -1498,7 +1536,7 @@ body[data-state="error"] .sky {
   top: 21px;
   left: 0;
   color: var(--signal);
-  font-family: "SFMono-Regular", Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
 }
 
@@ -1540,18 +1578,27 @@ body[data-state="error"] .sky {
 .metrics {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-bottom: 1px solid var(--line-strong);
+  gap: 10px;
+  padding: 6px 0 10px;
 }
 
 .metrics article {
   min-width: 0;
   min-height: 112px;
-  padding: 20px 14px 18px;
-  border-left: 1px solid var(--line);
+  padding: 18px 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: rgba(19, 29, 40, 0.48);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: border-color 160ms var(--ease-out), transform 160ms var(--ease-out);
 }
 
-.metrics article:first-child {
-  border-left: 0;
+@media (hover: hover) and (pointer: fine) {
+  .metrics article:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+  }
 }
 
 .metrics span,
@@ -1568,7 +1615,7 @@ body[data-state="error"] .sky {
 
 .metrics strong {
   margin-top: 14px;
-  font-family: "Baskerville", "Iowan Old Style", serif;
+  font-family: var(--font-serif-num);
   font-size: clamp(23px, 2.7vw, 31px);
   font-weight: 400;
   font-variant-numeric: lining-nums tabular-nums;
@@ -1583,6 +1630,7 @@ body[data-state="error"] .sky {
   display: flex;
   gap: 14px;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding: 8px 4px 18px;
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
@@ -1598,7 +1646,7 @@ body[data-state="error"] .sky {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-radius: 20px;
+  border-radius: var(--radius-card);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(19, 29, 40, 0.72);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
@@ -1610,10 +1658,17 @@ body[data-state="error"] .sky {
   user-select: none;
 }
 
-.day-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+@media (hover: hover) and (pointer: fine) {
+  .day-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.day-card:active {
+  transform: scale(0.985);
+  transition-duration: 90ms;
 }
 
 /* Atmospheric mood gradients inside the glass */
@@ -1644,7 +1699,7 @@ body[data-state="error"] .sky {
   height: 2px;
   background: var(--signal);
   opacity: 0.7;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .day-card[data-tier="epic"]::after { background: var(--signal-epic, #ffd07c); }
@@ -1675,11 +1730,12 @@ body[data-state="error"] .sky {
 
 .day-card strong {
   margin: 0;
-  font-family: "Baskerville", "Iowan Old Style", "Songti SC", serif;
+  font-family: var(--font-serif-num);
   font-size: 44px;
   font-weight: 400;
   line-height: 0.95;
   letter-spacing: -0.02em;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .day-card[data-tier="epic"] strong { color: var(--signal-epic, #ffd07c); }
@@ -1711,12 +1767,14 @@ body[data-state="error"] .sky {
   font-family: inherit;
   font-size: 12px;
   color: var(--ink);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .day-card-advice {
   font-size: 11px;
   color: rgba(247, 241, 231, 0.72);
   line-height: 1.4;
+  text-wrap: pretty;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1754,7 +1812,7 @@ dialog {
   padding: 26px;
   overflow: auto;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: var(--radius-card);
   background: var(--panel-solid);
   color: var(--ink);
   box-shadow: 0 32px 90px rgba(2, 8, 14, 0.52);
@@ -1783,7 +1841,7 @@ dialog::backdrop {
 
 .dialog-head h2 {
   margin: 0;
-  font-family: "Hiragino Mincho ProN", "Songti SC", serif;
+  font-family: var(--font-serif-title);
   font-size: 25px;
   font-weight: 500;
 }
@@ -1798,17 +1856,23 @@ dialog::backdrop {
   align-items: center;
   gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   background: transparent;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 180ms ease, background 180ms ease;
+  transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 120ms var(--ease-out);
 }
 
-.location-row:hover {
-  border-color: var(--line-strong);
-  background: rgba(247, 241, 231, 0.05);
+.location-row:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .location-row:hover {
+    border-color: var(--line-strong);
+    background: rgba(247, 241, 231, 0.05);
+  }
 }
 
 .location-row > svg {
@@ -1842,14 +1906,15 @@ dialog::backdrop {
   align-items: center;
   gap: 10px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   background: rgba(247, 241, 231, 0.03);
-  transition: border-color 180ms ease, background 180ms ease;
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
 
 .search-field:focus-within {
   border-color: var(--signal);
   background: rgba(247, 241, 231, 0.06);
+  box-shadow: 0 0 0 3px rgba(237, 181, 111, 0.22);
 }
 
 .search-field > svg {
@@ -1926,10 +1991,17 @@ dialog::backdrop {
   transition: transform 160ms var(--ease-out), color 160ms var(--ease-out);
 }
 
-.search-results li button:hover,
-.favorite-place:hover {
-  transform: translateX(5px);
-  color: var(--signal);
+@media (hover: hover) and (pointer: fine) {
+  .search-results li button:hover,
+  .favorite-place:hover {
+    transform: translateX(5px);
+    color: var(--signal);
+  }
+}
+
+.search-results li button:active,
+.favorite-place:active {
+  transform: scale(0.98);
 }
 
 .search-results strong {
@@ -1991,9 +2063,11 @@ dialog::backdrop {
   transition: background 150ms var(--ease-out), color 150ms var(--ease-out), transform 90ms var(--ease-out);
 }
 
-.delete-favorite:hover {
-  background: rgba(247, 241, 231, 0.07);
-  color: var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  .delete-favorite:hover {
+    background: rgba(247, 241, 231, 0.07);
+    color: var(--ink);
+  }
 }
 
 .delete-favorite:active {
@@ -2029,7 +2103,7 @@ dialog.liquid-glass {
 body[data-state="ready"] .top-actions.liquid-glass {
   padding: 3px;
   gap: 2px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .top-actions.liquid-glass .icon-button {
@@ -2040,8 +2114,10 @@ body[data-state="ready"] .top-actions.liquid-glass {
   box-shadow: none;
 }
 
-.top-actions.liquid-glass .icon-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .top-actions.liquid-glass .icon-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .event-tabs.liquid-glass {
@@ -2049,14 +2125,14 @@ body[data-state="ready"] .top-actions.liquid-glass {
   align-self: center;
   align-items: center;
   gap: 2px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .event-tabs.liquid-glass button {
   min-width: 58px;
   min-height: 44px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   transition: color 160ms var(--ease-out), background 160ms var(--ease-out), box-shadow 160ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
@@ -2064,8 +2140,10 @@ body[data-state="ready"] .top-actions.liquid-glass {
   display: none;
 }
 
-.event-tabs.liquid-glass button:hover {
-  background: rgba(255, 255, 255, 0.07);
+@media (hover: hover) and (pointer: fine) {
+  .event-tabs.liquid-glass button:hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
 }
 
 .event-tabs.liquid-glass button[aria-pressed="true"] {
@@ -2088,7 +2166,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   min-width: 176px;
   position: relative;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   color: var(--ink);
 }
 
@@ -2112,14 +2190,16 @@ body[data-state="ready"] .top-actions.liquid-glass {
   z-index: 1;
 }
 
-.liquid-glass.glass-tint:hover {
-  --glass-base: rgba(156, 105, 60, 0.46);
-  border-color: rgba(255, 222, 179, 0.48);
-}
+@media (hover: hover) and (pointer: fine) {
+  .liquid-glass.glass-tint:hover {
+    --glass-base: rgba(156, 105, 60, 0.46);
+    border-color: rgba(255, 222, 179, 0.48);
+  }
 
-.liquid-glass.glass-tint:hover::before {
-  opacity: 0.78;
-  transform: translateX(16px);
+  .liquid-glass.glass-tint:hover::before {
+    opacity: 0.78;
+    transform: translateX(16px);
+  }
 }
 
 .liquid-glass.glass-tint:active {
@@ -2131,7 +2211,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   width: 36px;
   height: 4.5px;
   margin: -4px auto 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--line-strong);
   opacity: 0.55;
   cursor: grab;
@@ -2139,9 +2219,11 @@ body[data-state="ready"] .top-actions.liquid-glass {
   transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
 }
 
-.drawer-handle:hover {
-  opacity: 0.9;
-  background: var(--signal);
+@media (hover: hover) and (pointer: fine) {
+  .drawer-handle:hover {
+    opacity: 0.9;
+    background: var(--signal);
+  }
 }
 
 dialog.is-dragging .drawer-handle {
@@ -2155,7 +2237,7 @@ dialog.liquid-glass {
   --glass-base: rgba(19, 29, 40, 0.84);
   --glass-blur: 18px;
   --glass-border: rgba(247, 250, 251, 0.26);
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(255, 255, 255, 0.05),
@@ -2216,6 +2298,10 @@ dialog.liquid-glass::backdrop {
 
   dialog.liquid-glass {
     background: var(--panel-solid);
+  }
+
+  .metrics article {
+    background: rgba(19, 29, 40, 0.88);
   }
 }
 
@@ -2606,9 +2692,13 @@ body[data-state="ready"] .ready {
   .metrics {
     grid-template-columns: none;
     grid-auto-flow: column;
-    grid-auto-columns: 112px;
+    grid-auto-columns: 118px;
+    gap: 10px;
+    padding-bottom: 12px;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
   }
 
   .horizontal-scroll-region.can-scroll::before {
@@ -2658,10 +2748,6 @@ body[data-state="ready"] .ready {
     scroll-snap-align: start;
   }
 
-  .metrics article:first-child {
-    border-left: 0;
-  }
-
   .metrics strong {
     font-size: 26px;
   }
@@ -2686,7 +2772,7 @@ body[data-state="ready"] .ready {
     margin: auto 12px max(12px, env(safe-area-inset-bottom));
     padding: 16px 20px 22px;
     overscroll-behavior: contain;
-    border-radius: 24px;
+    border-radius: var(--radius-card);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -2735,7 +2821,7 @@ body[data-state="ready"] .ready {
     min-height: 74px;
     margin: 18px 0 12px;
     padding: 0 16px;
-    border-radius: 14px;
+    border-radius: var(--radius-control);
   }
 
   .glass-sheet .location-row strong {
@@ -2749,7 +2835,7 @@ body[data-state="ready"] .ready {
   .glass-sheet .search-field {
     min-height: 56px;
     padding: 0 16px;
-    border-radius: 14px;
+    border-radius: var(--radius-control);
   }
 
   .glass-sheet .search-field input {
