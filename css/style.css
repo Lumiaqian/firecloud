@@ -52,9 +52,12 @@
   --atmosphere-heat: rgba(255, 221, 170, 0.1);
   --atmosphere-night-glow: rgba(118, 158, 203, 0.13);
   --atmosphere-night-horizon: rgba(142, 168, 195, 0.07);
-  --atmosphere-cloud-high: rgba(239, 245, 247, 0.34);
-  --atmosphere-cloud-mid: rgba(205, 217, 222, 0.23);
-  --atmosphere-cloud-low: rgba(27, 42, 54, 0.28);
+  --atmosphere-cloud-high: rgba(255, 255, 255, 0.46);
+  --atmosphere-cloud-mid: rgba(225, 240, 250, 0.24);
+  --atmosphere-cloud-low: rgba(90, 135, 170, 0.13);
+  --sky-cloud-highlight: rgba(255, 255, 255, 0.55);
+  --sky-cloud-body: rgba(225, 240, 250, 0.26);
+  --sky-cloud-shade: rgba(75, 115, 150, 0.13);
   --atmosphere-fog-high: rgba(226, 234, 232, 0.23);
   --atmosphere-fog-mid: rgba(184, 198, 198, 0.17);
   --atmosphere-fog-low: rgba(85, 105, 111, 0.12);
@@ -136,14 +139,14 @@ body[data-tier="dull"] {
 
 body[data-light="day"][data-weather="clear"] {
   /* Noon-first clear: bright azure, soft warm floor scaled by --clear-energy */
-  --sky-top: #2f7ab4;
-  --sky-mid: #86b8cc;
+  --sky-top: #1c5b94;
+  --sky-mid: #4a8eb8;
   --sky-horizon: color-mix(
     in srgb,
-    #c5c0b4 calc((1 - var(--clear-energy)) * 100%),
-    #e2a070 calc(var(--clear-energy) * 100%)
+    #a6cde2 calc((1 - var(--clear-energy)) * 100%),
+    #edd4b8 calc(var(--clear-energy) * 100%)
   );
-  --sky-glow: rgb(255 214 160 / calc(0.1 + var(--clear-energy) * 0.34));
+  --sky-glow: rgb(255 220 170 / calc(0.12 + var(--clear-energy) * 0.3));
   --sky-cloud-opacity: 0;
   --sky-texture-opacity: 0.04;
   --atmosphere-sun-core: rgb(255 244 220 / calc(0.26 + var(--clear-energy) * 0.16));
@@ -152,66 +155,96 @@ body[data-light="day"][data-weather="clear"] {
 }
 
 body[data-light="day"][data-weather="partly"] {
-  --sky-top: #14283d;
-  --sky-mid: #526670;
-  --sky-horizon: #9e816f;
-  --sky-glow: rgba(238, 181, 119, 0.27);
-  --sky-cloud-opacity: 0.64;
+  /* Daytime partly: airy azure with soft sunlit cloud volume and luminous horizon */
+  --sky-top: #194a74;
+  --sky-mid: #3d769c;
+  --sky-horizon: #8eb3c8;
+  --sky-glow: rgba(255, 232, 195, 0.28);
+  --sky-cloud-opacity: 0.55;
+  --sky-texture-opacity: 0.05;
+  --sky-cloud-highlight: rgba(255, 255, 255, 0.62);
+  --sky-cloud-body: rgba(225, 242, 252, 0.28);
+  --sky-cloud-shade: rgba(80, 120, 155, 0.12);
+  --atmosphere-cloud-high: rgba(255, 255, 255, 0.46);
+  --atmosphere-cloud-mid: rgba(220, 238, 250, 0.22);
+  --atmosphere-cloud-low: rgba(90, 135, 170, 0.12);
 }
 
 body[data-light="day"][data-weather="overcast"] {
-  --sky-top: #202b35;
-  --sky-mid: #4b565d;
-  --sky-horizon: #716e69;
-  --sky-glow: rgba(220, 207, 185, 0.12);
-  --sky-cloud-opacity: 0.88;
-  --sky-texture-opacity: 0.24;
+  /* Daytime overcast: cool silver-slate diffuse canopy, uniform and calm */
+  --sky-top: #283745;
+  --sky-mid: #4a5c6c;
+  --sky-horizon: #768896;
+  --sky-glow: rgba(215, 228, 238, 0.14);
+  --sky-cloud-opacity: 0.85;
+  --sky-texture-opacity: 0.2;
+  --sky-cloud-highlight: rgba(220, 232, 240, 0.35);
+  --sky-cloud-body: rgba(180, 195, 206, 0.22);
+  --sky-cloud-shade: rgba(50, 68, 82, 0.22);
+  --atmosphere-cloud-high: rgba(210, 222, 230, 0.35);
+  --atmosphere-cloud-mid: rgba(165, 180, 192, 0.22);
+  --atmosphere-cloud-low: rgba(65, 82, 96, 0.22);
 }
 
 body[data-light="day"][data-weather="rain"] {
-  --sky-top: #111c28;
-  --sky-mid: #34434b;
-  --sky-horizon: #525b5b;
-  --sky-glow: rgba(167, 191, 202, 0.07);
-  --sky-cloud-opacity: 0.96;
-  --sky-texture-opacity: 0.3;
+  --sky-top: #162432;
+  --sky-mid: #384958;
+  --sky-horizon: #5b6f7d;
+  --sky-glow: rgba(180, 205, 222, 0.1);
+  --sky-cloud-opacity: 0.94;
+  --sky-texture-opacity: 0.25;
+  --sky-cloud-highlight: rgba(185, 202, 215, 0.26);
+  --sky-cloud-body: rgba(130, 150, 166, 0.18);
+  --sky-cloud-shade: rgba(22, 36, 48, 0.3);
+  --atmosphere-cloud-high: rgba(170, 190, 205, 0.25);
+  --atmosphere-cloud-mid: rgba(125, 145, 160, 0.2);
+  --atmosphere-cloud-low: rgba(24, 38, 50, 0.26);
 }
 
 body[data-light="day"][data-weather="snow"] {
-  --sky-top: #1b3044;
-  --sky-mid: #5d707b;
-  --sky-horizon: #7a8789;
-  --sky-glow: rgba(226, 237, 241, 0.18);
-  --sky-cloud-opacity: 0.72;
+  --sky-top: #243d52;
+  --sky-mid: #557285;
+  --sky-horizon: #899fae;
+  --sky-glow: rgba(235, 245, 252, 0.22);
+  --sky-cloud-opacity: 0.74;
   --sky-texture-opacity: 0.16;
+  --sky-cloud-highlight: rgba(250, 253, 255, 0.5);
+  --sky-cloud-body: rgba(215, 232, 244, 0.25);
+  --sky-cloud-shade: rgba(60, 88, 110, 0.14);
 }
 
 body[data-light="day"][data-weather="fog"] {
-  --sky-top: #273945;
-  --sky-mid: #69777b;
-  --sky-horizon: #9a9d98;
-  --sky-glow: rgba(224, 224, 210, 0.13);
-  --sky-cloud-opacity: 0.28;
+  --sky-top: #324450;
+  --sky-mid: #687982;
+  --sky-horizon: #9da8a7;
+  --sky-glow: rgba(230, 235, 228, 0.16);
+  --sky-cloud-opacity: 0.32;
   --sky-texture-opacity: 0.08;
 }
 
 body[data-light="day"][data-weather="thunder"] {
-  --sky-top: #07131f;
-  --sky-mid: #273640;
-  --sky-horizon: #434a4c;
-  --sky-glow: rgba(144, 166, 181, 0.05);
+  --sky-top: #0a1622;
+  --sky-mid: #202e3a;
+  --sky-horizon: #3f4e58;
+  --sky-glow: rgba(160, 185, 205, 0.08);
   --sky-cloud-opacity: 1;
-  --sky-texture-opacity: 0.34;
+  --sky-texture-opacity: 0.32;
+  --sky-cloud-highlight: rgba(170, 190, 208, 0.22);
+  --sky-cloud-body: rgba(110, 130, 148, 0.18);
+  --sky-cloud-shade: rgba(15, 26, 38, 0.35);
 }
 
 body[data-light="day"][data-weather="hail"] {
-  --sky-top: #0a1724;
-  --sky-mid: #2a4556;
-  --sky-horizon: #4a6570;
-  --sky-glow: rgba(160, 210, 230, 0.12);
+  --sky-top: #0e1e2b;
+  --sky-mid: #254759;
+  --sky-horizon: #4a6c7c;
+  --sky-glow: rgba(175, 220, 235, 0.15);
   --sky-cloud-opacity: 0.98;
   --sky-texture-opacity: 0.28;
   --atmosphere-hail-wash: rgba(72, 128, 158, 0.28);
+  --sky-cloud-highlight: rgba(185, 215, 230, 0.24);
+  --sky-cloud-body: rgba(120, 155, 175, 0.2);
+  --sky-cloud-shade: rgba(18, 38, 52, 0.35);
 }
 
 body[data-light="night"] {
@@ -221,6 +254,9 @@ body[data-light="night"] {
   --sky-glow: rgba(112, 153, 199, 0.16);
   --sky-cloud-opacity: 0.2;
   --sky-texture-opacity: 0.1;
+  --sky-cloud-highlight: rgba(145, 170, 192, 0.22);
+  --sky-cloud-body: rgba(90, 118, 140, 0.15);
+  --sky-cloud-shade: rgba(12, 24, 36, 0.28);
   --atmosphere-cloud-high: rgba(151, 169, 181, 0.2);
   --atmosphere-cloud-mid: rgba(113, 134, 149, 0.16);
   --atmosphere-cloud-low: rgba(8, 18, 28, 0.36);
@@ -389,15 +425,15 @@ a {
   z-index: 0;
   opacity: var(--sky-cloud-opacity);
   background:
-    radial-gradient(ellipse 34% 10% at 4% 27%, rgba(244, 248, 249, 0.54) 0 20%, rgba(220, 230, 234, 0.2) 48%, transparent 72%),
-    radial-gradient(ellipse 42% 12% at 5% 34%, rgba(22, 36, 48, 0.32) 0 16%, rgba(18, 32, 44, 0.13) 46%, transparent 72%),
-    radial-gradient(ellipse 31% 9% at 49% 42%, rgba(239, 245, 247, 0.46) 0 21%, rgba(215, 225, 229, 0.17) 49%, transparent 72%),
-    radial-gradient(ellipse 39% 11% at 50% 49%, rgba(20, 34, 46, 0.3) 0 16%, rgba(16, 30, 42, 0.12) 47%, transparent 73%),
-    radial-gradient(ellipse 37% 11% at 94% 28%, rgba(242, 247, 248, 0.5) 0 22%, rgba(218, 228, 231, 0.18) 49%, transparent 73%),
-    radial-gradient(ellipse 45% 13% at 94% 35%, rgba(18, 32, 44, 0.33) 0 17%, rgba(14, 28, 40, 0.13) 47%, transparent 73%),
-    radial-gradient(ellipse 50% 12% at 28% 72%, rgba(225, 233, 236, 0.28) 0 18%, transparent 72%),
-    radial-gradient(ellipse 62% 15% at 31% 79%, rgba(10, 23, 34, 0.32) 0 16%, transparent 74%);
-  filter: blur(5px);
+    radial-gradient(ellipse 34% 10% at 4% 27%, var(--sky-cloud-highlight) 0 20%, var(--sky-cloud-body) 48%, transparent 72%),
+    radial-gradient(ellipse 42% 12% at 5% 34%, var(--sky-cloud-shade) 0 16%, transparent 60%),
+    radial-gradient(ellipse 31% 9% at 49% 42%, var(--sky-cloud-highlight) 0 21%, var(--sky-cloud-body) 49%, transparent 72%),
+    radial-gradient(ellipse 39% 11% at 50% 49%, var(--sky-cloud-shade) 0 16%, transparent 60%),
+    radial-gradient(ellipse 37% 11% at 94% 28%, var(--sky-cloud-highlight) 0 22%, var(--sky-cloud-body) 49%, transparent 73%),
+    radial-gradient(ellipse 45% 13% at 94% 35%, var(--sky-cloud-shade) 0 17%, transparent 62%),
+    radial-gradient(ellipse 50% 12% at 28% 72%, var(--sky-cloud-body) 0 18%, transparent 72%),
+    radial-gradient(ellipse 62% 15% at 31% 79%, var(--sky-cloud-shade) 0 16%, transparent 65%);
+  filter: blur(6px);
   transition: opacity 500ms var(--ease-out);
 }
 
@@ -622,8 +658,9 @@ body[data-state="ready"][data-light="night"][data-weather="clear"] .weather-atmo
 body[data-state="ready"][data-weather="partly"] .weather-atmosphere {
   --atmosphere-back-image: var(--atmosphere-cloud-back-texture);
   --atmosphere-front-image: none;
-  --atmosphere-back-opacity: 0.58;
+  --atmosphere-back-opacity: 0.52;
   --atmosphere-front-opacity: 0;
+  --atmosphere-back-blend: soft-light;
   --atmosphere-back-animation: atmosphere-cloud-back-drift;
   --atmosphere-front-animation: none;
   --atmosphere-back-base-duration: 52s;
@@ -2056,14 +2093,38 @@ body[data-state="ready"] .top-actions {
   font-size: 11px;
 }
 
-.data-meta span:first-child {
+.weather-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: opacity 200ms var(--ease-out);
+}
+
+.weather-badge:empty,
+.weather-badge[hidden] {
+  display: none;
+}
+
+.data-meta #data-source {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: rgba(247, 241, 231, 0.76);
 }
 
-.data-meta span:first-child::before {
+.data-meta #data-source::before {
   content: "";
   width: 6px;
   height: 6px;
@@ -2072,11 +2133,11 @@ body[data-state="ready"] .top-actions {
   box-shadow: 0 0 6px rgba(82, 196, 26, 0.6);
 }
 
-.data-meta span:first-child[data-status="stale"] {
+.data-meta #data-source[data-status="stale"] {
   color: var(--signal);
 }
 
-.data-meta span:first-child[data-status="stale"]::before {
+.data-meta #data-source[data-status="stale"]::before {
   background: var(--signal);
   box-shadow: 0 0 6px var(--signal);
 }

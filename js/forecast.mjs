@@ -44,6 +44,59 @@ export function weatherTheme({
   return { weather, light };
 }
 
+export function weatherConditionFor({
+  weather = "clear",
+  weatherCode,
+  isDay = 1,
+  precipitation = 0,
+  cloudCover = 0,
+  temperature
+} = {}) {
+  let label = "晴朗";
+  let icon = isDay === 0 ? "✨" : "☀️";
+
+  if (weather === "hail") {
+    label = "冰雹";
+    icon = "🌨️";
+  } else if (weather === "thunder") {
+    label = "雷阵雨";
+    icon = "⛈️";
+  } else if (weather === "snow") {
+    label = "降雪";
+    icon = "❄️";
+  } else if (weather === "rain") {
+    if (weatherCode === 80 || weatherCode === 81 || weatherCode === 82) {
+      label = "阵雨";
+    } else {
+      label = precipitation >= 3 ? "大雨" : precipitation >= 0.5 ? "中雨" : "小雨";
+    }
+    icon = "🌧️";
+  } else if (weather === "fog") {
+    label = "大雾";
+    icon = "🌫️";
+  } else if (weather === "overcast") {
+    label = "阴天";
+    icon = "☁️";
+  } else if (weather === "partly") {
+    label = weatherCode === 1 || cloudCover < 50 ? "晴间多云" : "多云";
+    icon = isDay === 0 ? "🌙" : "⛅";
+  } else if (weather === "wind") {
+    label = "大风";
+    icon = "💨";
+  } else if (isDay === 0) {
+    label = "晴朗";
+    icon = "🌙";
+  }
+
+  const tempStr = Number.isFinite(temperature) ? ` ${Math.round(temperature)}°C` : "";
+  return {
+    label,
+    icon,
+    full: `${icon} ${label}${tempStr}`.trim(),
+    summary: `${label}${tempStr}`.trim()
+  };
+}
+
 /** Prefer local sunrise/sunset over a stale API is_day once the page has been sitting open. */
 export function lightFromSunClock(now, { sunrise, sunset } = {}, fallbackLight = "day") {
   if (now instanceof Date && !Number.isNaN(now.valueOf()) && sunrise && sunset) {

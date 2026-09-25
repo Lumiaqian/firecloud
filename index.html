@@ -12,7 +12,7 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=42">
+  <link rel="stylesheet" href="css/style.css?v=43">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
@@ -86,7 +86,11 @@
           <h1 class="event-time" id="event-time">—</h1>
           <p class="event-date" id="event-date">—</p>
           <p class="countdown" id="countdown">—</p>
-          <div class="data-meta"><span id="data-source">实时数据</span><span id="updated-at">—</span></div>
+          <div class="data-meta">
+            <span class="weather-badge" id="current-weather-badge"></span>
+            <span id="data-source">实时数据</span>
+            <span id="updated-at">—</span>
+          </div>
         </div>
         <div class="score-block">
           <p class="index-label" id="index-label">霞光指数</p>
@@ -191,6 +195,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=28"></script>
+  <script type="module" src="js/app.mjs?v=29"></script>
 </body>
 </html>

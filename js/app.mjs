@@ -1,4 +1,4 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=7";
+import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=8";
 import {
   indexBand,
   lightFromSunClock,
@@ -12,8 +12,9 @@ import {
   sunDiskPosition,
   sunTimes,
   waitAdvice,
+  weatherConditionFor,
   weatherTheme
-} from "./forecast.mjs?v=6";
+} from "./forecast.mjs?v=7";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
 
 const PLACE_KEY = "firecloud:place:v1";
@@ -35,6 +36,7 @@ const elements = {
   devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
+  weatherBadge: $("current-weather-badge"),
   source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
   errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
   dialog: $("places-dialog"), dialogLocate: $("dialog-locate"), search: $("city-search"),
@@ -344,6 +346,15 @@ function applyWeatherBackground(bundle) {
   }
   const skyTop = getComputedStyle(document.body).getPropertyValue("--sky-top").trim();
   if (/^#[\da-f]{6}$/i.test(skyTop)) elements.themeColor.content = skyTop;
+  const condition = weatherConditionFor({
+    weather: theme.weather,
+    weatherCode: current.weather_code,
+    isDay: theme.light === "night" ? 0 : 1,
+    precipitation,
+    cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
+    temperature: current.temperature_2m
+  });
+  return { theme, condition };
 }
 
 function updateHorizontalScrollRegions() {
@@ -459,11 +470,19 @@ function renderReady(cacheAge = 0) {
   const metrics = metricsAt(state.bundle, eventTime);
   const score = scoreSky(metrics);
   document.body.dataset.tier = tierFor(score);
-  applyWeatherBackground(state.bundle);
+  const { condition } = applyWeatherBackground(state.bundle) ?? {};
   const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
   const timeZone = localTimeZone(state.bundle);
-  elements.placeName.textContent = state.place.name;
-  elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${state.place.name}`);
+  const conditionSuffix = condition?.summary ? ` · ${condition.summary}` : "";
+  elements.placeName.textContent = `${state.place.name}${conditionSuffix}`;
+  elements.openPlaces.setAttribute(
+    "aria-label",
+    `选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`
+  );
+  if (elements.weatherBadge) {
+    elements.weatherBadge.textContent = condition ? condition.full : "";
+    elements.weatherBadge.hidden = !condition;
+  }
   elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime, timeZone)}`;
   elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
   const wasReady = document.body.dataset.state === "ready";

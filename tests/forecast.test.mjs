@@ -12,6 +12,7 @@ import {
   stormLevelFor,
   sunDiskPosition,
   waitAdvice,
+  weatherConditionFor,
   weatherTheme
 } from "../js/forecast.mjs";
 
@@ -164,4 +165,33 @@ test("微量降水不触发雨雪主题，太阳方位可映射到屏幕坐标",
   assert.ok(disk.x > 8 && disk.x < 92);
   assert.ok(disk.y > 8 && disk.y < 70);
   assert.deepEqual(sunDiskPosition(180, -10), { x: 78, y: 19, valid: false });
+});
+
+test("实况天气中文描述、图标与温度准确映射", () => {
+  const xiamen = weatherConditionFor({
+    weather: "partly",
+    weatherCode: 1,
+    isDay: 1,
+    cloudCover: 49,
+    temperature: 28.7
+  });
+  assert.equal(xiamen.label, "晴间多云");
+  assert.equal(xiamen.icon, "⛅");
+  assert.equal(xiamen.full, "⛅ 晴间多云 29°C");
+  assert.equal(xiamen.summary, "晴间多云 29°C");
+
+  const overcast = weatherConditionFor({ weather: "overcast", isDay: 1, temperature: 22.1 });
+  assert.equal(overcast.label, "阴天");
+  assert.equal(overcast.icon, "☁️");
+  assert.equal(overcast.full, "☁️ 阴天 22°C");
+
+  const thunder = weatherConditionFor({ weather: "thunder", weatherCode: 95, isDay: 1, precipitation: 4 });
+  assert.equal(thunder.label, "雷阵雨");
+  assert.equal(thunder.icon, "⛈️");
+  assert.equal(thunder.full, "⛈️ 雷阵雨");
+
+  const clearNight = weatherConditionFor({ weather: "clear", isDay: 0, temperature: 18 });
+  assert.equal(clearNight.label, "晴朗");
+  assert.equal(clearNight.icon, "🌙");
+  assert.equal(clearNight.full, "🌙 晴朗 18°C");
 });
