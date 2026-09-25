@@ -720,12 +720,14 @@ body[data-state="ready"][data-weather="thunder"] .weather-atmosphere {
     radial-gradient(circle at 72% 10%, var(--atmosphere-lightning-core) 0, transparent 28%),
     radial-gradient(circle at 38% 18%, rgba(220, 236, 255, 0.35) 0, transparent 18%),
     linear-gradient(180deg, var(--atmosphere-lightning-wash), var(--atmosphere-rain-wash) 55%, transparent 82%);
-  --atmosphere-light-animation: atmosphere-thunder-exposure;
-  --atmosphere-light-duration: 11.5s;
-  --atmosphere-light-timing: linear;
+  --atmosphere-light-animation: none;
   --atmosphere-light-blend: screen;
   --atmosphere-light-mask: radial-gradient(ellipse 96% 82% at 60% 12%, var(--ink) 0 24%, transparent 80%);
-  --atmosphere-light-opacity: 1;
+  --atmosphere-light-opacity: var(--atmosphere-lightning-flash, 0);
+}
+
+body[data-state="ready"][data-weather="thunder"] .atmosphere-layer--light {
+  transition: opacity 60ms ease-out;
 }
 
 body[data-state="ready"][data-weather="hail"] .weather-atmosphere {

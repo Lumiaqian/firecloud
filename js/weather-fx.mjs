@@ -10,6 +10,21 @@ const PARTICLE_LIMITS = {
 const CONTACT_EFFECTS = new Set(["rain", "snow", "hail"]);
 const DRIVEN_EFFECTS = new Set(["rain", "snow", "hail", "wind", "fog"]);
 
+const RAIN_WIDTH_TIERS = [0.35, 0.6, 0.9, 1.25];
+const RAIN_ALPHA_TIERS = [0.08, 0.16, 0.24, 0.32, 0.40];
+const STATIC_RAIN_BUCKETS = [];
+for (let w = 0; w < RAIN_WIDTH_TIERS.length; w++) {
+  for (let a = 0; a < RAIN_ALPHA_TIERS.length; a++) {
+    STATIC_RAIN_BUCKETS.push({
+      width: RAIN_WIDTH_TIERS[w],
+      alpha: RAIN_ALPHA_TIERS[a],
+      style: `rgba(207, 227, 238, ${RAIN_ALPHA_TIERS[a]})`,
+      drops: new Array(PARTICLE_LIMITS.rain.max),
+      count: 0
+    });
+  }
+}
+
 const COLLISION_BANDS = {
   rain: [0.93, 1.015],
   snow: [0.91, 1.02],
@@ -519,8 +534,11 @@ function updateHailContacts(contacts, elapsed) {
 }
 
 function updateHail(particles, contacts, surfaces, width, height, elapsed, dynamics) {
+  const lerp = Math.min(1, elapsed * 3.6);
   for (let index = 0; index < particles.length; index += 1) {
     const stone = particles[index];
+    const targetVx = dynamics.windX * (0.3 + stone.depth * 0.7);
+    stone.velocityX += (targetVx - stone.velocityX) * lerp;
     const previousY = stone.y;
     stone.x += stone.velocityX * elapsed;
     stone.y += stone.velocityY * elapsed;
@@ -543,9 +561,12 @@ function updateHail(particles, contacts, surfaces, width, height, elapsed, dynam
 }
 
 function updateWind(particles, width, height, elapsed, dynamics) {
+  const lerp = Math.min(1, elapsed * 3.5);
   for (let index = 0; index < particles.length; index += 1) {
     const gust = particles[index];
     gust.phase += gust.turn * elapsed;
+    gust.velocityX += (dynamics.windX - gust.velocityX) * lerp;
+    gust.velocityY += (dynamics.windY - gust.velocityY) * lerp;
     gust.x += gust.velocityX * elapsed;
     gust.y += gust.velocityY * elapsed;
     if (gust.x < -gust.length || gust.x > width + gust.length
@@ -557,10 +578,15 @@ function updateWind(particles, width, height, elapsed, dynamics) {
 
 
 function updateRain(particles, groundImpacts, contactImpacts, surfaces, width, height, elapsed, dynamics) {
+  const lerp = Math.min(1, elapsed * 3.8);
   for (let index = 0; index < particles.length; index += 1) {
     const drop = particles[index];
     const previousY = drop.y;
     drop.phase += drop.turn * elapsed;
+    const targetWind = dynamics.windX * (0.4 + drop.depth * 0.6);
+    const targetWindY = (dynamics.windY ?? 0) * (0.35 + drop.depth * 0.45);
+    drop.wind += (targetWind - drop.wind) * lerp;
+    drop.windY = (drop.windY ?? 0) + (targetWindY - (drop.windY ?? 0)) * lerp;
     drop.x += (drop.wind + Math.sin(drop.phase) * drop.flutter) * elapsed;
     drop.y += (drop.speed + (drop.windY ?? 0)) * elapsed;
     const surface = weatherSurfaceCrossing(surfaces, drop.x, previousY, drop.y);
@@ -577,10 +603,13 @@ function updateRain(particles, groundImpacts, contactImpacts, surfaces, width, h
 }
 
 function updateSnow(particles, contacts, surfaces, width, height, elapsed, dynamics) {
+  const lerp = Math.min(1, elapsed * 3.2);
   for (let index = 0; index < particles.length; index += 1) {
     const flake = particles[index];
     flake.phase += flake.turn * elapsed;
     flake.rotation += flake.spin * elapsed;
+    const targetDrift = dynamics.windX * (0.28 + flake.depth * 0.72);
+    flake.drift += (targetDrift - flake.drift) * lerp;
 
     if (flake.grounded) {
       flake.settleAge += elapsed;
@@ -639,23 +668,26 @@ function updateLightning(bolts, elapsed) {
 
 function drawRain(context, particles) {
   context.lineCap = "round";
-  const buckets = new Map();
-  for (const drop of particles) {
-    const widthKey = Math.round(drop.width * 4) / 4;
-    const alphaKey = Math.round(drop.alpha * 20) / 20;
-    const key = `${widthKey}:${alphaKey}`;
-    let bucket = buckets.get(key);
-    if (!bucket) {
-      bucket = { width: widthKey, alpha: alphaKey, drops: [] };
-      buckets.set(key, bucket);
-    }
-    bucket.drops.push(drop);
+  for (let i = 0; i < STATIC_RAIN_BUCKETS.length; i++) {
+    STATIC_RAIN_BUCKETS[i].count = 0;
   }
-  for (const bucket of buckets.values()) {
+  for (let i = 0; i < particles.length; i++) {
+    const drop = particles[i];
+    const wIdx = clamp(Math.floor((drop.width - 0.25) / 0.26), 0, 3);
+    const aIdx = clamp(Math.floor((drop.alpha - 0.05) / 0.08), 0, 4);
+    const bucket = STATIC_RAIN_BUCKETS[wIdx * 5 + aIdx];
+    bucket.drops[bucket.count++] = drop;
+  }
+  for (let i = 0; i < STATIC_RAIN_BUCKETS.length; i++) {
+    const bucket = STATIC_RAIN_BUCKETS[i];
+    const count = bucket.count;
+    if (count === 0) continue;
     context.beginPath();
     context.lineWidth = bucket.width;
-    context.strokeStyle = `rgba(207, 227, 238, ${bucket.alpha})`;
-    for (const drop of bucket.drops) {
+    context.strokeStyle = bucket.style;
+    const drops = bucket.drops;
+    for (let d = 0; d < count; d++) {
+      const drop = drops[d];
       const fall = Math.max(40, drop.speed + (drop.windY ?? 0));
       context.moveTo(drop.x - (drop.wind / fall) * drop.length, drop.y - drop.length);
       context.lineTo(drop.x, drop.y);
@@ -892,6 +924,15 @@ export function createWeatherFx(canvas, {
   let surfaceFrame = null;
   let previousTime = 0;
 
+  let retiringParticles = [];
+  let retiringEffect = null;
+  const retiringGroundImpacts = [];
+  const retiringContactImpacts = [];
+  const retiringSnowContacts = [];
+  const retiringHailContacts = [];
+  let transitionProgress = 1;
+  const TRANSITION_DURATION = 0.65;
+
   const SURFACE_TOP_INSET = 2;
 
   function clearContactEffects() {
@@ -1037,6 +1078,44 @@ export function createWeatherFx(canvas, {
     }
   }
 
+  function renderEffectSet(eff, pts, gImpacts, cImpacts, sContacts, hContacts, alphaMultiplier = 1, elapsed = 0) {
+    if (alphaMultiplier <= 0 || !eff || !pts.length) return;
+    const prevAlpha = context.globalAlpha;
+    const prevContactAlpha = contactContext ? contactContext.globalAlpha : 1;
+    context.globalAlpha = prevAlpha * alphaMultiplier;
+    if (contactContext) contactContext.globalAlpha = prevContactAlpha * alphaMultiplier;
+
+    if (eff === "rain") {
+      updateRain(pts, gImpacts, cImpacts, surfaces, width, height, elapsed, dynamics);
+      drawRain(context, pts);
+      drawRainImpacts(context, gImpacts);
+      drawRainImpacts(contactContext ?? context, cImpacts);
+      markContactDrawn();
+    } else if (eff === "snow") {
+      updateSnow(pts, sContacts, surfaces, width, height, elapsed, dynamics);
+      drawSnow(context, pts);
+      drawSnowContacts(contactContext ?? context, sContacts);
+      markContactDrawn();
+    } else if (eff === "hail") {
+      updateHail(pts, hContacts, surfaces, width, height, elapsed, dynamics);
+      drawHail(context, pts);
+      drawHailContacts(contactContext ?? context, hContacts);
+      markContactDrawn();
+    } else if (eff === "wind") {
+      updateWind(pts, width, height, elapsed, dynamics);
+      drawWind(context, pts);
+    } else if (eff === "fog") {
+      updateFog(pts, width, height, elapsed, dynamics);
+      drawFog(context, pts);
+    } else if (eff === "stars") {
+      updateStars(pts, elapsed);
+      drawStars(context, pts);
+    }
+
+    context.globalAlpha = prevAlpha;
+    if (contactContext) contactContext.globalAlpha = prevContactAlpha;
+  }
+
   function drawFrame(timestamp) {
     const elapsed = previousTime ? Math.min((timestamp - previousTime) / 1_000, 0.04) : 0;
     previousTime = timestamp;
@@ -1047,36 +1126,38 @@ export function createWeatherFx(canvas, {
       updateStars(starfield, elapsed);
       drawStars(context, starfield, 0.38);
     }
-    if (effect === "rain") {
-      updateRain(particles, groundImpacts, contactImpacts, surfaces, width, height, elapsed, dynamics);
-      drawRain(context, particles);
-      drawRainImpacts(context, groundImpacts);
-      drawRainImpacts(contactContext ?? context, contactImpacts);
-      markContactDrawn();
-    } else if (effect === "snow") {
-      updateSnow(particles, snowContacts, surfaces, width, height, elapsed, dynamics);
-      drawSnow(context, particles);
-      drawSnowContacts(contactContext ?? context, snowContacts);
-      markContactDrawn();
-    } else if (effect === "hail") {
-      updateHail(particles, hailContacts, surfaces, width, height, elapsed, dynamics);
-      drawHail(context, particles);
-      drawHailContacts(contactContext ?? context, hailContacts);
-      markContactDrawn();
-    } else if (effect === "wind") {
-      updateWind(particles, width, height, elapsed, dynamics);
-      drawWind(context, particles);
-    } else if (effect === "fog") {
-      updateFog(particles, width, height, elapsed, dynamics);
-      drawFog(context, particles);
-    } else if (effect === "stars") {
-      updateStars(particles, elapsed);
-      drawStars(context, particles);
+    if (transitionProgress < 1) {
+      transitionProgress = Math.min(1, transitionProgress + (elapsed > 0 ? elapsed : 0.016) / TRANSITION_DURATION);
+      renderEffectSet(retiringEffect, retiringParticles, retiringGroundImpacts, retiringContactImpacts, retiringSnowContacts, retiringHailContacts, 1 - transitionProgress, elapsed);
+      renderEffectSet(effect, particles, groundImpacts, contactImpacts, snowContacts, hailContacts, transitionProgress, elapsed);
+      if (transitionProgress >= 1) {
+        retiringParticles.length = 0;
+        retiringEffect = null;
+        retiringGroundImpacts.length = 0;
+        retiringContactImpacts.length = 0;
+        retiringSnowContacts.length = 0;
+        retiringHailContacts.length = 0;
+      }
+    } else {
+      renderEffectSet(effect, particles, groundImpacts, contactImpacts, snowContacts, hailContacts, 1, elapsed);
     }
     if (root.dataset.lightning === "true") {
       maybeSpawnLightning(elapsed);
       updateLightning(lightningBolts, elapsed);
       drawLightning(context, lightningBolts);
+      let flashIntensity = 0;
+      for (const bolt of lightningBolts) {
+        const progress = clamp(bolt.age / bolt.life, 0, 1);
+        const flash = progress < 0.18 ? 1 : 1 - (progress - 0.18) / 0.82;
+        flashIntensity = Math.max(flashIntensity, bolt.alpha * flash);
+      }
+      if (flashIntensity > 0.01) {
+        root.style.setProperty("--atmosphere-lightning-flash", flashIntensity.toFixed(3));
+      } else if (root.style.getPropertyValue("--atmosphere-lightning-flash")) {
+        root.style.removeProperty("--atmosphere-lightning-flash");
+      }
+    } else if (root.style.getPropertyValue("--atmosphere-lightning-flash")) {
+      root.style.removeProperty("--atmosphere-lightning-flash");
     }
     animationFrame = window.requestAnimationFrame(drawFrame);
   }
@@ -1085,6 +1166,10 @@ export function createWeatherFx(canvas, {
     if (animationFrame != null) window.cancelAnimationFrame(animationFrame);
     animationFrame = null;
     previousTime = 0;
+    retiringParticles.length = 0;
+    retiringEffect = null;
+    transitionProgress = 1;
+    root.style.removeProperty("--atmosphere-lightning-flash");
     clearCanvases();
   }
 
@@ -1105,6 +1190,23 @@ export function createWeatherFx(canvas, {
     const nextDynamics = weatherDynamicsFor({ effect: nextEffect, ...root.dataset });
     const dynamicsChanged = !sameDynamics(nextDynamics, dynamics);
     if (nextEffect !== effect) {
+      if (effect && particles.length > 0) {
+        retiringParticles = particles.slice();
+        retiringEffect = effect;
+        retiringGroundImpacts.length = 0;
+        retiringGroundImpacts.push(...groundImpacts);
+        retiringContactImpacts.length = 0;
+        retiringContactImpacts.push(...contactImpacts);
+        retiringSnowContacts.length = 0;
+        retiringSnowContacts.push(...snowContacts);
+        retiringHailContacts.length = 0;
+        retiringHailContacts.push(...hailContacts);
+        transitionProgress = 0;
+      } else {
+        retiringParticles.length = 0;
+        retiringEffect = null;
+        transitionProgress = 1;
+      }
       effect = nextEffect;
       dynamics = nextDynamics;
       rebuildParticles();
