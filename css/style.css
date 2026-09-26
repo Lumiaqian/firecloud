@@ -3434,6 +3434,11 @@ body[data-state="ready"] .ready {
   outline-offset: 4px;
 }
 
+/* Result headings receive reading focus, not interactive control styling. */
+.event-time:focus-visible {
+  outline: none;
+}
+
 @media (min-width: 761px) {
   dialog {
     margin: clamp(84px, 12vh, 128px) auto auto;
