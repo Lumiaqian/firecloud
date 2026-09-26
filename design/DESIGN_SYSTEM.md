@@ -1,209 +1,125 @@
-# 霞光预报 Design System 规范手册 (Living Design System)
+# 霞光预报设计规范
 
-> **版本**: 1.0.0  
-> **更新时间**: 2026-09  
-> **真理源 (Single Source of Truth)**: [`css/style.css`](file:///Users/lumiaqian/tools/firecloud/css/style.css)  
-> **设计哲学**: 自然气象主义 (Natural Weather Materiality) + 苹果级流体交互 (Apple Fluid Interface)
+本文记录当前产品的设计决策和验证要求，不把现有 CSS 或本文本身视为不可质疑的正确答案。遇到冲突时，以用户任务、可访问性和实际页面验证确定规则，再同步实现与文档。
 
----
+实现入口：[页面结构](../index.html)、[样式与令牌](../css/style.css)、[交互与呈现](../js/app.mjs)、[指数计算与评价](../js/forecast.mjs)。
 
-## 1. 核心设计哲学 (Design Philosophy)
+## 1. 设计方向与边界
 
-《霞光预报》是一个专注于晨昏天光与气象美学的纯静态 PWA。它的核心美学建立在**双层材质体系 (Dual Materiality)** 与 **原生无依赖 (Zero-Dependency)** 之上：
+- 保留气象观测手记的视觉风格：衬线标题与数字、无衬线正文、天气驱动的天空背景。
+- 首要任务是回答“下一场霞光值得等吗”：行动建议、事件时间和指数应易于找到，数据解释随后展开。
+- 同一语义使用相同的视觉规则；不同角色可以不同。统一不意味着把按钮、卡片和胶囊做成同一种形状。
+- 保持纯静态、零构建的原生实现，不为视觉一致性引入新的组件或动画依赖。
+- 指数是 0–99 的条件评价，不是发生概率，也不计算年度稀有程度。建议描述观测条件与行动，不使用“年度级”“概率极高”等未经模型支持的承诺。
 
-### 1.1 双层材质体系 (Dual Materiality)
-页面在纵深上严格解耦为两层，严禁混淆穿透：
-1. **气象画卷层 (Atmospheric Canvas, z-index: 0)**:
-   - 由动态天光渐变（`var(--sky-top)`, `var(--sky-mid)`, `var(--sky-horizon)`）、云层雾气光斑、粒子物理引擎（雨、雪、雷暴、冰雹、暗星、热浪）构成。
-   - 随不同分档（`epic`, `great`, `fair`, `dull`）和当前天气（`clear`, `rain`, `fog` 等）实时流转，负责营造真实而沉浸的情绪氛围。
-2. **功能操作层 (Functional Layer & Liquid Glass, z-index: 1~10)**:
-   - 包含顶部导航、事件 Tab、数据读数、未来预报卡片与手势抽屉。
-   - **严格克制原则**：Liquid Glass（流动毛玻璃）**仅用于功能件与卡片容器**，严禁在全局或深层节点滥用 `backdrop-filter`，确保在移动端高刷新率（ProMotion 120Hz）下的极致流畅。
+## 2. 颜色语义
 
-### 1.2 纯净与现代 Web 原生标准
-- **零构建、零外部样式库**：不引入 Tailwind、Bootstrap、Storybook 等重型构建流水线。
-- **现代原生 CSS 特性**：全面拥抱 CSS Custom Properties、`color-mix()`、`backdrop-filter`、`scroll-snap`、`text-wrap: balance / pretty`。
+品牌操作、评分、数据状态和天气氛围分开定义，不使用一个通用强调色同时承担所有角色。
 
----
+| 用途 | 令牌 | 规则 |
+| --- | --- | --- |
+| 主操作、选中、焦点 | `--accent`、`--accent-hover` | 稳定的琥珀色，不随评分变化 |
+| 指数分类 | `--score-epic`、`--score-great`、`--score-fair`、`--score-dull` | 颜色仅表达该份预报自身的档位 |
+| 无数据／无事件 | `--score-unavailable` | 中性呈现，必须同时有文字说明，不当作低分 |
+| 成功、更新中、缓存警告、失败 | `--status-success`、`--status-info`、`--status-warning`、`--status-error` | 状态含义与天气、评分独立；颜色不能替代文字 |
+| 天气氛围 | `--sky-*`、`--atmosphere-*` 等 | 随天气、昼夜和气象强度变化，不覆盖操作与状态色 |
 
-## 2. Design Tokens 规范体系 (DTCG 3-Tier)
+`--score-color` 是组件使用的当前评分色。主结果由自身 `data-tier` 确定；每张七日卡片独立设置自己的评分色，不能从主结果继承档位。
 
-遵循 W3C Design Tokens Community Group (DTCG) 的分层标准，Tokens 采用严格单向向下引用的 3-Tier 结构：
+### 指数与评价映射
 
-```mermaid
-flowchart TD
-    Primitive["Tier 1: Primitives (基础原始层)<br/>色彩基底、基础曲线、几何像素"] --> Semantic["Tier 2: Semantics (系统语义层)<br/>--radius-control, --font-serif-num, --ease-drawer"]
-    Semantic --> Component["Tier 3: Component Tokens (组件应用层)<br/>.day-card, .metrics article, dialog.liquid-glass"]
-```
+保留现有评分算法和数值边界；四种视觉档位与五种文字评价是两种粒度，不需要强行合并。
 
----
+| 指数 | 视觉档位 | 文字评价 | 行动建议 |
+| --- | --- | --- | --- |
+| 80–99 | `epic` | 极佳 | 值得专程等待 |
+| 65–79 | `great` | 值得追 | 值得追这场霞光 |
+| 50–64 | `fair` | 有机会 | 可以顺路看看 |
+| 35–49 | `fair` | 一般 | 有空可以留意 |
+| 0–34 | `dull` | 平淡 | 不建议专程等待 |
+| 缺少本地低／中／高云任一核心数据 | `unavailable` | 暂无预报 | 不评分，不推断晴天，不给摄影条件建议 |
+| 没有对应日出／日落事件 | `unavailable` | 极昼或无事件 | 说明无晨昏事件，区别于数据缺失 |
 
-### 2.1 圆角阶梯系统 (Radii Scale)
+缺少远端云量或空气质量等辅助数据时保留既有降级规则，并提示部分辅助数据缺失；不得把核心数据缺失代入零值生成看似有效的指数。
 
-项目中严禁出现任意未定义圆角，所有圆角收敛为 3 层语义 Token 与 1 个特异纯几何圆：
+## 3. 组件与材质
 
-| Token 名称 | 变量值 | 语义角色 | 适用组件与元素 |
-| :--- | :--- | :--- | :--- |
-| **`--radius-control`** | `12px` | **交互控件与操作行** | 主操作按钮 (`.primary`, `.text-button`)、搜索输入框 (`.search-field`)、当前位置行 (`.location-row`) |
-| **`--radius-card`** | `18px` | **容器卡片与数据条** | 一体化气象数据条 (`.metrics`)、7日预报卡片 (`.day-card`)、模态抽屉/弹窗 (`dialog`, `dialog.liquid-glass`)、色调功能卡 (`.liquid-glass.glass-tint`) |
-| **`--radius-pill`** | `999px` | **胶囊件与指示器** | 顶部品牌药丸 (`.brand`)、Tab 切换栏 (`.event-tabs`)、手势拖拽把手 (`.drawer-handle`)、卡片顶层光晕条 (`.day-card::before`) |
-| *Geometric Circle* | `50%` | **纯几何圆形 (非 Token)** | 加载环 (`.loader`)、品牌中心点 (`.brand-mark`)、圆形关闭/删除按钮 (`.icon-button`, `.delete-favorite`) |
+### 主操作与次操作
 
----
+- 欢迎页“使用当前位置”和错误页“重新尝试”均使用 `.primary`：12px 控件圆角、至少 50px 高、稳定实色品牌背景和深色文字。
+- 次操作使用 `.text-button`：同一控件圆角和正文体系，较低权重的背景与边框。
+- 定位列表行、标签切换、图标按钮承担不同角色，不要求与页面主操作完全同形。
+- 若以后需要新的主按钮材质变体，应明确其背景可读性或优先级理由；不能由装饰类偶然覆盖按钮圆角、字号与颜色。
 
-### 2.2 字体排印体系 (Typography Hierarchy)
+### 地点行
 
-排版是界面古典质感与科学可读性的核心。字体按功能严格分为 4 层栈：
+- 搜索结果和收藏地点均使用 `.place-label`，主名称为 15px、字重 600，共享左侧对齐和行内交互规则。
+- 搜索结果可以增加行政区副标题；收藏行可以增加尾部删除按钮。副标题与附加操作不改变主名称的排版身份。
+- 搜索输入在所有宽度下至少 16px，包含手机横屏；保留页面缩放能力。
 
-```css
-:root {
-  /* 标题与品牌古典衬线 */
-  --font-serif-title: "Hiragino Mincho ProN", "Songti SC", "STSong", serif;
-  /* 气象指数与数据专属衬线（排印必须搭配 tabular-nums，首选 Georgia 保障纯正数字与单位比例） */
-  --font-serif-num: "Georgia", "Newsreader", "Playfair Display", "Baskerville", "Iowan Old Style", "Times New Roman", serif;
-  /* 序列编号与技术元数据等宽 */
-  --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
-  /* 全局正文与现代交互界面 */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
-}
-```
+### 容器与布局
 
-#### 排印场景对照规则
-1. **`--font-serif-title`**：
-   - 适用：大标题 (`.welcome h1`)、品牌标 (`.brand-copy strong`)、晨昏时钟 (`.event-time`)、章节标题 (`.section-head h2`)、分档定性词 (`.band`)、弹窗大标题 (`.dialog-head h2`)。
-   - 规则：大标题必须配合 `text-wrap: balance`，消除孤字换行。
-2. **`--font-serif-num`**：
-   - 适用：霞光总分 (`.score-row strong`)、观测数据读数 (`.metrics strong`)、未来7日单日大分 (`.day-card strong`)。
-   - **硬性规则**：必须显式声明 `font-variant-numeric: lining-nums tabular-nums`，确保数字在更新与滚动时横向完全等宽对齐，严禁数字跳动。
-3. **`--font-mono`**：
-   - 适用：章节序号 (`01 / 02 / 03`)、时间步元数据 (`.data-meta`)、技术说明前缀。
-4. **`--font-sans`**：
-   - 适用：全局正文、气象建议、说明文本、表单输入、按钮文本。
-   - 规则：正文段落必须配合 `text-wrap: pretty`。
+- `--radius-control: 12px`：按钮、输入、操作行。
+- `--radius-card: 18px`：指标条、七日卡片、弹窗容器。
+- `--radius-pill: 999px`：时段切换等胶囊结构；圆形图标按钮可以使用 50%。
+- 新几何尺寸应有角色依据，优先复用令牌，不以“所有数值必须相同”代替判断。
+- 天空线索采用平铺行；观测数据组合为指标条；未来七日采用独立卡片。避免给每层内容重复增加容器。
+- 桌面七日布局在 960px 起使用七列；较窄视口使用原生横向滚动与滚动吸附，边缘提示随滚动位置变化。
+- 玻璃材质用于需要层级分离的工具栏、切换栏、卡片与弹窗；不为了装饰反复叠加模糊。支持减少透明度偏好及不支持模糊时的可读降级。
 
----
+## 4. 排版与信息主次
 
-### 2.3 色彩分档与语义映射 (Mood Tiers & Semantics)
+- `--font-serif-title`：品牌、主标题、事件时间和章节标题。
+- `--font-serif-num`：主指数、指标数字、七日分数；动态数字使用 `lining-nums tabular-nums`。
+- `--font-mono`：序号和技术元信息；`--font-sans`：说明、建议和控件。
+- 大数字保留辨识度，旁边说明“0–99 指数 · 非概率”；行动建议使用 18px 的高对比度正文。
+- 七日卡片的大字号只作用于 `.day-card-score-box > strong`；时间保持 12px，标签和时间均不换行，不继承分数字号与颜色。
+- 当前天气在顶栏展示一次；来源与更新时间使用紧凑、可换行的元信息行，异常通过独立状态色和文字提示。
+- `text-wrap: balance`、`pretty` 可改善换行，但仍需验证真实中文文案、长地点名称和窄屏，不能保证自动消除所有孤字或溢出。
 
-霞光指数分为 4 个标准情绪档位，各档位统领全局的天空底色、粒子光泽与微光反射：
+## 5. 时间、数据和反馈
 
-| 档位 Tier | 霞光指数区间 | 语义信号色 (`--signal`) | 天空主情绪与意象 |
-| :--- | :--- | :--- | :--- |
-| **`epic`** | 80 ~ 99 | `#ffd07c` (金赤) | 深空邃蓝转炽烈燃霞，光晕饱和，粒子辉映 |
-| **`great`** | 60 ~ 79 | `#edb56f` (琥珀暖金) | 经典晚霞，暖橙泛金，天光通透 |
-| **`fair`** | 40 ~ 59 | `#d9b184` (柔棕米金) | 平和静谧，轻云微染，低饱和度暖调 |
-| **`dull`** | 0 ~ 39 | `#aeb8b8` (冷灰霜白) | 铅云密布或水汽灰蒙，沉着冷静 |
+- 事件时间、事件日期与绝对更新时间统一使用地点时区；无法取得有效地点时区时统一回退设备时区，并在事件日期中标明。缓存年龄使用相对时间。
+- 七日卡片可以展示已计算的日出／日落时间，但该时刻超出气象数据覆盖时必须显示“—／暂无预报”。天文时间已知不等于气象预报可用。
+- 主结果缺少核心云层数据时进入有重试入口的错误态，不展示或播报旧指数作为新结果。
+- 首次加载和换地点成功后，通过持久的 `role="status"` 通知结果并聚焦标题；有弹窗打开时不抢走弹窗焦点。
+- 同地点、同时段刷新保留已有预报与操作焦点。数据来源状态分别为 `loading`、`live`、`stale`、`error`；失败保留上次结果与时间，明确标注不是最新数据。
+- 朝霞与晚霞建议跟随所选时段，分别使用晨光／朝霞与暮光／晚霞表述。
 
----
+### 收藏删除与撤销
 
-## 3. 动效与触觉物理学规范 (Motion & Physics)
+- 删除即时持久化，并提供最近一次删除的撤销；没有交互时提示 7 秒后消失，悬停或聚焦提示时暂停计时。
+- 删除后焦点移至相邻删除按钮；没有剩余收藏时移至搜索框。成功撤销恢复原顺序并聚焦恢复项。
+- 地点弹窗打开时在弹窗内反馈，关闭后转至主页面；同一操作的成功与失败都必须出现在当前可见层级。
+- 撤销不能产生重复项或突破 8 个收藏的上限。容量不足时保留待撤销操作，明确提示先释放位置，不静默丢弃。
+- 容量失败后为了释放位置而删除另一收藏时，提示明确说明“撤销”仍恢复先前那一项；该次释放位置的删除不另开第二个撤销栈。
 
-《霞光预报》的动画交互严格遵循 Apple Human Interface Guidelines 规范，杜绝突兀的无缓动变化。
+## 6. 动效与手势
 
-### 3.1 缓动曲线参数 (Curves & Easings)
-```css
-:root {
-  /* 基础平滑出动 (160ms - 220ms)，用于 hover、微位移、轻量变色 */
-  --ease-out: cubic-bezier(0.2, 0.9, 0.2, 1);
-  /* 物理弹簧微感 (280ms)，用于局部高光浮动、状态激活 */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* 苹果原生抽屉弹簧曲线 (280ms - 320ms)，用于 Sheet 进场与 Settling */
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-}
-```
+- 动效用于操作反馈、状态变化或空间关系。静态七日卡片不提供按钮式悬停浮起和按压缩放，内容允许复制。
+- 现有缓动令牌：`--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`、`--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)`、`--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1)`、`--ease-spring: cubic-bezier(0.16, 1, 0.3, 1)`。命名不代表实现了物理弹簧。
+- 优先动画化 `transform` 与 `opacity`，减少不必要的布局和绘制；这不保证合成线程执行，也不能据此承诺固定帧率或“100% GPU 加速”。性能需要针对设备和场景测量。
+- 鼠标悬停效果由 `(hover: hover) and (pointer: fine)` 限定；触摸仍提供即时按压反馈。
+- 减少动态效果偏好下停用粒子和大幅运动，保留必要的状态表达。
+- 晨昏切换保留工具栏和已有结果；无缓存时明确提示下方暂为上次结果，失败恢复原时段。选中胶囊移动 180ms，不等待网络，也不把旧结果改标成新时段。
+- 结果更新只对变化文字做 160ms 透明度过渡；不滚动计数。七日卡按位置复用，未变化卡片不重播入场。
+- 收藏列表复用地点对应的行；删除退出 120ms，其余行位置过渡及恢复项入场 160ms。退出行立即不可交互，持久化与焦点转移不等待动画。
+- 主页面撤销反馈固定在底部安全区，不推动正文，入退场使用 180ms 透明度与小幅位移；不支持离散显示过渡的浏览器仍可直接显示和隐藏。
+- 键盘操作和减少动态效果偏好下，新增的切换、列表、结果与关闭过渡即时完成，不延迟操作。
 
-### 3.2 触觉微反馈规范 (Tactile Haptics)
-所有可点击元素必须遵循以下完整的交互状态链：
+### 地点抽屉
 
-```
-[Rest 默认态] ──(fine-hover)──> [Hover 浮动态 (仅在有鼠标时)]
-      │
-      └──────(pointerdown)─────> [Active 按压物理缩放]
-```
+- 外观与手势共用 760px 断点：较窄视口为底部抽屉并显示把手，较宽视口为浮动弹窗。
+- 拖动持续跟随指针；向上越界逐渐增加阻尼。释放后的投影终点超过高度的 35%，或向下速度超过 550px/s 且位移超过 30px，触发关闭。
+- 回弹或退出中重新抓取时，从当前呈现位置继续跟随，取消旧定时器与监听；第二个指针不接管当前手势。
+- `pointercancel` 只回弹，不按甩动关闭；关闭与重开清理旧手势状态。
+- 指针点击关闭复用退出流程：移动端位移 220ms／透明度 200ms，桌面缩小至 0.98 并淡出 200ms；先固定当前呈现状态，确保从入场中途关闭也能插值。键盘关闭直接交还焦点。
 
-- **按压微缩放 (Active Scale)**:
-  - 按钮与列表行：`:active { transform: scale(0.975 ~ 0.98); }`
-  - 卡片：`:active { transform: scale(0.985); }`
-  - 药丸切换按钮：`:active { transform: scale(0.97); }`
-- **悬停隔离原则 (Hover Pointer Guard)**:
-  - **严禁直接裸写 `:hover`**，所有悬停样式必须包裹于：
-    ```css
-    @media (hover: hover) and (pointer: fine) {
-      .my-component:hover { /* 仅限鼠标指针设备触发 */ }
-    }
-    ```
-  - 这彻底根除了 iOS Safari 和 Android Chrome 触摸滑动时产生的粘滞性 hover 视觉假象。
+## 7. 验证与维护
 
-### 3.3 弹窗与手势抽屉规范 (Responsive Modal & Sheet)
-[places-dialog](file:///Users/lumiaqian/tools/firecloud/index.html#L137) 严格遵循响应式双模态设计（Desktop Centered Modal vs. Mobile Sheet）：
-- **桌面端 (Desktop >680px)**：
-  - 呈现为居中浮动磨砂窗 (`dialog.liquid-glass`)，**完全隐藏触摸拖拽把手 (`.drawer-handle { display: none; }`)**。
-  - 关闭按钮采用 32px 极简微光圆钮，与标题组纵向绝对居中对齐；入场采用 `dialog-modal-enter` 微缩放平滑缓动。
-- **移动端 (Mobile ≤680px)**：
-  - 激活原生手势抽屉（Swipe-to-Dismiss Sheet），显式呈现胶囊把手 (`.drawer-handle`)。
-  - **拖拽跟随 (Direct Manipulation)**：在 `pointermove` 过程中，抽屉 `transform: translateY(dY)` 实时跟手，阻尼系数在向上越界时自动衰减。
-  - **背景透光率随动**：`--backdrop-opacity` 随下拉位移线性衰减（$1.0 \to 0$），手势与视觉完全共振。
-  - **阈值裁决**：
-    - 超过 $100\text{px}$ 或向下加速度矢量大于 $0.5\text{px/ms}$ $\to$ 执行流畅出场动画并关闭。
-    - 未达到阈值 $\to$ 应用 `--ease-drawer` 平滑弹回原位（Settling）。
-
-### 3.4 天体日冕加载器规范 (Celestial Twilight Corona Loader)
-告别生硬机械的通用 1px CSS 细圈 Spinner，严格遵循 Emil Kowalski 动效哲学与 Apple 界面物理学构建具有天体美感的霞光透光加载体系：
-- **感知性能法则 (Perceived Performance)**：根据 `emil-design-eng` 规范，过慢的转圈会直接放大用户对卡顿的心理感知；外轨日冕彗尾采用 `0.95s` 匀速旋转，赋予界面敏捷、充满活力的实时响应感。
-- **100% GPU 合成层加速 (Strict GPU-Only Motion)**：严格禁绝在 `@keyframes` 中直接动画改变 `box-shadow` 或 `filter`（防止浏览器逐帧触发 CPU 重绘与 Layout Thrashing）；全量动效仅作用于 `transform` 与 `opacity`。
-- **高保真矢量双天体轨道 (`.loader-rings`)**：采用精细 SVG 矢量绘制，杜绝圆角 Mask 在特定浏览器上的边缘方形伪影（Mask Corner Glitch）：
-  - **外轨日冕彗尾 (`.ring-comet`)**：88px 矢量环，采用渐变彗尾与圆润端头（`stroke-linecap: round`），搭配微弱落日光晕（`drop-shadow`）顺时针巡弋。
-  - **内轨星盘刻度 (`.ring-orbit`)**：52px 虚线同心圆环，以 3.6s 逆时针匀速旋转，营造天文仪器般的深邃天体韵律。
-  - **微型日核与地平线辉光 (`.loader-core` / `.loader-ambient`)**：中心 12px 金色日核与背衬柔和漫射光晕，仅通过 `scale` 和 `opacity` 进行 2~3s 的呼吸起伏。
-- **无障碍降级与进场收敛**：面板进场严格遵循“禁止 `scale(0)`”规则，从 `scale(0.96) translateY(4px)` 平滑展开；在 `@media (prefers-reduced-motion: reduce)` 下暂停旋转，日冕彗尾自动合拢为纯净静态光环。
-
----
-
-## 4. 空间节奏与组件视觉阶梯 (Component Progression)
-
-首页三大核心章节建立了从“信息平铺”到“精密数据条”再到“沉浸大卡”的渐进式空间节奏，彻底杜绝多层卡片堆叠（Card Fatigue）：
-
-```
-┌────────────────────────────────────────────────────────┐
-│ 01 天空线索 (平铺纯净行, border-bottom, 无多余卡片)     │
-└────────────────────────────────────────────────────────┘
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ 02 观测数据 (--radius-card: 18px 一体化微质感数据刻度带) │
-└────────────────────────────────────────────────────────┘
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│ 03 未来 7 日 (--radius-card: 18px 唯一核心通透气象大卡)  │
-└────────────────────────────────────────────────────────┘
-```
-
-1. **Section 01 (天空线索)**：极简轻盈，采用无圆角单线分隔行，配合轻质大气基线 (`--line: 0.12`)，阅读焦点纯粹停留在定性条件本身。
-2. **Section 02 (观测数据 - 精密气象刻度带)**：
-   - **全局章节基线统一与纵向呼吸感**：保持与 01、03 一致的 `.section-head` 细腻基线 (`--line-strong: 0.18`)，并通过给仪表带留出 `margin-top: 22px` 的舒展空隙，既保证全页面章节结构的 100% 严整一致，又杜绝了紧贴边框造成的“双横线铁轨”视觉压迫。
-   - **数学等分对称与居中校准**：采用 `grid-template-columns: repeat(7, minmax(0, 1fr))` 严谨等分，6 条内嵌发丝分割线在视觉上完全等距对称；单元格内部采用居中校准，标签精准锚定在读数上方，彻底根除因列宽不等导致的虚空与歪斜感。
-   - **黑曜石深空透光材质**：`--surface-metrics-bg` 统一采用深海曜石磨砂底色（与 03 保持一致的蓝灰暗色玻璃基底），彻底消除纯白半透明与落日余晖混合产生的“白浊土黄”浑浊斑块。
-   - **内嵌发丝微光分割 (告别 Excel 呆板网格)**：移除贯通上下的实线，采用上下各收进 22% 的内嵌渐变发丝线 (`::after` 配合 `linear-gradient` 两端淡出)，呈现瑞士腕表表盘与航空仪表盘般的精致蚀刻刻度。
-   - **边角圆弧安全内缩**：首列与尾列分别追加 `padding-left: 18px` 与 `padding-right: 18px`，并约束悬停内径倒角，确保在 18px 圆角边界处绝无文字贴边与高光溢出。
-3. **Section 03 (未来预报)**：全页唯一的沉浸式核心大卡，具备自适应昼夜通透微光渐变，顶部附带柔和光晕顶条（`::before`），完全消除传统底边裁剪导致的暗斑阴影（Dark Chin Glitch）以及黑雾遮罩问题。
-   - **桌面端 7 列全景并列 (Desktop Panoramic Grid)**：在桌面端 (`@media (min-width: 960px)`) 采用 `grid-template-columns: repeat(7, minmax(0, 1fr))`，7 天卡片一次性完整呈现，彻底杜绝第 6、7 天卡片被侧边硬生生截断（Cut-off Glitch）的不完整体验。
-   - **移动与小屏双向渐隐边缘 (Bidirectional Fade Mask)**：在 `<960px` 横向滚动状态下，废弃容易产生脏底色色差的渐变遮罩伪元素，统一采用原生 CSS `mask-image: linear-gradient(...)` 动态感知滚动状态（`is-at-start` / `is-at-end`），呈现平滑通透的边缘淡出。
-   - **语义化人性格化倒计时与状态胶囊 (Humanized Countdown Pill)**：倒计时采用微光药丸胶囊（含呼吸高光信号点），规避机械化的 `0小时17分钟`，智能输出 `17分钟`；数据来源配置绿色实时脉冲圆点与状态切换。
-
----
-
-## 5. 约束与防熵增守则 (Engineering Constraints & Anti-Patterns)
-
-为保持代码库的极高一致性，无论是人类工程师还是 AI 智能体，编写样式与组件时必须严格遵循以下规则：
-
-### ❌ 绝对禁止 (Prohibited Anti-Patterns)
-1. **禁止魔法尺寸 (No Magic Numbers)**：严禁在样式中写 `border-radius: 6px / 7px / 14px / 16px / 20px / 24px`，必须引用 `--radius-control`、`--radius-card` 或 `--radius-pill`。
-2. **禁止裸写 `:hover`**：严禁在无 `@media (hover: hover) and (pointer: fine)` 保护的情况下编写 `:hover` 规则。
-3. **禁止非等宽数值混排**：动态数字必须搭配 `font-variant-numeric: lining-nums tabular-nums`。
-4. **禁止全屏或深层堆叠毛玻璃**：毛玻璃（`backdrop-filter`）严禁嵌套在已有毛玻璃的子容器内部，避免移动端 GPU 掉帧。
-5. **禁止引入第三方 CSS 框架**：严禁引入 Tailwind、Bootstrap、Sass 等外部依赖，保持纯净原生。
-
-### ✅ 推荐与必须 (Mandatory Rules)
-1. **搜索框软键盘保护**：所有搜索类输入框必须标注 `autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"`。
-2. **优雅降级 (Graceful Degradation)**：任何使用 `backdrop-filter` 的组件，必须在 `@supports not (backdrop-filter: blur(1px))` 中声明高不透明度实色降级背景。
-3. **动态减弱动效**：系统必须响应 `@media (prefers-reduced-motion: reduce)`，禁用粒子和激烈过渡。
-4. **验证流程**：任何样式与逻辑修改完成后，必须运行 `npm run verify`，确保代码语法与 28 项全量单元测试 100% 通过。
+- 修改规则时同步相关组件及本文，不只修改令牌名，也不机械地按文档覆盖有效实现。
+- `npm run verify` 检查语法并运行已有测试；测试通过不替代页面验证。
+- 浏览器验证至少覆盖：320px 窄屏、390px 移动布局、720px 抽屉、844px 横屏输入、960px 与桌面七列布局。
+- 比较所有评分档位下同一按钮、同一状态与同一卡片的颜色；检查首屏、搜索／收藏、错误和更新状态。
+- 使用明确标注的测试数据覆盖核心数据缺失、仅辅助数据缺失、时区不同、容量不足和撤销重试；不把模拟数据当作真实预报证据。
+- 软键盘、安全区、真实触摸、屏幕阅读器与低性能设备仍需对应环境验证。没有真机或性能记录时，明确说明边界，不作帧率或平台体验保证。

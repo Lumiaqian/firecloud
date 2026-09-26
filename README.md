@@ -28,7 +28,7 @@
 
 ## 设计系统
 
-项目拥有完整的原生 Design System 规范，遵循 W3C DTCG 3-Tier 标准与苹果级流体交互美学。详细的设计令牌、排版阶梯、双层材质、手势动效物理学与防熵增守则请查阅 [design/DESIGN_SYSTEM.md](design/DESIGN_SYSTEM.md)。
+设计规则记录于 [design/DESIGN_SYSTEM.md](design/DESIGN_SYSTEM.md)，覆盖颜色语义、评分映射、组件、排版、状态反馈和手势。规则以产品任务与实际验证为依据；文档或现有样式出现冲突时应核对行为并同步修正，不作为未经验证的标准合规或性能保证。
 
 ## 本地启动
 

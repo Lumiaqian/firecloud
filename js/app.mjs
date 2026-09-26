@@ -23,6 +23,22 @@ const DATA_KEY = "firecloud:data:v1";
 const CACHE_MAX_AGE = 12 * 60 * 60 * 1000;
 const CACHE_LIMIT = 16;
 const $ = (id) => document.getElementById(id);
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+document.addEventListener("pointerdown", () => { document.body.dataset.input = "pointer"; }, true);
+document.addEventListener("keydown", () => { document.body.dataset.input = "keyboard"; }, true);
+function motionAllowed() {
+  return !reducedMotion.matches && document.body.dataset.input !== "keyboard";
+}
+function fadeUpdate(element) {
+  if (!motionAllowed()) return;
+  element.getAnimations().forEach((animation) => animation.cancel());
+  element.animate([{ opacity: 0.55 }, { opacity: 1 }], {
+    duration: 160, easing: getComputedStyle(document.documentElement).getPropertyValue("--ease-out").trim()
+  });
+}
+function syncEventTabs() {
+  for (const tab of elements.tabs) tab.setAttribute("aria-pressed", String(tab.dataset.event === state.event));
+}
 const panels = ["welcome", "loading", "ready", "error"];
 createWeatherFx($("weather-canvas"), {
   contactCanvas: $("weather-contact-canvas")
@@ -36,12 +52,14 @@ const elements = {
   devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
-  weatherBadge: $("current-weather-badge"),
-  source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
+  status: $("forecast-status"), source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
   errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
   dialog: $("places-dialog"), dialogLocate: $("dialog-locate"), search: $("city-search"),
   searchStatus: $("search-status"), searchSpinner: $("search-spinner"), searchResults: $("search-results"),
   favoritesList: $("favorites-list"), favoritesEmpty: $("favorites-empty"),
+  favoriteFeedback: $("favorite-feedback"), favoriteMessage: $("favorite-message"), undoFavorite: $("undo-favorite"),
+  dialogFavoriteFeedback: $("dialog-favorite-feedback"), dialogFavoriteMessage: $("dialog-favorite-message"),
+  dialogUndoFavorite: $("dialog-undo-favorite"),
   metrics: {
     low: $("metric-low"), mid: $("metric-mid"), high: $("metric-high"), pathLow: $("metric-path"),
     vis: $("metric-vis"), rh: $("metric-rh"), aod: $("metric-aod")
@@ -67,6 +85,8 @@ const state = {
   bundle: null,
   event: "sunset",
   stale: false,
+  refreshing: false,
+  refreshFailed: false,
   favorites: normalizeFavorites(storage.get(FAVORITES_KEY, [])),
   ticker: null,
   loadRequestId: 0,
@@ -119,6 +139,10 @@ function writeCache(bundle) {
 function setPanel(name) {
   if (name !== "ready") stopTicker();
   document.body.dataset.state = name;
+  if (name === "loading") {
+    elements.source.textContent = "更新中";
+    elements.source.dataset.status = "loading";
+  }
   for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
   const ready = name === "ready";
   elements.favorite.hidden = !ready;
@@ -126,9 +150,8 @@ function setPanel(name) {
 }
 
 function setBusy(busy) {
-  elements.refresh.disabled = busy;
   elements.refresh.classList.toggle("spin", busy);
-  for (const tab of elements.tabs) tab.disabled = busy;
+  elements.refresh.setAttribute("aria-busy", String(busy));
 }
 
 function localTimeZone(bundle) {
@@ -161,8 +184,10 @@ function formatEventDate(date, timeZone) {
   return formatted.replace(/(?=周)/, " · ");
 }
 
-function formatUpdated(timestamp) {
-  return new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(timestamp));
+function formatUpdated(timestamp, timeZone) {
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone
+  }).format(new Date(timestamp));
 }
 
 function formatAge(milliseconds) {
@@ -228,6 +253,10 @@ function tierFor(score) {
   if (score >= 65) return "great";
   if (score >= 35) return "fair";
   return "dull";
+}
+
+function hasLocalCloudForecast(metrics) {
+  return Number.isFinite(metrics.low) && Number.isFinite(metrics.mid) && Number.isFinite(metrics.high);
 }
 
 function twilightWarmthFor(now, { sunrise, sunset, goldenStart, goldenEnd }) {
@@ -386,17 +415,27 @@ function weatherSymbolFor(metrics) {
   return "☀️";
 }
 
-function photographicAdviceFor(metrics, score) {
+function photographicAdviceFor(metrics, score, eventType) {
   if (metrics.precip != null && metrics.precip > 0.2) return "降水与低层云层遮蔽光路，观测受限";
-  if (score >= 80) return "透光高空卷云，年度级火烧云概率极高，建议守候";
+  if (score >= 80) return "高云透光且地平线光路良好，建议提前选好机位守候";
   if (score >= 65) return "中高云分层丰富，地平线光路良好，适宜摄影取景";
-  if (score >= 45) return "有柔和暮光漫射，可记录层次渐变天色";
-  if ((metrics.low ?? 0) > 50) return "本地低层云偏厚压制，晚霞显现几率偏低";
+  if (score >= 45) return eventType === "sunrise" ? "有柔和晨光漫射，可记录层次渐变天色" : "有柔和暮光漫射，可记录层次渐变天色";
+  if ((metrics.low ?? 0) > 50) return `本地低层云偏厚压制，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现几率偏低`;
   return "云层染色条件不足，整体天色趋于平淡";
 }
 
 function renderWeek(bundle) {
-  elements.week.replaceChildren();
+  const previous = [...elements.week.children];
+  let cardIndex = 0;
+  const appendCard = (card) => {
+    const old = previous[cardIndex++];
+    if (!old) elements.week.append(card);
+    else if (old.innerHTML !== card.innerHTML || old.dataset.tier !== card.dataset.tier) {
+      card.dataset.updated = "true";
+      old.replaceWith(card);
+      fadeUpdate(card);
+    }
+  };
   const base = currentEventTime();
   if (!base) return;
   const timeZone = localTimeZone(bundle);
@@ -415,11 +454,11 @@ function renderWeek(bundle) {
     card.className = "day-card";
 
     if (!eventTime) {
-      card.dataset.tier = "dull";
+      card.dataset.tier = "unavailable";
       card.innerHTML = `
         <div class="day-card-top">
           <span class="day-card-date">${formatter.format(probe)}</span>
-          <span class="day-card-weather">🌑</span>
+          <span class="day-card-weather" aria-hidden="true"></span>
         </div>
         <div class="day-card-score-box">
           <strong>—</strong>
@@ -431,10 +470,31 @@ function renderWeek(bundle) {
       `;
     } else {
       const metrics = metricsAt(bundle, eventTime);
+      if (!hasLocalCloudForecast(metrics)) {
+        card.dataset.tier = "unavailable";
+        card.innerHTML = `
+          <div class="day-card-top">
+            <span class="day-card-date">${formatter.format(eventTime)}</span>
+          </div>
+          <div class="day-card-score-box">
+            <strong>—</strong>
+            <span class="day-card-band">暂无预报</span>
+          </div>
+          <div class="day-card-footer">
+            <div class="day-card-time">
+              <span>${eventLabel}时刻</span>
+              <strong>${formatClock(eventTime, timeZone)}</strong>
+            </div>
+            <p class="day-card-advice">当地云层预报暂无数据</p>
+          </div>
+        `;
+        appendCard(card);
+        continue;
+      }
       const score = scoreSky(metrics);
       const tier = tierFor(score);
       const weatherEmoji = weatherSymbolFor(metrics);
-      const advice = photographicAdviceFor(metrics, score);
+      const advice = photographicAdviceFor(metrics, score, state.event);
       const formattedDate = formatter.format(eventTime);
 
       card.dataset.tier = tier;
@@ -456,18 +516,45 @@ function renderWeek(bundle) {
         </div>
       `;
     }
-    elements.week.append(card);
+    appendCard(card);
   }
   requestAnimationFrame(updateHorizontalScrollRegions);
 }
 
+function updateSourceStatus() {
+  elements.source.textContent = state.refreshing ? "更新中" : state.refreshFailed ? "更新失败 · 显示上次数据" : state.stale ? "缓存数据" : "实时数据";
+  elements.source.dataset.status = state.refreshing ? "loading" : state.refreshFailed ? "error" : state.stale ? "stale" : "live";
+}
+
+function announceReady() {
+  const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
+  const freshness = state.refreshFailed ? "更新失败，显示上次数据（非最新）" : state.stale ? "缓存数据（非最新）" : "实时数据";
+  elements.status.textContent = `${state.place.name}，${eventLabel}，霞光指数 ${elements.score.textContent}，${freshness}`;
+}
+
+function focusNewResult() {
+  if (!elements.dialog.open && !elements.devDialog.open) elements.eventTime.focus({ preventScroll: true });
+}
+
 function renderReady(cacheAge = 0) {
   const eventTime = currentEventTime();
-  if (!eventTime || !state.bundle) {
+  if (!eventTime) {
     showError("未来三天没有可预测的日出或日落");
-    return;
+    return false;
+  }
+  if (!state.bundle) {
+    showError("暂无可用预测，请稍后重试");
+    return false;
   }
   const metrics = metricsAt(state.bundle, eventTime);
+  if (!hasLocalCloudForecast(metrics)) {
+    showError("当前时刻缺少当地低、中、高云层预报，无法计算霞光指数。请稍后重试或选择其他地点");
+    return false;
+  }
+  const wasReady = document.body.dataset.state === "ready";
+  const changing = [elements.eventTime, elements.eventDate, elements.score, elements.band,
+    elements.verdict, elements.reasons, ...Object.values(elements.metrics)];
+  const previousText = changing.map((element) => element.textContent);
   const score = scoreSky(metrics);
   document.body.dataset.tier = tierFor(score);
   const { condition } = applyWeatherBackground(state.bundle) ?? {};
@@ -479,26 +566,16 @@ function renderReady(cacheAge = 0) {
     "aria-label",
     `选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`
   );
-  if (elements.weatherBadge) {
-    elements.weatherBadge.textContent = condition ? condition.full : "";
-    elements.weatherBadge.hidden = !condition;
-  }
   elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime, timeZone)}`;
   elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
-  const wasReady = document.body.dataset.state === "ready";
+  delete document.body.dataset.switching;
+  $("event-pending").hidden = true;
   elements.score.textContent = String(score);
-  if (wasReady) {
-    elements.score.classList.remove("is-updating");
-    void elements.score.offsetWidth;
-    elements.score.classList.add("is-updating");
-  } else {
-    elements.score.classList.remove("is-updating");
-  }
+  if (!wasReady) elements.week.replaceChildren();
   elements.band.textContent = indexBand(score);
   elements.verdict.textContent = waitAdvice(score);
-  elements.source.textContent = state.stale ? "缓存数据" : "实时数据";
-  elements.source.dataset.status = state.stale ? "stale" : "live";
-  elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt)}`;
+  updateSourceStatus();
+  elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
   elements.reasons.replaceChildren(...reasonsFor(metrics).map((reason) => {
     const chip = document.createElement("span");
     chip.textContent = reason;
@@ -511,18 +588,30 @@ function renderReady(cacheAge = 0) {
   displayMetric(elements.metrics.vis, metrics.vis, (value) => `${Math.round(value / 1000)} km`);
   displayMetric(elements.metrics.rh, metrics.rh, (value) => `${Math.round(value)}%`);
   displayMetric(elements.metrics.aod, metrics.aod, (value) => value.toFixed(2));
-  for (const tab of elements.tabs) tab.setAttribute("aria-pressed", String(tab.dataset.event === state.event));
+  syncEventTabs();
   updateFavoriteButton();
   renderWeek(state.bundle);
   updateTicker(eventTime);
   setPanel("ready");
+  if (wasReady) changing.forEach((element, index) => {
+    if (element.textContent !== previousText[index]) fadeUpdate(element);
+  });
+  return true;
 }
 
 function showError(message) {
   setBusy(false);
+  delete document.body.dataset.switching;
+  $("event-pending").hidden = true;
+  elements.status.textContent = "";
+  elements.source.dataset.status = "error";
   elements.errorText.textContent = message;
   setPanel("error");
-  queueMicrotask(() => elements.errorTitle.focus({ preventScroll: true }));
+  queueMicrotask(() => {
+    if (!elements.dialog.open && !elements.devDialog.open && document.body.dataset.state === "error") {
+      elements.errorTitle.focus({ preventScroll: true });
+    }
+  });
 }
 
 async function loadPlace(place, { preferCache = false, force = false } = {}) {
@@ -530,21 +619,47 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
   const normalized = normalizePlace(place);
   if (!normalized) return showError("地点信息无效，请重新搜索");
   const eventType = state.event;
+  const keepReady = document.body.dataset.state === "ready"
+    && state.bundle && placeIdentity(state.bundle.place) === placeIdentity(normalized);
+  const sameReady = keepReady && state.bundle.eventType === eventType;
+  delete document.body.dataset.switching;
+  $("event-pending").hidden = true;
   state.place = normalized;
   storage.set(PLACE_KEY, normalized);
-  elements.placeName.textContent = normalized.name;
-  elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${normalized.name}`);
+  if (!sameReady) {
+    elements.placeName.textContent = normalized.name;
+    elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${normalized.name}`);
+  }
   const cached = readValidCache(normalized, eventType);
   if (!force && preferCache && cached) {
     state.bundle = cached.bundle;
     state.stale = true;
+    state.refreshing = false;
+    state.refreshFailed = false;
     setBusy(false);
-    renderReady(cached.age);
+    if (renderReady(cached.age)) {
+      announceReady();
+      if (!keepReady) focusNewResult();
+    }
     return;
   }
   const eventTime = nextEvent(eventType, normalized.lat, normalized.lon, new Date());
   if (!eventTime) return showError("未来三天没有可预测的日出或日落");
-  setPanel("loading");
+  if (keepReady && !sameReady) {
+    stopTicker();
+    document.body.dataset.switching = "true";
+    $("event-pending").textContent = `正在读取${eventType === "sunset" ? "晚霞" : "朝霞"}预报，下方暂保留上次结果`;
+    $("event-pending").hidden = false;
+    syncEventTabs();
+  }
+  state.refreshing = sameReady;
+  state.refreshFailed = false;
+  if (sameReady) {
+    updateSourceStatus();
+    elements.status.textContent = `正在更新${normalized.name}${eventType === "sunset" ? "晚霞" : "朝霞"}预报`;
+  } else if (!keepReady) {
+    setPanel("loading");
+  }
   setBusy(true);
   elements.loadingText.textContent = `正在计算${eventType === "sunset" ? "晚霞" : "朝霞"}方向的云层…`;
   try {
@@ -552,18 +667,38 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
     if (requestId !== state.loadRequestId) return;
     state.bundle = bundle;
     state.stale = false;
+    state.refreshing = false;
     writeCache(bundle);
-    renderReady();
+    if (renderReady()) {
+      announceReady();
+      if (!keepReady) focusNewResult();
+    }
   } catch (error) {
     if (requestId !== state.loadRequestId) return;
-    const fallback = readValidCache(normalized, eventType);
-    if (fallback) {
-      state.bundle = fallback.bundle;
+    state.refreshing = false;
+    state.refreshFailed = true;
+    if (keepReady) {
+      state.event = state.bundle.eventType;
+      delete document.body.dataset.switching;
+      $("event-pending").hidden = true;
+      syncEventTabs();
+      updateTicker(currentEventTime());
       state.stale = true;
-      renderReady(fallback.age);
+      updateSourceStatus();
+      announceReady();
     } else {
-      console.error(error);
-      showError("暂无可用预测，请稍后重试");
+      const fallback = readValidCache(normalized, eventType);
+      if (fallback) {
+        state.stale = true;
+        state.bundle = fallback.bundle;
+        if (renderReady(fallback.age)) {
+          announceReady();
+          focusNewResult();
+        }
+      } else {
+        console.error(error);
+        showError("暂无可用预测，请稍后重试");
+      }
     }
   } finally {
     if (requestId === state.loadRequestId) setBusy(false);
@@ -571,12 +706,11 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
 }
 
 function openPlaces() {
-  renderFavorites();
   if (!elements.dialog.open) {
-    elements.dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
-    elements.dialog.style.removeProperty("--sheet-translate-y");
-    elements.dialog.style.removeProperty("--backdrop-opacity");
+    renderFavorites();
+    resetPlacesDrawer();
     elements.dialog.showModal();
+    renderFavoriteFeedback();
   }
 }
 
@@ -634,6 +768,7 @@ function renderSearchResults(results) {
     const button = document.createElement("button");
     button.type = "button";
     const name = document.createElement("strong");
+    name.className = "place-label";
     name.textContent = place.name;
     const detail = document.createElement("small");
     detail.textContent = place.detail || "";
@@ -680,38 +815,159 @@ elements.search.addEventListener("input", () => {
   }, 300);
 });
 
+let pendingFavorite = null;
+
+function renderFavoriteFeedback() {
+  const inDialog = elements.dialog.open;
+  elements.favoriteFeedback.hidden = !pendingFavorite || inDialog;
+  elements.dialogFavoriteFeedback.hidden = !pendingFavorite || !inDialog;
+  for (const feedback of [elements.favoriteFeedback, elements.dialogFavoriteFeedback]) {
+    feedback.inert = feedback.hidden;
+    if (pendingFavorite?.error) feedback.dataset.status = "error";
+    else feedback.removeAttribute("data-status");
+  }
+  if (pendingFavorite) {
+    const message = pendingFavorite.error
+      ? "最多收藏 8 个地点，请先移除一个收藏，再撤销"
+      : pendingFavorite.retryRemoved
+        ? `已删除收藏 ${pendingFavorite.retryRemoved}，可撤销先前删除的 ${pendingFavorite.place.name}`
+        : `已删除收藏 ${pendingFavorite.place.name}`;
+    (inDialog ? elements.dialogFavoriteMessage : elements.favoriteMessage).textContent = message;
+  }
+  scheduleFavoriteUndo();
+}
+
+function scheduleFavoriteUndo() {
+  if (!pendingFavorite) return;
+  clearTimeout(pendingFavorite.timer);
+  const feedback = elements.dialog.open ? elements.dialogFavoriteFeedback : elements.favoriteFeedback;
+  if (feedback.matches(":hover") || feedback.contains(document.activeElement)) return;
+  const pending = pendingFavorite;
+  pending.timer = setTimeout(() => {
+    if (pendingFavorite === pending) clearFavoriteUndo();
+  }, 7000);
+}
+
+function clearFavoriteUndo() {
+  if (!pendingFavorite) return;
+  clearTimeout(pendingFavorite.timer);
+  pendingFavorite = null;
+  const undoHadFocus = document.activeElement === elements.undoFavorite || document.activeElement === elements.dialogUndoFavorite;
+  renderFavoriteFeedback();
+  if (undoHadFocus) {
+    (elements.dialog.open ? elements.search : elements.favorite.hidden ? elements.openPlaces : elements.favorite).focus({ preventScroll: true });
+  }
+}
+
+function removeFavorite(place) {
+  const index = state.favorites.findIndex((favorite) => placeIdentity(favorite) === placeIdentity(place));
+  if (index < 0) return;
+  const retryingUndo = Boolean(pendingFavorite?.error);
+  if (!retryingUndo) clearFavoriteUndo();
+  const [removed] = state.favorites.splice(index, 1);
+  storage.set(FAVORITES_KEY, state.favorites);
+  renderFavorites();
+  updateFavoriteButton();
+  if (elements.dialog.open) {
+    const adjacent = elements.favoritesList.children[Math.min(index, state.favorites.length - 1)];
+    (adjacent?.querySelector(".delete-favorite") || elements.search).focus({ preventScroll: true });
+  }
+  if (retryingUndo) {
+    pendingFavorite.error = false;
+    pendingFavorite.retryRemoved = removed.name;
+  } else {
+    pendingFavorite = { place: removed, index, timer: null, error: false };
+  }
+  renderFavoriteFeedback();
+}
+
+function undoFavorite() {
+  if (!pendingFavorite) return;
+  const { place, index } = pendingFavorite;
+  const alreadyRestored = state.favorites.some((favorite) => placeIdentity(favorite) === placeIdentity(place));
+  if (!alreadyRestored && state.favorites.length >= 8) {
+    pendingFavorite.error = true;
+    pendingFavorite.retryRemoved = null;
+    renderFavoriteFeedback();
+    (elements.dialog.open ? elements.dialogUndoFavorite : elements.undoFavorite).focus({ preventScroll: true });
+    return;
+  }
+  clearFavoriteUndo();
+  let restoredIndex = state.favorites.findIndex((favorite) => placeIdentity(favorite) === placeIdentity(place));
+  if (restoredIndex < 0 && state.favorites.length < 8) {
+    restoredIndex = Math.min(index, state.favorites.length);
+    state.favorites.splice(restoredIndex, 0, place);
+    storage.set(FAVORITES_KEY, state.favorites);
+    renderFavorites();
+    updateFavoriteButton();
+  }
+  if (elements.dialog.open) {
+    (restoredIndex >= 0 ? elements.favoritesList.children[restoredIndex]?.querySelector(".favorite-place") : elements.search)
+      .focus({ preventScroll: true });
+  } else if (!elements.favorite.hidden) {
+    elements.favorite.focus({ preventScroll: true });
+  }
+}
+
 function renderFavorites() {
-  elements.favoritesList.replaceChildren(...state.favorites.map((place) => {
+  const list = elements.favoritesList;
+  const oldRows = new Map([...list.children].filter((row) => !row.dataset.exiting)
+    .map((row) => [row.dataset.place, row]));
+  const positions = new Map([...oldRows].map(([key, row]) => [key, row.getBoundingClientRect()]));
+  const animate = elements.dialog.open && motionAllowed();
+  const easing = getComputedStyle(document.documentElement).getPropertyValue("--ease-out").trim();
+  const rows = state.favorites.map((place) => {
+    const key = placeIdentity(place);
+    if (oldRows.has(key)) return oldRows.get(key);
     const item = document.createElement("li");
     item.className = "favorite-row";
+    item.dataset.place = key;
     const choose = document.createElement("button");
     choose.type = "button";
     choose.className = "favorite-place";
-    choose.textContent = place.name;
+    const name = document.createElement("strong");
+    name.className = "place-label";
+    name.textContent = place.name;
+    choose.append(name);
     choose.addEventListener("click", () => choosePlace(place));
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "delete-favorite";
     remove.setAttribute("aria-label", `删除收藏 ${place.name}`);
     remove.textContent = "×";
-    remove.addEventListener("click", () => {
-      if (item.classList.contains("is-removing")) return;
-      item.classList.add("is-removing");
-      let finished = false;
-      const finalize = () => {
-        if (finished) return;
-        finished = true;
-        state.favorites = state.favorites.filter((candidate) => placeIdentity(candidate) !== placeIdentity(place));
-        storage.set(FAVORITES_KEY, state.favorites);
-        renderFavorites();
-        updateFavoriteButton();
-      };
-      item.addEventListener("transitionend", finalize, { once: true });
-      setTimeout(finalize, 200);
-    });
+    remove.addEventListener("click", () => removeFavorite(place));
     item.append(choose, remove);
     return item;
-  }));
+  });
+  const retained = new Set(rows);
+  for (const row of oldRows.values()) {
+    if (retained.has(row)) continue;
+    const rect = positions.get(row.dataset.place);
+    row.remove();
+    if (animate) {
+      row.dataset.exiting = "true";
+      row.inert = true;
+      row.setAttribute("aria-hidden", "true");
+      row.style.cssText = `position:absolute;top:${rect.top - list.getBoundingClientRect().top}px;left:0;width:${rect.width}px;pointer-events:none`;
+      list.append(row);
+      row.animate([{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(-8px)" }],
+        { duration: 120, easing }).finished.then(() => row.remove(), () => row.remove());
+    }
+  }
+  rows.forEach((row, index) => {
+    if (list.children[index] !== row) list.insertBefore(row, list.children[index] || null);
+  });
+  for (const row of rows) {
+    const previous = positions.get(row.dataset.place);
+    row.getAnimations().forEach((animation) => animation.cancel());
+    if (!animate) continue;
+    const delta = previous ? previous.top - row.getBoundingClientRect().top : 4;
+    if (previous && Math.abs(delta) < 0.5) continue;
+    row.animate([
+      { transform: `translateY(${delta}px)`, opacity: previous ? 1 : 0 },
+      { transform: "translateY(0)", opacity: 1 }
+    ], { duration: 160, easing });
+  }
   elements.favoritesEmpty.hidden = state.favorites.length > 0;
 }
 
@@ -720,15 +976,16 @@ function toggleFavorite() {
   const identity = placeIdentity(state.place);
   const index = state.favorites.findIndex((place) => placeIdentity(place) === identity);
   if (index >= 0) {
-    state.favorites.splice(index, 1);
-  } else {
-    if (state.favorites.length >= 8) {
-      setLocationStatus("最多收藏 8 个地点");
-      openPlaces();
-      return;
-    }
-    state.favorites.push({ ...state.place });
+    removeFavorite(state.place);
+    return;
   }
+  if (state.favorites.length >= 8) {
+    setLocationStatus("最多收藏 8 个地点");
+    openPlaces();
+    return;
+  }
+  if (pendingFavorite && placeIdentity(pendingFavorite.place) === identity) clearFavoriteUndo();
+  state.favorites.push({ ...state.place });
   storage.set(FAVORITES_KEY, state.favorites);
   updateFavoriteButton();
   renderFavorites();
@@ -746,6 +1003,28 @@ function initFluidDrawer(dialog) {
   let currentTranslateY = 0;
   let activePointerId = null;
   let history = [];
+  let motionTimer = null;
+  let motionEnd = null;
+
+  function cancelMotion() {
+    clearTimeout(motionTimer);
+    motionTimer = null;
+    if (motionEnd) dialog.removeEventListener("transitionend", motionEnd);
+    motionEnd = null;
+  }
+
+  function finishMotion(callback, delay) {
+    cancelMotion();
+    const onEnd = (event) => {
+      if (event && (event.target !== dialog || event.propertyName !== "transform")) return;
+      cancelMotion();
+      callback();
+    };
+    motionEnd = onEnd;
+    dialog.addEventListener("transitionend", onEnd);
+    motionTimer = setTimeout(() => onEnd(), delay);
+  }
+
 
   function rubberband(overshoot, dimension = 350, constant = 0.45) {
     return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
@@ -764,47 +1043,48 @@ function initFluidDrawer(dialog) {
   }
 
   function resetDialogStyles() {
+    cancelMotion();
     dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
     dialog.style.removeProperty("--sheet-translate-y");
     dialog.style.removeProperty("--backdrop-opacity");
+    dialog.style.removeProperty("animation");
     currentTranslateY = 0;
     isDragging = false;
     activePointerId = null;
   }
 
   function dismissDrawer() {
+    if (!motionAllowed()) {
+      dialog.close();
+      resetDialogStyles();
+      return;
+    }
+    const presentation = getComputedStyle(dialog);
+    dialog.style.transform = presentation.transform;
+    dialog.style.opacity = presentation.opacity;
+    dialog.style.animation = "none";
+    void dialog.offsetWidth;
     dialog.classList.remove("is-dragging", "is-settling");
     dialog.classList.add("is-dismissing");
-    let closed = false;
-    const onEnd = () => {
-      if (closed) return;
-      closed = true;
-      dialog.removeEventListener("transitionend", onEnd);
+    dialog.style.removeProperty("transform");
+    dialog.style.removeProperty("opacity");
+    dialog.style.setProperty("--backdrop-opacity", "0");
+    finishMotion(() => {
       if (dialog.open) dialog.close();
       resetDialogStyles();
-    };
-    dialog.addEventListener("transitionend", onEnd, { once: true });
-    setTimeout(onEnd, 240);
+    }, 240);
   }
 
   function springBack() {
-    dialog.classList.remove("is-dragging");
+    dialog.classList.remove("is-dragging", "is-dismissing");
     dialog.classList.add("is-settling");
     setTranslateY(0);
-    let settled = false;
-    const onEnd = () => {
-      if (settled) return;
-      settled = true;
-      dialog.removeEventListener("transitionend", onEnd);
-      resetDialogStyles();
-    };
-    dialog.addEventListener("transitionend", onEnd, { once: true });
-    setTimeout(onEnd, 320);
+    finishMotion(resetDialogStyles, 320);
   }
 
   function canStartDrag(e) {
     if (!dialog.open) return false;
-    if (window.matchMedia("(min-width: 681px)").matches) return false;
+    if (window.matchMedia("(min-width: 761px)").matches) return false;
     if (handle && (e.target === handle || handle.contains(e.target))) return true;
     if (head && (e.target === head || head.contains(e.target))) {
       if (e.target.closest("button, a, input")) return false;
@@ -818,13 +1098,18 @@ function initFluidDrawer(dialog) {
   }
 
   dialog.addEventListener("pointerdown", (e) => {
+    if (activePointerId !== null) return;
     if (e.button !== 0 && e.pointerType === "mouse") return;
     if (!canStartDrag(e)) return;
 
-    if (dialog.classList.contains("is-settling")) {
-      const matrix = new DOMMatrix(getComputedStyle(dialog).transform);
-      currentTranslateY = matrix.m42 || currentTranslateY;
-      dialog.classList.remove("is-settling");
+    if (dialog.classList.contains("is-settling") || dialog.classList.contains("is-dismissing")) {
+      const presentationY = new DOMMatrix(getComputedStyle(dialog).transform).m42;
+      cancelMotion();
+      dialog.classList.remove("is-settling", "is-dismissing");
+      dialog.classList.add("is-dragging");
+      setTranslateY(presentationY);
+    } else {
+      dialog.classList.add("is-dragging");
     }
 
     isDragging = true;
@@ -832,8 +1117,6 @@ function initFluidDrawer(dialog) {
     startY = e.clientY - currentTranslateY;
     currentY = e.clientY;
     history = [{ y: e.clientY, t: performance.now() }];
-
-    dialog.classList.add("is-dragging");
     try { dialog.setPointerCapture(e.pointerId); } catch {}
 
     if (document.activeElement && document.activeElement.tagName === "INPUT") {
@@ -865,7 +1148,12 @@ function initFluidDrawer(dialog) {
   function handlePointerEnd(e) {
     if (!isDragging || e.pointerId !== activePointerId) return;
     isDragging = false;
+    activePointerId = null;
     try { dialog.releasePointerCapture(e.pointerId); } catch {}
+    if (e.type === "pointercancel") {
+      if (dialog.open) springBack();
+      return;
+    }
 
     const now = performance.now();
     const recent = history.filter((p) => now - p.t < 120);
@@ -885,10 +1173,18 @@ function initFluidDrawer(dialog) {
 
   dialog.addEventListener("pointerup", handlePointerEnd);
   dialog.addEventListener("pointercancel", handlePointerEnd);
-  dialog.addEventListener("close", resetDialogStyles);
+  dialog.querySelector(".dialog-close")?.addEventListener("click", (event) => {
+    if (!event.detail || !motionAllowed()) return;
+    event.preventDefault();
+    dismissDrawer();
+  });
+  dialog.addEventListener("close", () => {
+    if (!dialog.open) resetDialogStyles();
+  });
+  return resetDialogStyles;
 }
 
-initFluidDrawer(elements.dialog);
+const resetPlacesDrawer = initFluidDrawer(elements.dialog);
 initFluidDrawer(elements.devDialog);
 
 const LOADER_STORAGE_KEY = "firecloud:loader_style:v1";
@@ -1142,6 +1438,14 @@ elements.errorSearch.addEventListener("click", () => { openPlaces(); elements.se
 elements.locate.addEventListener("click", locate);
 elements.dialogLocate.addEventListener("click", locate);
 elements.favorite.addEventListener("click", toggleFavorite);
+elements.undoFavorite.addEventListener("click", undoFavorite);
+elements.dialogUndoFavorite.addEventListener("click", undoFavorite);
+elements.dialog.addEventListener("close", renderFavoriteFeedback);
+for (const feedback of [elements.favoriteFeedback, elements.dialogFavoriteFeedback]) {
+  for (const event of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
+    feedback.addEventListener(event, () => queueMicrotask(scheduleFavoriteUndo));
+  }
+}
 elements.refresh.addEventListener("click", () => state.place && loadPlace(state.place, { force: true }));
 elements.retry.addEventListener("click", () => state.place ? loadPlace(state.place, { force: true }) : openPlaces());
 for (const tab of elements.tabs) {

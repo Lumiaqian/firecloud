@@ -12,7 +12,7 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=43">
+  <link rel="stylesheet" href="css/style.css?v=46">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great">
@@ -39,6 +39,11 @@
         </button>
       </div>
     </header>
+    <p id="forecast-status" class="sr-only" role="status" aria-atomic="true"></p>
+    <div id="favorite-feedback" class="favorite-feedback" hidden>
+      <p id="favorite-message" role="status" aria-atomic="true"></p>
+      <button id="undo-favorite" class="text-button" type="button">撤销</button>
+    </div>
 
     <section class="panel welcome" id="panel-welcome">
       <div class="welcome-layout">
@@ -47,7 +52,7 @@
           <h1>下一场霞光<br>值得等吗</h1>
           <p class="intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
           <div class="welcome-actions">
-            <button class="primary liquid-glass glass-tint" id="locate-button" type="button" aria-describedby="privacy-note">
+            <button class="primary" id="locate-button" type="button" aria-describedby="privacy-note">
               <span>使用当前位置</span><span aria-hidden="true">↗</span>
             </button>
             <button class="text-button" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市</button>
@@ -79,22 +84,23 @@
           <button id="tab-sunset" aria-pressed="true" data-event="sunset" type="button">晚霞</button>
           <button id="tab-sunrise" aria-pressed="false" data-event="sunrise" type="button">朝霞</button>
         </div>
+        <p id="event-pending" class="event-pending" role="status" hidden></p>
       </div>
       <section class="hero-card" aria-labelledby="index-label" data-weather-surface>
         <div class="event-brief">
           <p class="hero-overline">霞光时刻</p>
-          <h1 class="event-time" id="event-time">—</h1>
+          <h1 class="event-time" id="event-time" tabindex="-1">—</h1>
           <p class="event-date" id="event-date">—</p>
           <p class="countdown" id="countdown">—</p>
           <div class="data-meta">
-            <span class="weather-badge" id="current-weather-badge"></span>
             <span id="data-source">实时数据</span>
             <span id="updated-at">—</span>
           </div>
         </div>
         <div class="score-block">
           <p class="index-label" id="index-label">霞光指数</p>
-          <div class="score-row"><strong id="score">—</strong></div>
+          <p class="index-scale" id="index-scale">0–99 指数 · 非概率</p>
+          <div class="score-row" aria-describedby="index-scale"><strong id="score">—</strong></div>
           <p class="band" id="band">—</p>
           <p class="verdict" id="verdict">—</p>
         </div>
@@ -148,6 +154,10 @@
     <p class="dialog-status" id="search-status" role="status"></p>
     <ul class="search-results" id="search-results"></ul>
     <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">还没有收藏地点</p></section>
+    <div id="dialog-favorite-feedback" class="favorite-feedback" hidden>
+      <p id="dialog-favorite-message" role="status" aria-atomic="true"></p>
+      <button id="dialog-undo-favorite" class="text-button" type="button">撤销</button>
+    </div>
   </dialog>
 
   <dialog class="liquid-glass glass-sheet dev-lab-dialog" id="dev-lab-dialog" aria-labelledby="dev-lab-title">
@@ -195,6 +205,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=29"></script>
+  <script type="module" src="js/app.mjs?v=32"></script>
 </body>
 </html>
