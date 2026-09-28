@@ -71,7 +71,7 @@ body[data-tier="dull"] {
     linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(246, 239, 226, 0.4) 100%);
   background-size: 16px 16px, 100% 100%;
   transform: rotate(-0.35deg);
-  transition: transform 380ms var(--ease-spring), box-shadow 380ms ease, filter 300ms ease;
+  transition: transform 220ms var(--ease-out), box-shadow 260ms ease, filter 260ms ease;
   z-index: 15;
 }
 
@@ -364,7 +364,21 @@ body[data-tier="dull"] {
   background-image: 
     radial-gradient(rgba(180, 160, 135, 0.14) 1px, transparent 0),
     linear-gradient(180deg, #fff 0%, #faf5ec 100%);
-  background-size: 14px 14px, 100% 100%;
+  animation: day-card-stagger-in 320ms var(--ease-out) backwards;
+  animation-delay: calc(var(--day-idx, 0) * 35ms);
+}
+
+@keyframes day-card-stagger-in {
+  0% {
+    opacity: 0;
+    translate: 0 14px;
+    scale: 0.96;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
 }
 
 /* 自然微倾角交错排列 */
@@ -1312,6 +1326,8 @@ body[data-state="ready"] .metrics article strong {
   }
   .day-journal-card:nth-child(n) {
     transform: none !important;
+    translate: none !important;
+    scale: none !important;
   }
   .day-journal-card:hover,
   .hero-master-card:hover {
@@ -1511,6 +1527,9 @@ dialog#dev-lab-dialog::before {
     color: var(--seal-cinnabar, #c23b22) !important;
   }
 }
+#places-dialog .search-results li button:active {
+  transform: translateX(4px) scale(0.98) !important;
+}
 #places-dialog .place-label {
   font-family: var(--font-serif) !important;
   font-size: 15px !important;
@@ -1559,6 +1578,9 @@ dialog#dev-lab-dialog::before {
     transform: translateX(5px) !important;
   }
 }
+#places-dialog .favorite-place:active {
+  transform: translateX(3px) scale(0.985) !important;
+}
 #places-dialog .delete-favorite {
   color: #9c8a77 !important;
 }
@@ -1567,6 +1589,9 @@ dialog#dev-lab-dialog::before {
     background: rgba(194, 59, 34, 0.1) !important;
     color: var(--seal-cinnabar, #c23b22) !important;
   }
+}
+#places-dialog .delete-favorite:active {
+  transform: scale(0.9) !important;
 }
 
 /* 收藏反馈吐司 */

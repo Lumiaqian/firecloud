@@ -30,11 +30,19 @@ document.addEventListener("keydown", () => { document.body.dataset.input = "keyb
 function motionAllowed() {
   return !reducedMotion.matches && document.body.dataset.input !== "keyboard";
 }
+function triggerHaptic(pattern = 10) {
+  if (navigator.vibrate && motionAllowed()) {
+    try { navigator.vibrate(pattern); } catch {}
+  }
+}
 function fadeUpdate(element) {
-  if (!motionAllowed()) return;
+  if (!motionAllowed() || !element) return;
   element.getAnimations().forEach((animation) => animation.cancel());
-  element.animate([{ opacity: 0.55 }, { opacity: 1 }], {
-    duration: 160, easing: getComputedStyle(document.documentElement).getPropertyValue("--ease-out").trim()
+  element.animate([
+    { opacity: 0.45, filter: "blur(1.5px)", transform: "translateY(3px)" },
+    { opacity: 1, filter: "blur(0)", transform: "translateY(0)" }
+  ], {
+    duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)"
   });
 }
 function syncEventTabs() {
@@ -50,17 +58,25 @@ const journalWeather = createJournalWeatherEngine(
 );
 
 // 绑定黄铜夹与朱砂印章自然微物理触控
-$("hero-brass-clip")?.addEventListener("click", () => journalWeather?.triggerLightningStrike("clip"));
+$("hero-brass-clip")?.addEventListener("click", () => {
+  triggerHaptic([15, 30, 20]);
+  journalWeather?.triggerLightningStrike("clip");
+});
 $("hero-brass-clip")?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
+    triggerHaptic([15, 30, 20]);
     journalWeather?.triggerLightningStrike("clip");
   }
 });
-$("seal-stamp")?.addEventListener("click", () => journalWeather?.triggerSunWarm());
+$("seal-stamp")?.addEventListener("click", () => {
+  triggerHaptic(25);
+  journalWeather?.triggerSunWarm();
+});
 $("seal-stamp")?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
+    triggerHaptic(25);
     journalWeather?.triggerSunWarm();
   }
 });
@@ -68,16 +84,21 @@ $("seal-stamp")?.addEventListener("keydown", (e) => {
 // 手帐主体卡片物理微倾动效 (Subtle 3D Physics Tilt)
 const heroMasterCard = $("hero-master-card");
 if (heroMasterCard) {
+  let tiltRaf = 0;
   heroMasterCard.addEventListener("mousemove", (e) => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const rect = heroMasterCard.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    const rotX = -(y / (rect.height / 2)) * 1.8;
-    const rotY = (x / (rect.width / 2)) * 2.2;
-    heroMasterCard.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) translateY(-2px)`;
+    cancelAnimationFrame(tiltRaf);
+    tiltRaf = requestAnimationFrame(() => {
+      const rect = heroMasterCard.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      const rotX = -(y / (rect.height / 2)) * 1.5;
+      const rotY = (x / (rect.width / 2)) * 2.0;
+      heroMasterCard.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(-0.35deg) translateY(-2px)`;
+    });
   });
   heroMasterCard.addEventListener("mouseleave", () => {
+    cancelAnimationFrame(tiltRaf);
     heroMasterCard.style.transform = "";
   });
 }
@@ -517,6 +538,7 @@ function renderWeek(bundle) {
     const eventTime = sunTimes(probe, state.place.lat, state.place.lon)[state.event];
     const card = document.createElement("article");
     card.className = "day-card day-journal-card";
+    card.style.setProperty("--day-idx", String(day));
     if (day === 0) card.classList.add("is-active-day");
 
     if (!eventTime) {
@@ -594,8 +616,11 @@ function renderWeek(bundle) {
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，霞光指数 ${score}分，${miniSeal}，${advice}`);
       const selectCard = () => {
+        triggerHaptic(12);
         elements.week.querySelectorAll(".day-journal-card").forEach(c => c.classList.remove("is-active-day"));
         card.classList.add("is-active-day");
+        const targets = [elements.eventTime, elements.entryTag, elements.score, elements.verdict, elements.sealGrade, elements.sealSub];
+        targets.forEach(el => el && fadeUpdate(el));
         // 联动更新 Hero 主卡片展示该日预报
         if (elements.eventTime) {
           const clock = formatClock(eventTime, timeZone);
@@ -1574,6 +1599,7 @@ elements.retry.addEventListener("click", () => state.place ? loadPlace(state.pla
 for (const tab of elements.tabs) {
   tab.addEventListener("click", () => {
     if (tab.dataset.event === state.event || !state.place) return;
+    triggerHaptic(10);
     state.event = tab.dataset.event;
     loadPlace(state.place, { preferCache: true });
   });
