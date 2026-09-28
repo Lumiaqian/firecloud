@@ -944,6 +944,102 @@ body[data-state="welcome"] .sky {
   filter: none;
 }
 
+/* ==========================================================================
+   🌕 天幕真实月相天体系统 (Celestial Moon & Lunar Phase System)
+   ========================================================================== */
+.sky-moon {
+  position: absolute;
+  left: var(--moon-x, 78%);
+  top: var(--moon-y, 16%);
+  width: 76px;
+  height: 76px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-out), left 2s ease, top 2s ease, filter 800ms ease;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .sky-moon {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+body[data-light="night"] .sky-moon {
+  opacity: 1;
+}
+
+/* 晴朗夜晚：皎洁明月与清澈月晕 */
+body[data-light="night"][data-weather="clear"] .sky-moon {
+  filter: drop-shadow(0 0 18px rgba(225, 240, 255, 0.76)) drop-shadow(0 0 38px rgba(180, 215, 255, 0.4));
+}
+body[data-light="night"][data-weather="clear"] .sky-moon-halo {
+  opacity: calc(0.35 + var(--moon-illumination, 0.5) * 0.45);
+}
+
+/* 多云夜晚：轻纱微掩 */
+body[data-light="night"][data-weather="partly"] .sky-moon {
+  opacity: 0.88;
+  filter: drop-shadow(0 0 14px rgba(200, 225, 250, 0.55)) blur(0.5px);
+}
+body[data-light="night"][data-weather="partly"] .sky-moon-halo {
+  opacity: calc(0.28 + var(--moon-illumination, 0.5) * 0.35);
+}
+
+/* 阴天夜晚：云隙透月，朦胧清幽 */
+body[data-light="night"][data-weather="overcast"] .sky-moon {
+  opacity: 0.48;
+  filter: blur(2.5px) drop-shadow(0 0 16px rgba(180, 205, 235, 0.4));
+}
+body[data-light="night"][data-weather="overcast"] .sky-moon-halo {
+  opacity: 0.22;
+}
+
+/* 雨天/雷暴：水气漫射，月影朦胧 */
+body[data-light="night"][data-weather="rain"] .sky-moon,
+body[data-light="night"][data-weather="thunder"] .sky-moon {
+  opacity: 0.42;
+  filter: blur(2.5px) drop-shadow(0 0 14px rgba(180, 210, 240, 0.35));
+}
+
+/* 雾天夜晚：大光圈漫反射月晕 */
+body[data-light="night"][data-weather="fog"] .sky-moon {
+  opacity: 0.48;
+  filter: blur(4.5px) drop-shadow(0 0 20px rgba(195, 220, 250, 0.4));
+}
+
+/* 降雪夜晚：清冷皎洁银霜月 */
+body[data-light="night"][data-weather="snow"] .sky-moon {
+  filter: drop-shadow(0 0 20px rgba(235, 248, 255, 0.85)) drop-shadow(0 0 45px rgba(200, 230, 255, 0.45));
+}
+
+/* 月晕漫射环 */
+.sky-moon-halo {
+  position: absolute;
+  inset: -52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(225, 242, 255, 0.30) 0%, rgba(185, 220, 255, 0.12) 42%, transparent 72%);
+  pointer-events: none;
+  opacity: 0.4;
+  transform: scale(calc(0.7 + var(--moon-illumination, 0.5) * 0.6));
+  transition: opacity 1s ease, transform 1.5s ease;
+}
+
+.sky-moon-disk {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sky-moon-disk svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .app-shell {
   position: relative;
   z-index: 1;

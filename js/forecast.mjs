@@ -191,6 +191,213 @@ export function sunDiskPosition(azimuthDeg, elevationDeg, {
   return { x, y, valid: true };
 }
 
+/**
+ * 将月球方位/高度角映射到屏幕百分比坐标
+ * 映射至顶部空旷天幕视觉走廊 (X: 18% ~ 82%, Y: 7% ~ 15%)，避免遮挡顶栏操作或卡片
+ */
+export function moonDiskPosition(azimuthDeg, elevationDeg, {
+  fallbackX = 76,
+  fallbackY = 12
+} = {}) {
+  if (!Number.isFinite(azimuthDeg) || !Number.isFinite(elevationDeg) || elevationDeg < -1) {
+    return { x: fallbackX, y: fallbackY, valid: false, aboveHorizon: false };
+  }
+  // 水平方位：东方(90°)偏右(~78%)，南方(180°)居中(~50%)，西方(270°)偏左(~22%)
+  const x = Math.min(84, Math.max(16, 50 + Math.sin(azimuthDeg * RAD) * 28));
+  // 垂直高度：天顶(90°)位于顶部(~7%)，地平线(0°)位于天幕底部(~14%)
+  const y = Math.min(16, Math.max(6, 14 - (Math.min(Math.max(0, elevationDeg), 90) / 90) * 7));
+  return { x, y, valid: true, aboveHorizon: true };
+}
+
+/**
+ * 天文月相与月球坐标算法 (Jean Meeus 算法)
+ */
+export function lunarPhase(date = new Date(), lat = 30.27, lng = 120.15) {
+  const d = toDays(date);
+
+  // 1. 太阳平黄经与真黄经
+  const L_sun = (280.466 + 0.98564736 * d) % 360;
+  const M_sun = (357.529 + 0.98560028 * d) % 360;
+  const lambda_sun = (L_sun + 1.915 * Math.sin(M_sun * RAD) + 0.020 * Math.sin(2 * M_sun * RAD) + 360) % 360;
+
+  // 2. 月球平黄经、平近点角与升交点黄经
+  const L_moon = (218.316 + 13.176396 * d) % 360;
+  const M_moon = (134.963 + 13.064993 * d) % 360;
+  const F_moon = (93.272 + 13.229350 * d) % 360;
+
+  // 3. 月球真黄经与黄纬摄动修正
+  const lambda_moon = (L_moon + 6.289 * Math.sin(M_moon * RAD)
+    - 1.274 * Math.sin((M_moon - 2 * (L_moon - lambda_sun)) * RAD)
+    + 0.658 * Math.sin(2 * (L_moon - lambda_sun) * RAD)
+    - 0.214 * Math.sin(2 * M_moon * RAD)
+    - 0.186 * Math.sin(M_sun * RAD)
+    + 360) % 360;
+  const beta_moon = 5.128 * Math.sin(F_moon * RAD);
+
+  // 4. 日月距角与照亮比例
+  const elongation = (lambda_moon - lambda_sun + 360) % 360;
+  const phaseFraction = (1 - Math.cos(elongation * RAD)) / 2;
+  const isWaxing = elongation < 180;
+  const moonAge = (elongation / 360) * 29.530588853;
+
+  // 5. 月相中文名称与分类
+  let phaseName = "新月";
+  let phaseKey = "new";
+  if (elongation < 15 || elongation >= 345) {
+    phaseName = "新月 (朔)";
+    phaseKey = "new";
+  } else if (elongation < 75) {
+    phaseName = "蛾眉月";
+    phaseKey = "waxing-crescent";
+  } else if (elongation < 105) {
+    phaseName = "上弦月";
+    phaseKey = "first-quarter";
+  } else if (elongation < 165) {
+    phaseName = "盈凸月";
+    phaseKey = "waxing-gibbous";
+  } else if (elongation < 195) {
+    phaseName = "满月 (望)";
+    phaseKey = "full";
+  } else if (elongation < 255) {
+    phaseName = "亏凸月";
+    phaseKey = "waning-gibbous";
+  } else if (elongation < 285) {
+    phaseName = "下弦月";
+    phaseKey = "last-quarter";
+  } else {
+    phaseName = "残月";
+    phaseKey = "waning-crescent";
+  }
+
+  // 6. 农历月日格式化 (利用 Intl 原生中历引擎)
+  let lunarDate = "";
+  try {
+    const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", { month: "long", day: "numeric" });
+    const parts = formatter.format(date);
+    const match = parts.match(/^(.*?)(\d+)日?$/);
+    if (match) {
+      const monthPart = match[1];
+      const dayNum = parseInt(match[2], 10);
+      const dayNames = ["", "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"];
+      lunarDate = `农历${monthPart}${dayNames[dayNum] || match[2]}`;
+    } else {
+      lunarDate = `农历${parts}`;
+    }
+  } catch {
+    lunarDate = `月龄 ${moonAge.toFixed(1)}天`;
+  }
+
+  // 7. 赤道与地平天球坐标 (赤经、赤纬、时角、高度角、方位角)
+  const lRad = lambda_moon * RAD;
+  const bRad = beta_moon * RAD;
+  const x = Math.cos(bRad) * Math.cos(lRad);
+  const y = Math.cos(OBLIQUITY) * Math.cos(bRad) * Math.sin(lRad) - Math.sin(OBLIQUITY) * Math.sin(bRad);
+  const z = Math.sin(OBLIQUITY) * Math.cos(bRad) * Math.sin(lRad) + Math.cos(OBLIQUITY) * Math.sin(bRad);
+
+  const ra = (Math.atan2(y, x) * DEG + 360) % 360;
+  const dec = Math.asin(Math.max(-1, Math.min(1, z))) * DEG;
+
+  const gst = (280.46061837 + 360.98564736629 * d) % 360;
+  const lst = (gst + lng + 360) % 360;
+  const ha = (lst - ra + 360) % 360;
+
+  const latRad = lat * RAD;
+  const decRad = dec * RAD;
+  const haRad = ha * RAD;
+
+  const sinAlt = Math.sin(latRad) * Math.sin(decRad) + Math.cos(latRad) * Math.cos(decRad) * Math.cos(haRad);
+  const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * DEG;
+
+  const cosAz = (Math.sin(decRad) - Math.sin(latRad) * sinAlt) / (Math.cos(latRad) * Math.cos(Math.asin(sinAlt)));
+  let azimuth = Math.acos(Math.max(-1, Math.min(1, cosAz))) * DEG;
+  if (Math.sin(haRad) > 0) azimuth = 360 - azimuth;
+
+  const isAboveHorizon = altitude > -1;
+  const disk = moonDiskPosition(azimuth, altitude);
+
+  return {
+    elongation,
+    phaseFraction,
+    isWaxing,
+    moonAge,
+    phaseKey,
+    phaseName,
+    lunarDate,
+    altitude,
+    azimuth,
+    isAboveHorizon,
+    disk
+  };
+}
+
+/**
+ * 生成精确月相切线 SVG 矢量路径
+ */
+export function lunarSvgPath(fraction, isWaxing, R = 40, cx = 50, cy = 50) {
+  const top = `${cx} ${cy - R}`;
+  const bottom = `${cx} ${cy + R}`;
+  const rx = Math.max(0.1, R * Math.abs(2 * fraction - 1));
+
+  if (fraction >= 0.992) {
+    return `M ${cx - R} ${cy} A ${R} ${R} 0 1 0 ${cx + R} ${cy} A ${R} ${R} 0 1 0 ${cx - R} ${cy}`;
+  }
+  if (fraction <= 0.008) {
+    return "";
+  }
+
+  if (isWaxing) {
+    // 亮面在右：顺时针外圆弧至底部，椭圆内弧回顶部
+    const sweep = fraction >= 0.5 ? 1 : 0;
+    return `M ${top} A ${R} ${R} 0 0 1 ${bottom} A ${rx.toFixed(2)} ${R} 0 0 ${sweep} ${top} Z`;
+  } else {
+    // 亮面在左：逆时针外圆弧至底部，椭圆内弧回顶部
+    const sweep = fraction >= 0.5 ? 0 : 1;
+    return `M ${top} A ${R} ${R} 0 0 0 ${bottom} A ${rx.toFixed(2)} ${R} 0 0 ${sweep} ${top} Z`;
+  }
+}
+
+/**
+ * 生成包含地照、月海与受光曲面的月球完整 SVG 矢量图形
+ */
+export function buildMoonSvg(fraction, isWaxing, size = 72, idPrefix = "moon") {
+  const litPath = lunarSvgPath(fraction, isWaxing, 40, 50, 50);
+  const gradId = `${idPrefix}-grad-${Math.round(fraction * 100)}-${isWaxing ? "w" : "wn"}`;
+  const clipId = `${idPrefix}-clip-${Math.round(fraction * 100)}-${isWaxing ? "w" : "wn"}`;
+
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" class="lunar-moon-svg">
+  <defs>
+    <radialGradient id="${gradId}" cx="45%" cy="38%" r="58%">
+      <stop offset="0%" stop-color="#fffef8"/>
+      <stop offset="60%" stop-color="#ebe3cd"/>
+      <stop offset="100%" stop-color="#cfc4a6"/>
+    </radialGradient>
+    <radialGradient id="${idPrefix}-earthshine" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(125, 160, 205, 0.16)"/>
+      <stop offset="85%" stop-color="rgba(35, 60, 90, 0.28)"/>
+      <stop offset="100%" stop-color="rgba(12, 22, 36, 0.45)"/>
+    </radialGradient>
+    ${litPath ? `<clipPath id="${clipId}"><path d="${litPath}" /></clipPath>` : ""}
+  </defs>
+  <!-- 暗面地照微光轮廓 (Earthshine & Dark Limb) -->
+  <circle cx="50" cy="50" r="40" fill="#091322" stroke="rgba(165, 195, 235, 0.25)" stroke-width="0.75"/>
+  <circle cx="50" cy="50" r="40" fill="url(#${idPrefix}-earthshine)" />
+  
+  <!-- 受光月面与月海暗影 (Lit Surface & Lunar Maria) -->
+  ${litPath ? `<path d="${litPath}" fill="url(#${gradId})" />
+  <g clip-path="url(#${clipId})" opacity="0.42">
+    <!-- 月海暗影特征 (风暴洋、雨海、澄海、静海、危海) -->
+    <ellipse cx="38" cy="42" rx="13" ry="16" fill="#758292" />
+    <circle cx="48" cy="29" r="9" fill="#6d7988" />
+    <ellipse cx="64" cy="40" rx="9" ry="12" fill="#788698" />
+    <circle cx="75" cy="38" r="5" fill="#758292" />
+    <ellipse cx="66" cy="62" rx="8" ry="11" fill="#707c8c" />
+    <circle cx="40" cy="66" r="8" fill="#748090" />
+  </g>` : ""}
+</svg>`;
+}
+
 export function destinationPoint(lat, lng, bearingDeg, distanceKm) {
   const angularDistance = distanceKm / EARTH_RADIUS_KM;
   const latitude = lat * RAD;

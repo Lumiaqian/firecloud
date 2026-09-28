@@ -43,16 +43,24 @@
   transition: opacity 600ms ease;
 }
 
-/* 宣纸底色与环境漫射 */
-body[data-tier="epic"],
-body[data-tier="great"],
-body[data-tier="fair"],
-body[data-tier="dull"] {
+/* 宣纸底色与环境漫射 (日间宣纸 / 夜间天幕墨染) */
+body[data-light="day"][data-tier="epic"],
+body[data-light="day"][data-tier="great"],
+body[data-light="day"][data-tier="fair"],
+body[data-light="day"][data-tier="dull"] {
   background: 
     radial-gradient(circle at 50% 18%, rgba(255, 235, 205, 0.35) 0%, transparent 65%),
     linear-gradient(180deg, #e4ecf7 0%, #fbede0 50%, #fbe8d6 100%);
   background-attachment: fixed;
   color: #28221c;
+}
+
+body[data-light="night"] {
+  background: 
+    radial-gradient(circle at 50% 12%, rgba(25, 52, 90, 0.45) 0%, transparent 70%),
+    linear-gradient(180deg, #030814 0%, #0a1626 50%, #122235 100%) !important;
+  background-attachment: fixed !important;
+  color: #e5edf7 !important;
 }
 
 /* ==========================================================================
@@ -199,6 +207,13 @@ body[data-tier="dull"] {
   gap: 12px;
 }
 
+.journal-entry-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .journal-entry-tag {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -206,6 +221,50 @@ body[data-tier="dull"] {
   color: #9c8a77;
   border-left: 2px solid var(--seal-cinnabar);
   padding-left: 8px;
+}
+
+/* 🌙 夜间月相观测便签印签 (Stationery Lunar Observation Badge) */
+.hero-lunar-badge {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(220, 235, 252, 0.65);
+  border: 1px solid rgba(135, 175, 215, 0.45);
+  border-radius: 12px;
+  padding: 3px 9px 3px 6px;
+  font-size: 11px;
+  font-family: var(--font-serif);
+  color: #1e3e60;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(25, 45, 70, 0.08);
+  transition: background-color 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+body[data-light="night"] .hero-lunar-badge {
+  display: inline-flex;
+}
+
+.hero-lunar-badge:hover {
+  background: rgba(210, 230, 252, 0.9);
+  border-color: rgba(110, 155, 205, 0.7);
+  transform: translateY(-1px);
+}
+
+.hero-lunar-badge:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.lunar-badge-icon {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.lunar-badge-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .hero-event-time {
@@ -1788,6 +1847,92 @@ dialog#dev-lab-dialog::before {
 #dev-lab-dialog .dev-hint {
   color: #8c7b6a !important;
   font-family: var(--font-serif) !important;
+}
+
+/* ==========================================================================
+   🌙 夜间月相天文观测详情弹窗 (Lunar Astronomy Dialog)
+   ========================================================================== */
+.lunar-dialog {
+  max-width: 420px;
+  width: 90vw;
+  padding: 24px 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(12, 22, 38, 0.92);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  color: #eaf1fa;
+  box-shadow: 0 24px 60px rgba(0, 8, 20, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.lunar-dialog::backdrop {
+  background: rgba(2, 6, 12, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.lunar-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0 12px;
+}
+.lunar-stage-moon {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 24px rgba(220, 240, 255, 0.75));
+  margin-bottom: 12px;
+}
+.lunar-stage-moon svg {
+  width: 100%;
+  height: 100%;
+}
+.lunar-stage-name {
+  font-size: 20px;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: #f6f0dd;
+  letter-spacing: 0.05em;
+}
+.lunar-stage-date {
+  font-size: 13px;
+  color: rgba(200, 225, 250, 0.75);
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+}
+.lunar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+.lunar-cell {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lunar-cell small {
+  font-size: 11px;
+  color: rgba(185, 210, 235, 0.65);
+}
+.lunar-cell strong {
+  font-size: 15px;
+  color: #f0f5fc;
+  font-family: var(--font-mono);
+}
+.lunar-advice-box {
+  background: rgba(180, 215, 255, 0.08);
+  border-left: 3px solid #c89c56;
+  padding: 10px 12px;
+  border-radius: 4px 8px 8px 4px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(230, 242, 255, 0.85);
 }
 
 

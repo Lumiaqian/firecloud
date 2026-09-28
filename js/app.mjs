@@ -10,11 +10,14 @@ import {
   solarElevation,
   stormLevelFor,
   sunDiskPosition,
+  moonDiskPosition,
+  lunarPhase,
+  buildMoonSvg,
   sunTimes,
   waitAdvice,
   weatherConditionFor,
   weatherTheme
-} from "./forecast.mjs?v=7";
+} from "./forecast.mjs?v=8";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
 import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=2";
 
@@ -110,6 +113,12 @@ const elements = {
   loaderStage: $("loader-stage"), devDialog: $("dev-lab-dialog"), devPreviewStage: $("dev-preview-stage"),
   devLensSlider: $("dev-lens-slider"),
   devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
+  devBtnToggleNight: $("dev-btn-toggle-night"), devMoonSlider: $("dev-moon-slider"),
+  skyMoon: $("sky-moon"), skyMoonDisk: $("sky-moon-disk"), skyMoonHalo: $("sky-moon-halo"),
+  heroLunarBadge: $("hero-lunar-badge"), lunarBadgeIcon: $("lunar-badge-icon"), lunarBadgeText: $("lunar-badge-text"),
+  lunarDialog: $("lunar-dialog"), lunarDialogMoon: $("lunar-dialog-moon"), lunarDialogName: $("lunar-dialog-name"),
+  lunarDialogDate: $("lunar-dialog-date"), lunarCellFraction: $("lunar-cell-fraction"), lunarCellAge: $("lunar-cell-age"),
+  lunarCellAlt: $("lunar-cell-alt"), lunarCellAz: $("lunar-cell-az"), lunarDialogAdvice: $("lunar-dialog-advice"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
@@ -403,10 +412,19 @@ function applyWeatherBackground(bundle) {
   const sunPos = theme.light === "night"
     ? { x: 78, y: 19, valid: false }
     : sunDiskPosition(azimuth, elevation);
+
+  // 天体月相计算 (Lunar Phase & Horizon Coordinates)
+  const moon = lunarPhase(now, state.place.lat, state.place.lon);
+  const moonPos = moon.disk;
+
   const atmosphereStyles = {
     "--sun-x": `${sunPos.x.toFixed(1)}%`,
     "--sun-y": `${sunPos.y.toFixed(1)}%`,
     "--sun-elevation": Number.isFinite(elevation) ? elevation.toFixed(2) : "-90",
+    "--moon-x": `${moonPos.x.toFixed(1)}%`,
+    "--moon-y": `${moonPos.y.toFixed(1)}%`,
+    "--moon-elevation": `${moon.altitude.toFixed(2)}`,
+    "--moon-illumination": `${moon.phaseFraction.toFixed(3)}`,
     "--precip-intensity": drive.precipIntensity.toFixed(3),
     "--fx-density": drive.fxDensity.toFixed(3),
     "--twilight-warmth": twilightWarmth.toFixed(3),
@@ -470,7 +488,65 @@ function applyWeatherBackground(bundle) {
     isDay: theme.light !== "night"
   });
 
+  // 联动天幕与手札夜间真实月相渲染 (Update celestial moon & stationery lunar badge)
+  updateMoonDisplay(moon);
+
   return { theme, condition };
+}
+
+function updateMoonDisplay(moon) {
+  if (!moon) return;
+  // 1. 天幕月亮真实矢量渲染与月晕缩放
+  if (elements.skyMoonDisk) {
+    elements.skyMoonDisk.innerHTML = buildMoonSvg(moon.phaseFraction, moon.isWaxing, 76, "sky");
+  }
+  if (elements.skyMoonHalo) {
+    elements.skyMoonHalo.style.transform = `scale(${(0.7 + moon.phaseFraction * 0.6).toFixed(2)})`;
+    elements.skyMoonHalo.style.opacity = (0.25 + moon.phaseFraction * 0.5).toFixed(2);
+  }
+
+  // 2. 主手札便签月相微徽章
+  if (elements.lunarBadgeIcon) {
+    elements.lunarBadgeIcon.innerHTML = buildMoonSvg(moon.phaseFraction, moon.isWaxing, 15, "badge");
+  }
+  if (elements.lunarBadgeText) {
+    const pct = Math.round(moon.phaseFraction * 100);
+    elements.lunarBadgeText.textContent = `${moon.lunarDate} · ${moon.phaseName} ${pct}%`;
+  }
+
+  // 3. 夜间月相天文观测详情弹窗填充
+  if (elements.lunarDialogMoon) {
+    elements.lunarDialogMoon.innerHTML = buildMoonSvg(moon.phaseFraction, moon.isWaxing, 96, "dialog");
+  }
+  if (elements.lunarDialogName) {
+    elements.lunarDialogName.textContent = moon.phaseName;
+  }
+  if (elements.lunarDialogDate) {
+    elements.lunarDialogDate.textContent = `${moon.lunarDate} · 日月距角 ${moon.elongation.toFixed(1)}°`;
+  }
+  if (elements.lunarCellFraction) {
+    elements.lunarCellFraction.textContent = `${(moon.phaseFraction * 100).toFixed(1)}%`;
+  }
+  if (elements.lunarCellAge) {
+    elements.lunarCellAge.textContent = `${moon.moonAge.toFixed(1)} 天`;
+  }
+  if (elements.lunarCellAlt) {
+    elements.lunarCellAlt.textContent = `${moon.altitude.toFixed(1)}° (${moon.isAboveHorizon ? "地平线上" : "已入地平"})`;
+  }
+  if (elements.lunarCellAz) {
+    elements.lunarCellAz.textContent = `${moon.azimuth.toFixed(1)}°`;
+  }
+  if (elements.lunarDialogAdvice) {
+    if (moon.phaseFraction >= 0.9) {
+      elements.lunarDialogAdvice.textContent = "今宵月相趋满，银辉满天，适宜长焦拍摄地景接月或赏月夜景。";
+    } else if (moon.phaseFraction >= 0.4) {
+      elements.lunarDialogAdvice.textContent = "晨昏分界明显，月球环形山与月海暗影极具立体层次，适宜天文望远镜观测。";
+    } else if (moon.phaseFraction >= 0.05) {
+      elements.lunarDialogAdvice.textContent = "月如银钩，伴有地照微光（达芬奇辉光），极宜在暮光余晖初垂时与地景同框记录。";
+    } else {
+      elements.lunarDialogAdvice.textContent = "新月朔日，月隐星繁，天幕背景无月光干扰，极宜观测深空天体与拍摄银河暗夜。";
+    }
+  }
 }
 
 function updateHorizontalScrollRegions() {
@@ -1591,6 +1667,53 @@ elements.devBtnTestLoading.addEventListener("click", () => {
     else setPanel("welcome");
   }, 3000);
 });
+
+// 🌙 月相天文观测便签点击呼出详情弹窗
+elements.heroLunarBadge?.addEventListener("click", () => {
+  triggerHaptic(12);
+  elements.lunarDialog?.showModal();
+});
+elements.heroLunarBadge?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    triggerHaptic(12);
+    elements.lunarDialog?.showModal();
+  }
+});
+
+// 天体观测台实验室：昼夜切换与月相动态模拟滑块
+elements.devBtnToggleNight?.addEventListener("click", () => {
+  triggerHaptic(12);
+  const cur = document.body.dataset.light;
+  const next = cur === "night" ? "day" : "night";
+  document.body.dataset.light = next;
+  elements.devBtnToggleNight.textContent = `切换夜幕天体 (当前: ${next === "night" ? "夜" : "昼"})`;
+});
+
+elements.devMoonSlider?.addEventListener("input", (e) => {
+  const val = parseInt(e.target.value, 10);
+  const frac = val / 100;
+  const isWax = val <= 50;
+  const mockMoon = {
+    ...lunarPhase(new Date(), state.place?.lat || 30.27, state.place?.lon || 120.15),
+    phaseFraction: frac,
+    isWaxing: isWax,
+    phaseName: frac > 0.95 ? "满月 (望)" : frac < 0.05 ? "新月 (朔)" : isWax ? (frac > 0.4 ? "盈凸月" : "蛾眉月") : (frac > 0.4 ? "亏凸月" : "残月")
+  };
+  updateMoonDisplay(mockMoon);
+});
+
+// 挂载全局方法，支持控制台即时调用测试
+window.renderMoonPhase = (fraction = 0.96, isWaxing = false) => {
+  const mockMoon = {
+    ...lunarPhase(new Date(), state.place?.lat || 30.27, state.place?.lon || 120.15),
+    phaseFraction: Math.max(0, Math.min(1, fraction)),
+    isWaxing,
+    phaseName: fraction > 0.95 ? "满月 (望)" : fraction < 0.05 ? "新月 (朔)" : isWaxing ? "上弦月/盈月" : "亏凸月/亏月"
+  };
+  updateMoonDisplay(mockMoon);
+  return mockMoon;
+};
 
 elements.welcomeSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
 elements.errorSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });

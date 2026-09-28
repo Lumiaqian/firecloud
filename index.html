@@ -12,8 +12,8 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=3">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=50">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=9">
+  <link rel="stylesheet" href="css/style.css?v=52">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=10">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -44,7 +44,13 @@
   </script>
   <!-- 远景背景与微物理 Canvas -->
   <canvas class="weather-background-canvas" id="weather-background-canvas" aria-hidden="true"></canvas>
-  <div class="sky" aria-hidden="true"><canvas class="weather-canvas" id="weather-canvas"></canvas></div>
+  <div class="sky" aria-hidden="true">
+    <canvas class="weather-canvas" id="weather-canvas"></canvas>
+    <div class="sky-moon" id="sky-moon" aria-label="夜空月相">
+      <div class="sky-moon-halo" id="sky-moon-halo"></div>
+      <div class="sky-moon-disk" id="sky-moon-disk"></div>
+    </div>
+  </div>
   <div class="weather-atmosphere" aria-hidden="true">
     <span class="atmosphere-layer atmosphere-layer--back"></span>
     <span class="atmosphere-layer atmosphere-layer--front"></span>
@@ -191,7 +197,13 @@
         <div class="hero-journal-grid">
           <!-- 左侧：观测时段、倒计时与诗意研判 -->
           <div class="hero-meta-col">
-            <div class="journal-entry-tag" id="entry-tag">甲辰年 · 晨昏观测手记</div>
+            <div class="journal-entry-tag-row">
+              <div class="journal-entry-tag" id="entry-tag">甲辰年 · 晨昏观测手记</div>
+              <div class="hero-lunar-badge" id="hero-lunar-badge" role="button" tabindex="0" aria-label="查看今日月相观测数据" title="点击查看夜间月相天文观测详情">
+                <span class="lunar-badge-icon" id="lunar-badge-icon"></span>
+                <span class="lunar-badge-text" id="lunar-badge-text">—</span>
+              </div>
+            </div>
             <h1 class="hero-event-time" id="event-time" tabindex="-1">
               — <small id="hero-time-sub">—</small>
             </h1>
@@ -311,6 +323,16 @@
         </div>
       </div>
 
+      <div class="lens-liquid-toolbar" style="margin-top: 14px;">
+        <span>天体月相实测调控</span>
+        <button class="lens-speed-btn" id="dev-btn-toggle-night" type="button">切换夜幕天体</button>
+      </div>
+      <div class="lunar-dev-slider-row" style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;opacity:0.88;">
+        <span>朔 0%</span>
+        <input type="range" id="dev-moon-slider" min="0" max="100" value="96" style="flex:1;accent-color:#c89c56;cursor:pointer;">
+        <span>望 100%</span>
+      </div>
+
       <div class="dev-lab-actions">
         <button class="btn-liquid-secondary" id="dev-btn-test-loading" type="button">
           <span>全屏实测 3s</span>
@@ -324,6 +346,48 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v6"></script>
+  <!-- 🌟 夜间月相天文观测详情抽屉 (Lunar Observation Modal) -->
+  <dialog class="liquid-glass glass-sheet lunar-dialog" id="lunar-dialog" aria-labelledby="lunar-dialog-title">
+    <div class="drawer-handle" aria-hidden="true"></div>
+    <form method="dialog" class="dialog-head">
+      <div>
+        <p class="dev-badge">ASTRONOMY · LUNAR OBSERVATION</p>
+        <h2 id="lunar-dialog-title">夜间月相天文观测</h2>
+      </div>
+      <button class="icon-button dialog-close" value="cancel" aria-label="关闭">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </form>
+    <div class="lunar-dialog-content">
+      <div class="lunar-stage">
+        <div class="lunar-stage-moon" id="lunar-dialog-moon"></div>
+        <div class="lunar-stage-name" id="lunar-dialog-name">—</div>
+        <p class="lunar-stage-date" id="lunar-dialog-date">—</p>
+      </div>
+      <div class="lunar-grid">
+        <div class="lunar-cell">
+          <small>照亮比例</small>
+          <strong id="lunar-cell-fraction">—</strong>
+        </div>
+        <div class="lunar-cell">
+          <small>月龄 / 朔望</small>
+          <strong id="lunar-cell-age">—</strong>
+        </div>
+        <div class="lunar-cell">
+          <small>地平高度角</small>
+          <strong id="lunar-cell-alt">—</strong>
+        </div>
+        <div class="lunar-cell">
+          <small>天球方位角</small>
+          <strong id="lunar-cell-az">—</strong>
+        </div>
+      </div>
+      <div class="lunar-advice-box">
+        <p id="lunar-dialog-advice">—</p>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/app.mjs?v=stationery_v8"></script>
 </body>
 </html>

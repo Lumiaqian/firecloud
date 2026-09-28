@@ -11,6 +11,9 @@ import {
   solarElevation,
   stormLevelFor,
   sunDiskPosition,
+  moonDiskPosition,
+  lunarPhase,
+  lunarSvgPath,
   waitAdvice,
   weatherConditionFor,
   weatherTheme
@@ -195,3 +198,54 @@ test("实况天气中文描述、图标与温度准确映射", () => {
   assert.equal(clearNight.icon, "🌙");
   assert.equal(clearNight.full, "🌙 晴朗 18°C");
 });
+
+test("天文月相算法准确计算照亮比例、月相命名与农历映射", () => {
+  // 1. 中秋满月 (2026-09-25)
+  const fullMoon = lunarPhase(new Date("2026-09-25T20:00:00+08:00"), 30.27, 120.15);
+  assert.ok(fullMoon.phaseFraction > 0.95);
+  assert.ok(fullMoon.phaseName.includes("满月") || fullMoon.phaseName.includes("望"));
+  assert.ok(fullMoon.lunarDate.includes("八月"));
+
+  // 2. 亏凸月 (2026-09-28)
+  const waningGibbous = lunarPhase(new Date("2026-09-28T19:00:00+08:00"), 30.27, 120.15);
+  assert.equal(waningGibbous.phaseName, "亏凸月");
+  assert.equal(waningGibbous.isWaxing, false);
+  assert.ok(waningGibbous.phaseFraction > 0.9);
+
+  // 3. 新月朔日 (2026-09-11)
+  const newMoon = lunarPhase(new Date("2026-09-11T20:00:00+08:00"), 30.27, 120.15);
+  assert.ok(newMoon.phaseFraction < 0.05);
+  assert.equal(newMoon.phaseName, "新月 (朔)");
+
+  // 4. 上弦月 (2026-09-18)
+  const quarter = lunarPhase(new Date("2026-09-18T20:00:00+08:00"), 30.27, 120.15);
+  assert.ok(Math.abs(quarter.phaseFraction - 0.5) < 0.1);
+  assert.equal(quarter.phaseName, "上弦月");
+  assert.equal(quarter.isWaxing, true);
+});
+
+test("月球屏幕映射与月相矢量 SVG 路径生成", () => {
+  // 屏幕映射在合理视口范围内
+  const pos = moonDiskPosition(120, 35);
+  assert.equal(pos.valid, true);
+  assert.equal(pos.aboveHorizon, true);
+  assert.ok(pos.x >= 10 && pos.x <= 90);
+  assert.ok(pos.y >= 5 && pos.y <= 20);
+
+  // 地平线下回退
+  const sub = moonDiskPosition(120, -15);
+  assert.equal(sub.aboveHorizon, false);
+
+  // SVG 路径生成
+  const fullSvg = lunarSvgPath(1.0, true, 40, 50, 50);
+  assert.ok(fullSvg.includes("A 40 40"));
+
+  const halfWaxSvg = lunarSvgPath(0.5, true, 40, 50, 50);
+  assert.ok(halfWaxSvg.startsWith("M 50 10"));
+  assert.ok(halfWaxSvg.includes("A 40 40 0 0 1 50 90"));
+
+  const halfWanSvg = lunarSvgPath(0.5, false, 40, 50, 50);
+  assert.ok(halfWanSvg.startsWith("M 50 10"));
+  assert.ok(halfWanSvg.includes("A 40 40 0 0 0 50 90"));
+});
+
