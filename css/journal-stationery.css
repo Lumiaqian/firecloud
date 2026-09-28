@@ -82,7 +82,25 @@ body[data-tier="dull"] {
       0 12px 36px rgba(60, 45, 30, 0.14), 
       0 3px 10px rgba(60, 45, 30, 0.08),
       inset 0 0 50px rgba(240, 230, 215, 0.45);
-  }
+}
+
+/* 水膜轻薄漫反射层 (Moisture & Wet Sheen Layer) */
+.hero-master-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  pointer-events: none;
+  opacity: 0;
+  background: 
+    radial-gradient(ellipse at 50% 0%, rgba(210, 235, 255, 0.22) 0%, transparent 65%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.20) 0%, transparent 45%, rgba(175, 210, 240, 0.12) 100%);
+  transition: opacity 2.2s ease;
+  z-index: 12;
+}
+
+.hero-master-card.is-rain-damp::after {
+  opacity: 1;
 }
 
 /* 顶部活页手撕齿孔条 (Top Perforated Notch Holes) */
@@ -1075,6 +1093,115 @@ body[data-wind-gust="high"] .deck-kraft-sticky {
   50% { transform: translate3d(0, -6px, 0) rotate(2.4deg); }
   75% { transform: translate3d(0, 2px, 0) rotate(-0.8deg); }
   100% { transform: translate3d(0, 0, 0) rotate(-0.35deg); }
+}
+
+/* ==========================================================================
+   🌧️ 雨水浸湿手札卡片微物理体系 (Physical Rain Wetting & Damp Paper System)
+   ========================================================================== */
+
+/* 1. 主手札纸面吸水受潮深色水渍漫浸 (Damp Water Stains & Translucency) */
+.hero-master-card.is-rain-damp {
+  background-color: #ebe2d0 !important;
+  background-image: 
+    /* 雨水滴落洇开的不规则深浅水渍漫痕 */
+    radial-gradient(ellipse 110px 85px at 18% 26%, rgba(145, 178, 205, 0.26) 0%, rgba(160, 188, 212, 0.16) 55%, transparent 100%),
+    radial-gradient(ellipse 140px 95px at 82% 38%, rgba(135, 172, 200, 0.28) 0%, rgba(152, 184, 210, 0.14) 60%, transparent 100%),
+    radial-gradient(circle 75px at 42% 74%, rgba(140, 175, 202, 0.22) 0%, rgba(158, 186, 210, 0.12) 65%, transparent 100%),
+    radial-gradient(circle 50px at 88% 82%, rgba(138, 172, 198, 0.20) 0%, transparent 100%),
+    /* 受潮和纸纤维点阵与水气冷灰渐变 */
+    radial-gradient(rgba(125, 148, 170, 0.24) 1px, transparent 0),
+    linear-gradient(180deg, rgba(225, 235, 244, 0.5) 0%, rgba(220, 214, 200, 0.7) 100%) !important;
+  border-color: rgba(145, 172, 195, 0.55) !important;
+  box-shadow: 
+    0 14px 34px rgba(35, 55, 75, 0.16), 
+    0 2px 8px rgba(35, 55, 75, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8),
+    inset 0 0 45px rgba(150, 180, 210, 0.24) !important;
+  transition: background-color 2.5s ease, background-image 2.5s ease, border-color 2.5s ease, box-shadow 2.5s ease;
+}
+
+/* 2. 手撕打孔凹槽积水光珠 (Rain Water Pooling at Perforations) */
+.hero-master-card.is-rain-damp .hero-paper-perforations i,
+.deck-card--top.is-rain-damp .deck-paper-perforations i {
+  background: linear-gradient(180deg, #628aa8 0%, #9bc1dc 100%) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.8), 
+    0 0 5px rgba(135, 180, 215, 0.7) !important;
+  transform: scale(1.08);
+  transition: background 2s ease, box-shadow 2s ease, transform 2s ease;
+}
+
+/* 3. 和纸遮蔽胶带吸水半透紧贴 (Wet Translucent Washi Tape) */
+.hero-master-card.is-rain-damp .hero-washi-tape-topleft,
+.deck-card--top.is-rain-damp .deck-washi-tape-torn {
+  opacity: 0.62 !important;
+  filter: saturate(1.22) brightness(0.92) contrast(1.08) !important;
+  box-shadow: 0 1px 3px rgba(30, 45, 60, 0.22) !important;
+  transition: opacity 2s ease, filter 2s ease, box-shadow 2s ease;
+}
+
+/* 4. 黄铜长尾夹表面雨水冷凝水痕 (Cold Wet Brass Clip) */
+.hero-master-card.is-rain-damp .hero-brass-clip,
+.deck-card--top.is-rain-damp .deck-brass-clip {
+  filter: brightness(0.92) contrast(1.1) drop-shadow(0 2px 8px rgba(35, 60, 85, 0.38)) !important;
+  transition: filter 2s ease;
+}
+
+/* 5. 倒计时便签吸水深色与边框受潮 (Damp Countdown Note) */
+.hero-master-card.is-rain-damp .hero-countdown-tape {
+  background: rgba(200, 172, 138, 0.35) !important;
+  border-color: #9a7d58 !important;
+  color: #553312 !important;
+  box-shadow: inset 0 0 8px rgba(115, 150, 180, 0.22) !important;
+  transition: background-color 2s ease, border-color 2s ease, color 2s ease;
+}
+
+/* 6. 朱砂印章矿物微洇墨 (Wet Cinnabar Seal Ink Bleed) */
+.hero-master-card.is-rain-damp .cinnabar-seal-stamp,
+.deck-card--top.is-rain-damp .deck-cinnabar-seal {
+  filter: drop-shadow(0 0 5px rgba(181, 56, 38, 0.45)) saturate(1.15) brightness(0.94);
+  transition: filter 2.5s ease;
+}
+
+/* 7. 未来 7 日卡片中的雨水浸湿态 (Damp 7-Day Forecast Cards) */
+.day-journal-card.is-rain-damp {
+  background-color: #ece4d4 !important;
+  background-image: 
+    radial-gradient(circle at 75% 22%, rgba(142, 175, 202, 0.24) 0%, transparent 65%),
+    radial-gradient(rgba(135, 155, 175, 0.22) 1px, transparent 0),
+    linear-gradient(180deg, #f2f7fa 0%, #ebe3d4 100%) !important;
+  border-color: rgba(155, 180, 202, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(35, 55, 75, 0.12), inset 0 0 15px rgba(145, 175, 205, 0.18) !important;
+  transition: background-color 2s ease, border-color 2s ease, box-shadow 2s ease;
+}
+.day-journal-card.is-rain-damp .day-card-watercolor {
+  filter: blur(1.5px) saturate(1.35) brightness(1.05) !important;
+  transition: filter 2s ease;
+}
+.day-journal-card.is-rain-damp .day-card-perfs i {
+  background: linear-gradient(180deg, #628aa8 0%, #9bc1dc 100%) !important;
+  box-shadow: 0 0 3px rgba(135, 180, 215, 0.6) !important;
+  transition: background 2s ease, box-shadow 2s ease;
+}
+
+/* 8. 移动端叠放卡册雨天受潮 (Mobile Deck Damp State) */
+.deck-card--top.is-rain-damp {
+  background-color: #ebe2d0 !important;
+  background-image: 
+    radial-gradient(ellipse 110px 85px at 20% 25%, rgba(145, 178, 205, 0.25) 0%, transparent 65%),
+    radial-gradient(circle 75px at 75% 70%, rgba(140, 175, 202, 0.22) 0%, transparent 65%),
+    linear-gradient(rgba(145, 165, 185, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(145, 165, 185, 0.16) 1px, transparent 1px) !important;
+  border-color: rgba(145, 172, 195, 0.6) !important;
+  box-shadow: 0 12px 30px rgba(35, 55, 75, 0.16) !important;
+}
+.deck-card--top.is-rain-damp .deck-kraft-sticky {
+  background-color: #f2e8d2 !important;
+  border-color: #d8c29e !important;
+  box-shadow: inset 0 0 10px rgba(130, 165, 195, 0.18) !important;
+}
+.deck-card--top.is-rain-damp .deck-watercolor-stroke {
+  filter: blur(1.4px) saturate(1.35) !important;
 }
 
 /* ==========================================================================

@@ -20,6 +20,12 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
   let isSnowCollapsed = false;
   let snowHeight = 0;
 
+  // 雨水浸润与涟漪微物理状态 (Rain Soak & Water Ripple System)
+  let isRaining = false;
+  let cardRainRipples = [];
+  let nextCardRippleTime = 0;
+  let rainSoakTimer = null;
+
   // 闪电与风暴状态
   const stormLightning = {
     active: false,
@@ -228,9 +234,42 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
     });
   }
 
+  // 🌧️ 7. 雨水浸润手札卡片 (Soak stationery paper with rain water)
+  function triggerRainSoak(duration = null) {
+    isRaining = true;
+    const heroCard = document.getElementById("hero-master-card");
+    const deckCard = document.querySelector(".deck-card--top");
+    if (heroCard) heroCard.classList.add("is-rain-damp");
+    if (deckCard) deckCard.classList.add("is-rain-damp");
+
+    if (rainSoakTimer) {
+      clearTimeout(rainSoakTimer);
+      rainSoakTimer = null;
+    }
+
+    if (typeof duration === "number" && duration > 0) {
+      rainSoakTimer = setTimeout(() => {
+        restoreDryCard();
+      }, duration);
+    }
+  }
+
+  // 🌧️ 8. 干燥复原卡片 (Dry and restore stationery paper)
+  function restoreDryCard() {
+    isRaining = false;
+    const heroCard = document.getElementById("hero-master-card");
+    const deckCard = document.querySelector(".deck-card--top");
+    if (heroCard) heroCard.classList.remove("is-rain-damp");
+    if (deckCard) deckCard.classList.remove("is-rain-damp");
+    if (rainSoakTimer) {
+      clearTimeout(rainSoakTimer);
+      rainSoakTimer = null;
+    }
+  }
+
   // 🌟 根据实际气象数据自动联动卡片微物理状态 (Automatic Weather x Stationery Elements Linkage)
   let weatherSyncInterval = null;
-  function syncWeatherConditions({ weather, windSpeed = 0, windGust = 0, cloudCover = 0, isDay = true } = {}) {
+  function syncWeatherConditions({ weather, windSpeed = 0, windGust = 0, cloudCover = 0, precipitation = 0, isDay = true } = {}) {
     const heroCard = document.getElementById("hero-master-card");
     const seal = document.querySelector(".cinnabar-seal-stamp");
     const clip = document.querySelector(".hero-brass-clip");
@@ -284,6 +323,14 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
     } else {
       if (clip) clip.classList.remove("is-frost-edged");
       if (seal) seal.classList.remove("is-frost-cracked");
+    }
+
+    // 6. 🌧️ 雨水浸润手札纸面与水花涟漪
+    const hasRain = (weather === "rain" || weather === "thunder" || (typeof precipitation === "number" && precipitation > 0.05));
+    if (hasRain) {
+      triggerRainSoak();
+    } else {
+      restoreDryCard();
     }
   }
 
@@ -390,6 +437,71 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
         windDebris.splice(w, 1);
       }
     }
+
+    // ----------------------------------------------------------------------
+    // 🌧️ 雨水打在手札卡片上的水花与扩散微涟漪 (Raindrop Ripples on Card Surface)
+    // ----------------------------------------------------------------------
+    if (isRaining && now >= nextCardRippleTime) {
+      const activeCard = document.getElementById("hero-master-card") || document.querySelector(".deck-card--top");
+      if (activeCard) {
+        const rect = activeCard.getBoundingClientRect();
+        if (rect.width > 50 && rect.height > 50 && rect.bottom > 0 && rect.top < height) {
+          const paddingX = Math.min(32, rect.width * 0.1);
+          const paddingY = Math.min(32, rect.height * 0.1);
+          const count = Math.random() < 0.4 ? 2 : 1;
+          for (let c = 0; c < count; c++) {
+            if (cardRainRipples.length < 24) {
+              cardRainRipples.push({
+                x: rect.left + paddingX + Math.random() * (rect.width - paddingX * 2),
+                y: rect.top + paddingY + Math.random() * (rect.height - paddingY * 2),
+                radius: 1.5,
+                maxRadius: Math.random() * 16 + 10,
+                speed: Math.random() * 0.35 + 0.45,
+                alpha: Math.random() * 0.25 + 0.55
+              });
+            }
+          }
+        }
+      }
+      nextCardRippleTime = now + (Math.random() * 120 + 80);
+    }
+
+    // 绘制并更新卡面水波涟漪
+    for (let r = cardRainRipples.length - 1; r >= 0; r--) {
+      const rip = cardRainRipples[r];
+      rip.radius += rip.speed;
+      rip.alpha *= 0.945;
+
+      const progress = rip.radius / rip.maxRadius;
+      if (rip.alpha < 0.02 || progress >= 1.0) {
+        cardRainRipples.splice(r, 1);
+        continue;
+      }
+
+      fgCtx.save();
+      // 外层柔和水膜折射圆环
+      fgCtx.beginPath();
+      fgCtx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+      fgCtx.strokeStyle = `rgba(165, 205, 235, ${rip.alpha * 0.55})`;
+      fgCtx.lineWidth = Math.max(0.6, (1 - progress) * 1.6);
+      fgCtx.stroke();
+
+      // 上方高光弧线（模拟斜射天光水珠反射）
+      fgCtx.beginPath();
+      fgCtx.arc(rip.x, rip.y, rip.radius, Math.PI * 1.15, Math.PI * 1.85);
+      fgCtx.strokeStyle = `rgba(255, 255, 255, ${rip.alpha * 0.75})`;
+      fgCtx.lineWidth = Math.max(0.5, (1 - progress) * 1.2);
+      fgCtx.stroke();
+
+      // 刚滴落时的中心极微晶莹水珠点
+      if (rip.radius < 5.0) {
+        fgCtx.beginPath();
+        fgCtx.arc(rip.x, rip.y, 1.2, 0, Math.PI * 2);
+        fgCtx.fillStyle = `rgba(235, 248, 255, ${rip.alpha * 0.85})`;
+        fgCtx.fill();
+      }
+      fgCtx.restore();
+    }
   }
 
   requestAnimationFrame(renderLoop);
@@ -401,6 +513,8 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
   window.triggerWindGust = triggerWindGust;
   window.triggerSnowCollapse = triggerSnowCollapse;
   window.restoreSnowCard = restoreSnowCard;
+  window.triggerRainSoak = triggerRainSoak;
+  window.restoreDryCard = restoreDryCard;
   window.syncWeatherConditions = syncWeatherConditions;
 
   return {
@@ -410,6 +524,8 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
     triggerWindGust,
     triggerSnowCollapse,
     restoreSnowCard,
+    triggerRainSoak,
+    restoreDryCard,
     syncWeatherConditions
   };
 }

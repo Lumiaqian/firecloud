@@ -16,7 +16,7 @@ import {
   weatherTheme
 } from "./forecast.mjs?v=7";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
-import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=1";
+import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=2";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -466,6 +466,7 @@ function applyWeatherBackground(bundle) {
     windSpeed: Number(windSpeed) || 0,
     windGust: Number(windGust) || 0,
     cloudCover: Number(current.cloud_cover) || 0,
+    precipitation: Number(precipitation) || 0,
     isDay: theme.light !== "night"
   });
 
@@ -595,6 +596,9 @@ function renderWeek(bundle) {
 
       card.dataset.tier = tier;
       card.dataset.grade = tier;
+      if (typeof metrics.precip === "number" && metrics.precip > 0.05) {
+        card.classList.add("is-rain-damp");
+      }
       card.innerHTML = `
         <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
         <div class="day-date-row">
@@ -634,6 +638,13 @@ function renderWeek(bundle) {
         if (elements.sealGrade) elements.sealGrade.textContent = miniSeal;
         if (elements.sealSub) elements.sealSub.textContent = score >= 70 ? "极力推荐" : "宜静候";
         document.body.dataset.tier = tier;
+
+        // 若所选预测日有降雨，主卡片也呈现湿润浸染状态
+        if (typeof metrics.precip === "number" && metrics.precip > 0.05) {
+          journalWeather?.triggerRainSoak();
+        } else if (state.theme?.weather !== "rain" && state.theme?.weather !== "thunder") {
+          journalWeather?.restoreDryCard();
+        }
       };
 
       card.addEventListener("click", selectCard);
