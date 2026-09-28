@@ -3,19 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" id="theme-color" content="#101b2c">
+  <meta name="theme-color" id="theme-color" content="#1c5b94">
   <meta name="description" content="无自有后端、结合云层与空气质量的霞光指数预报">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="霞光">
   <link rel="icon" href="icons/icon-192.png?v=2">
-  <link rel="manifest" href="manifest.webmanifest?v=2">
+  <link rel="manifest" href="manifest.webmanifest?v=3">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=47">
+  <link rel="stylesheet" href="css/style.css?v=50">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=7">
   <title>霞光预报</title>
 </head>
-<body data-state="welcome" data-tier="great">
+<body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
+  <script>
+    (function () {
+      try {
+        var theme = JSON.parse(localStorage.getItem("firecloud:theme:v1") || "null");
+        var hasPlace = Boolean(localStorage.getItem("firecloud:place:v1"));
+        var h = new Date().getHours();
+        var isDay = (h >= 6 && h < 20);
+        var light = (theme && theme.light) || (isDay ? "day" : "night");
+        var weather = (theme && theme.weather) || "clear";
+        var tier = (theme && theme.tier) || "great";
+        var b = document.body;
+        if (b) {
+          if (hasPlace) b.dataset.state = "ready";
+          b.dataset.light = light;
+          b.dataset.weather = weather;
+          b.dataset.tier = tier;
+          if (theme) {
+            if (theme.skyTop) b.style.setProperty("--sky-top", theme.skyTop);
+            if (theme.skyMid) b.style.setProperty("--sky-mid", theme.skyMid);
+            if (theme.skyHorizon) b.style.setProperty("--sky-horizon", theme.skyHorizon);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <!-- 远景背景与微物理 Canvas -->
+  <canvas class="weather-background-canvas" id="weather-background-canvas" aria-hidden="true"></canvas>
   <div class="sky" aria-hidden="true"><canvas class="weather-canvas" id="weather-canvas"></canvas></div>
   <div class="weather-atmosphere" aria-hidden="true">
     <span class="atmosphere-layer atmosphere-layer--back"></span>
@@ -24,9 +52,11 @@
     <span class="atmosphere-layer atmosphere-layer--wind"></span>
   </div>
   <canvas class="weather-contact-canvas" id="weather-contact-canvas" aria-hidden="true"></canvas>
+  <!-- 🌟 前景透穿 Canvas (云影/闪电电弧/雨花/狂风飞屑) -->
+  <canvas class="weather-foreground-canvas" id="weather-foreground-canvas" aria-hidden="true"></canvas>
   <main class="app-shell">
     <header class="topbar">
-      <button class="brand" id="open-places" type="button" aria-label="选择地点，当前地点：未选择">
+      <button class="brand" id="open-places" type="button" aria-label="霞光预报 - 选择地点，当前地点：未选择">
         <span class="brand-mark" aria-hidden="true"></span>
         <span class="brand-copy"><strong>霞光预报</strong><small id="place-name">选择地点</small></span>
       </button>
@@ -48,9 +78,9 @@
     <section class="panel welcome" id="panel-welcome">
       <div class="welcome-layout">
         <div class="welcome-copy">
-          <p class="eyebrow"><span aria-hidden="true"></span>霞光观测手记</p>
-          <h1>下一场霞光<br>值得等吗</h1>
-          <p class="intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
+          <p class="eyebrow"><span aria-hidden="true"></span>霞光观测手记 · 自然光象实录</p>
+          <h1 id="welcome-title"><span id="welcome-title-prefix">今晚落日</span><br><span id="welcome-title-suffix">值得等吗</span></h1>
+          <p class="intro" id="welcome-intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
           <div class="welcome-actions">
             <button class="primary" id="locate-button" type="button" aria-describedby="privacy-note">
               <span>使用当前位置</span><span aria-hidden="true">↗</span>
@@ -60,13 +90,71 @@
           <p class="privacy-note" id="privacy-note">无自有后端 · 定位、搜索与气象请求由浏览器直接发送至第三方服务</p>
           <p class="notice" id="geo-notice" role="status"></p>
         </div>
-        <aside class="method-note" aria-label="霞光指数观测依据">
-          <p class="method-title">观测依据</p>
-          <dl>
-            <div><dt>01</dt><dd><strong>云幕</strong><span>中高云提供显色层次</span></dd></div>
-            <div><dt>02</dt><dd><strong>光路</strong><span>太阳方向低云决定遮挡</span></dd></div>
-            <div><dt>03</dt><dd><strong>空气</strong><span>能见度与气溶胶影响通透</span></dd></div>
-          </dl>
+
+        <aside class="welcome-specimen" aria-label="典范天幕观测手记">
+          <div class="specimen-card" id="specimen-card" data-slot="sunset">
+            <!-- 手帐卡片顶部书签与便签 -->
+            <div class="specimen-header">
+              <span class="specimen-tag">FIELD SPECIMEN · 标杆实录</span>
+              <div class="specimen-tabs" role="radiogroup" aria-label="观测手记卷别">
+                <button type="button" class="specimen-tab active" data-slot="sunset" id="tab-journal-sunset" role="radio" aria-checked="true">
+                  <span>🌅 暮天卷</span>
+                </button>
+                <button type="button" class="specimen-tab" data-slot="sunrise" id="tab-journal-sunrise" role="radio" aria-checked="false">
+                  <span>🌄 破晓卷</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 手帐野外冲印相片（带温润相纸留白与相片手记） -->
+            <figure class="specimen-photo-frame">
+              <img class="specimen-photo" id="specimen-photo" src="assets/sayram_sunset.jpg" alt="新疆赛里木湖西海落日雪山实景观测" width="960" height="640" fetchpriority="high" loading="eager">
+              <figcaption class="specimen-caption">
+                <span class="specimen-caption-place" id="specimen-place">新疆 · 赛里木湖 (2,073 m)</span>
+                <span class="specimen-caption-target" id="specimen-target">暮天火烧云与雪峰漫射实录 · 标杆观测</span>
+              </figcaption>
+            </figure>
+
+            <!-- 手记评定与依据 -->
+            <div class="specimen-body" id="specimen-body">
+              <!-- 手帐评定印章与视窗 -->
+              <div class="specimen-verdict-row">
+                <div class="specimen-stamp" id="specimen-stamp">
+                  <span class="stamp-star" aria-hidden="true">★</span>
+                  <strong class="stamp-text" id="specimen-stamp-text">晚霞极佳 · 值得专程等待</strong>
+                </div>
+                <div class="specimen-time-box" id="specimen-time-box">
+                  <span class="time-box-label">最佳视窗</span>
+                  <strong class="time-box-val" id="specimen-time-val">21:25 – 22:15</strong>
+                </div>
+              </div>
+
+              <!-- 手记三大观测依据 (传承手记经典 01/02/03) -->
+              <dl class="specimen-metrics" id="specimen-metrics">
+                <div>
+                  <dt>01</dt>
+                  <dd>
+                    <strong id="specimen-m1-title">云幕受光</strong>
+                    <span id="specimen-m1-desc">博罗科努高层卷云迎阳，预计触发 30 分钟火烧云</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>02</dt>
+                  <dd>
+                    <strong id="specimen-m2-title">地平光路</strong>
+                    <span id="specimen-m2-desc">西海低云仅 8%，太阳落入地平前无遮挡</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>03</dt>
+                  <dd>
+                    <strong id="specimen-m3-title">高山空气</strong>
+                    <span id="specimen-m3-desc">视距超 80km，瑞利散射纯净，雪山倒影赤红</span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
         </aside>
       </div>
     </section>
@@ -86,25 +174,56 @@
         </div>
         <p id="event-pending" class="event-pending" role="status" hidden></p>
       </div>
-      <section class="hero-card" aria-labelledby="index-label" data-weather-surface>
-        <div class="event-brief">
-          <p class="hero-overline">霞光时刻</p>
-          <h1 class="event-time" id="event-time" tabindex="-1">—</h1>
-          <p class="event-date" id="event-date">—</p>
-          <p class="countdown" id="countdown">—</p>
-          <div class="data-meta">
-            <span id="data-source">实时数据</span>
-            <span id="updated-at">—</span>
+
+      <!-- 🌟 大师级主体手帐实体卡片 (Hero Master Journal Card) -->
+      <article class="hero-master-card" id="hero-master-card" aria-labelledby="index-label" data-weather-surface>
+        <!-- 顶部活页手撕齿孔 -->
+        <div class="hero-paper-perforations" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+
+        <!-- 左上角斜贴手撕和纸胶带 -->
+        <div class="hero-washi-tape-topleft" aria-hidden="true"></div>
+
+        <!-- 右上角高光复古黄铜长尾夹 (引雷/受光/振动) -->
+        <div class="hero-brass-clip" id="hero-brass-clip" title="复古黄铜长尾夹 (点击触发引雷电光)" role="button" tabindex="0" aria-label="复古黄铜长尾夹，点击触发引雷电光"></div>
+
+        <div class="hero-journal-grid">
+          <!-- 左侧：观测时段、倒计时与诗意研判 -->
+          <div class="hero-meta-col">
+            <div class="journal-entry-tag" id="entry-tag">甲辰年 · 晨昏观测手记</div>
+            <h1 class="hero-event-time" id="event-time" tabindex="-1">
+              — <small id="hero-time-sub">—</small>
+            </h1>
+            <div class="hero-countdown-tape" id="countdown">—</div>
+            <p class="hero-verdict-quote" id="verdict">—</p>
+            <div class="data-meta">
+              <span id="data-source">实时数据</span>
+              <span id="updated-at">—</span>
+              <span id="event-date" style="display:none;">—</span>
+            </div>
+          </div>
+
+          <!-- 右侧：分值大字与朱砂印章 -->
+          <div class="hero-score-col">
+            <div class="score-label-row">
+              <span id="index-label">霞光指数综合研判</span>
+              <small id="index-scale">0–99 经验模型</small>
+            </div>
+            <div class="score-number-display">
+              <strong id="score">—</strong>
+              <small>分</small>
+            </div>
+            <p class="band" id="band" style="display:none;">—</p>
+
+            <!-- 实体朱砂印章 -->
+            <div class="cinnabar-seal-stamp" id="seal-stamp" title="朱砂印泥 (点击触发暖阳透射)" role="button" tabindex="0" aria-label="朱砂印章，点击触发暖阳透射">
+              <span class="seal-grade" id="seal-grade">霞光</span>
+              <span class="seal-sub" id="seal-sub">宜观赏</span>
+            </div>
           </div>
         </div>
-        <div class="score-block">
-          <p class="index-label" id="index-label">霞光指数</p>
-          <p class="index-scale" id="index-scale">0–99 指数 · 非概率</p>
-          <div class="score-row" aria-describedby="index-scale"><strong id="score">—</strong></div>
-          <p class="band" id="band">—</p>
-          <p class="verdict" id="verdict">—</p>
-        </div>
-      </section>
+      </article>
 
       <section class="section-block" aria-labelledby="reason-title">
         <div class="section-head" data-weather-surface><div><span>01</span><h2 id="reason-title">天空线索</h2></div><p>影响本次判断的主要条件</p></div>
@@ -205,6 +324,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=32"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v4"></script>
 </body>
 </html>

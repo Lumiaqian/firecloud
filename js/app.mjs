@@ -16,6 +16,7 @@ import {
   weatherTheme
 } from "./forecast.mjs?v=7";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
+import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=1";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -43,6 +44,44 @@ const panels = ["welcome", "loading", "ready", "error"];
 createWeatherFx($("weather-canvas"), {
   contactCanvas: $("weather-contact-canvas")
 });
+const journalWeather = createJournalWeatherEngine(
+  $("weather-background-canvas"),
+  $("weather-foreground-canvas")
+);
+
+// 绑定黄铜夹与朱砂印章自然微物理触控
+$("hero-brass-clip")?.addEventListener("click", () => journalWeather?.triggerLightningStrike("clip"));
+$("hero-brass-clip")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    journalWeather?.triggerLightningStrike("clip");
+  }
+});
+$("seal-stamp")?.addEventListener("click", () => journalWeather?.triggerSunWarm());
+$("seal-stamp")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    journalWeather?.triggerSunWarm();
+  }
+});
+
+// 手帐主体卡片物理微倾动效 (Subtle 3D Physics Tilt)
+const heroMasterCard = $("hero-master-card");
+if (heroMasterCard) {
+  heroMasterCard.addEventListener("mousemove", (e) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = heroMasterCard.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const rotX = -(y / (rect.height / 2)) * 1.8;
+    const rotY = (x / (rect.width / 2)) * 2.2;
+    heroMasterCard.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) translateY(-2px)`;
+  });
+  heroMasterCard.addEventListener("mouseleave", () => {
+    heroMasterCard.style.transform = "";
+  });
+}
+
 const elements = {
   themeColor: $("theme-color"), placeName: $("place-name"), openPlaces: $("open-places"),
   favorite: $("favorite-button"), refresh: $("refresh-button"), locate: $("locate-button"),
@@ -51,6 +90,8 @@ const elements = {
   devLensSlider: $("dev-lens-slider"),
   devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
+  heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
+  sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
   status: $("forecast-status"), source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
   errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
@@ -142,6 +183,9 @@ function setPanel(name) {
   if (name === "loading") {
     elements.source.textContent = "更新中";
     elements.source.dataset.status = "loading";
+  }
+  if (name === "welcome") {
+    syncWelcomeJournal();
   }
   for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
   const ready = name === "ready";
@@ -375,6 +419,17 @@ function applyWeatherBackground(bundle) {
   }
   const skyTop = getComputedStyle(document.body).getPropertyValue("--sky-top").trim();
   if (/^#[\da-f]{6}$/i.test(skyTop)) elements.themeColor.content = skyTop;
+  try {
+    storage.set("firecloud:theme:v1", {
+      light: theme.light,
+      weather: theme.weather,
+      storm,
+      tier: document.body.dataset.tier || "great",
+      skyTop,
+      skyMid: getComputedStyle(document.body).getPropertyValue("--sky-mid").trim(),
+      skyHorizon: getComputedStyle(document.body).getPropertyValue("--sky-horizon").trim()
+    });
+  } catch {}
   const condition = weatherConditionFor({
     weather: theme.weather,
     weatherCode: current.weather_code,
@@ -383,6 +438,16 @@ function applyWeatherBackground(bundle) {
     cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
     temperature: current.temperature_2m
   });
+
+  // 联动手帐主体卡片气象微物理状态 (Auto-sync stationery weather physics)
+  journalWeather?.syncWeatherConditions({
+    weather: theme.weather,
+    windSpeed: Number(windSpeed) || 0,
+    windGust: Number(windGust) || 0,
+    cloudCover: Number(current.cloud_cover) || 0,
+    isDay: theme.light !== "night"
+  });
+
   return { theme, condition };
 }
 
@@ -451,70 +516,108 @@ function renderWeek(bundle) {
     const probe = new Date(base.getTime() + day * 86_400_000);
     const eventTime = sunTimes(probe, state.place.lat, state.place.lon)[state.event];
     const card = document.createElement("article");
-    card.className = "day-card";
+    card.className = "day-card day-journal-card";
+    if (day === 0) card.classList.add("is-active-day");
 
     if (!eventTime) {
       card.dataset.tier = "unavailable";
+      card.dataset.grade = "dull";
       card.innerHTML = `
-        <div class="day-card-top">
+        <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
+        <div class="day-date-row">
           <span class="day-card-date">${formatter.format(probe)}</span>
-          <span class="day-card-weather" aria-hidden="true"></span>
+          <span class="day-mini-seal">无事件</span>
         </div>
-        <div class="day-card-score-box">
-          <strong>—</strong>
-          <span class="day-card-band">极昼或无事件</span>
+        <div class="day-card-watercolor"></div>
+        <div class="day-score-block">
+          <span class="day-score-num">—</span>
+          <div class="day-score-tag">
+            <span>极昼或无事件</span>
+          </div>
         </div>
-        <div class="day-card-footer">
-          <p class="day-card-advice">当前纬度此日期无对应晨昏事件</p>
-        </div>
+        <p class="day-tip-line">当前纬度此日期无对应晨昏事件</p>
       `;
     } else {
       const metrics = metricsAt(bundle, eventTime);
       if (!hasLocalCloudForecast(metrics)) {
         card.dataset.tier = "unavailable";
+        card.dataset.grade = "dull";
         card.innerHTML = `
-          <div class="day-card-top">
+          <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
+          <div class="day-date-row">
             <span class="day-card-date">${formatter.format(eventTime)}</span>
+            <span class="day-mini-seal">暂无</span>
           </div>
-          <div class="day-card-score-box">
-            <strong>—</strong>
-            <span class="day-card-band">暂无预报</span>
-          </div>
-          <div class="day-card-footer">
-            <div class="day-card-time">
-              <span>${eventLabel}时刻</span>
-              <strong>${formatClock(eventTime, timeZone)}</strong>
+          <div class="day-card-watercolor"></div>
+          <div class="day-score-block">
+            <span class="day-score-num">—</span>
+            <div class="day-score-tag">
+              <span>暂无预报</span>
             </div>
-            <p class="day-card-advice">当地云层预报暂无数据</p>
           </div>
+          <p class="day-tip-line">当地云层预报暂无数据</p>
         `;
         appendCard(card);
         continue;
       }
       const score = scoreSky(metrics);
       const tier = tierFor(score);
-      const weatherEmoji = weatherSymbolFor(metrics);
       const advice = photographicAdviceFor(metrics, score, state.event);
       const formattedDate = formatter.format(eventTime);
 
+      let miniSeal = "微茫";
+      if (score >= 85) miniSeal = "紫金";
+      else if (score >= 70) miniSeal = "晴金";
+      else if (score >= 50) miniSeal = "柔光";
+      else if (score >= 30) miniSeal = "休整";
+
       card.dataset.tier = tier;
+      card.dataset.grade = tier;
       card.innerHTML = `
-        <div class="day-card-top">
+        <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
+        <div class="day-date-row">
           <span class="day-card-date">${formattedDate}</span>
-          <span class="day-card-weather" aria-hidden="true">${weatherEmoji}</span>
+          <span class="day-mini-seal">${miniSeal}</span>
         </div>
-        <div class="day-card-score-box">
-          <strong>${score}</strong>
-          <span class="day-card-band">${indexBand(score)}</span>
-        </div>
-        <div class="day-card-footer">
-          <div class="day-card-time">
-            <span>${eventLabel}时刻</span>
-            <strong>${formatClock(eventTime, timeZone)}</strong>
+        <div class="day-card-watercolor"></div>
+        <div class="day-score-block">
+          <span class="day-score-num">${score}</span>
+          <div class="day-score-tag">
+            <span>${indexBand(score)}</span>
+            <small style="font-family:var(--font-mono);font-size:10px;color:#8c7b6a;">${formatClock(eventTime, timeZone)}</small>
           </div>
-          <p class="day-card-advice">${advice}</p>
         </div>
+        <p class="day-tip-line">${advice}</p>
       `;
+
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，霞光指数 ${score}分，${miniSeal}，${advice}`);
+      const selectCard = () => {
+        elements.week.querySelectorAll(".day-journal-card").forEach(c => c.classList.remove("is-active-day"));
+        card.classList.add("is-active-day");
+        // 联动更新 Hero 主卡片展示该日预报
+        if (elements.eventTime) {
+          const clock = formatClock(eventTime, timeZone);
+          elements.eventTime.innerHTML = `${clock} <small id="hero-time-sub">${eventLabel} · 最佳摄影视窗</small>`;
+        }
+        if (elements.entryTag) {
+          elements.entryTag.textContent = `${formattedDate} · ${eventLabel}观测手记`;
+        }
+        if (elements.score) elements.score.textContent = String(score);
+        if (elements.verdict) elements.verdict.textContent = `“${advice}”`;
+        if (elements.sealGrade) elements.sealGrade.textContent = miniSeal;
+        if (elements.sealSub) elements.sealSub.textContent = score >= 70 ? "极力推荐" : "宜静候";
+        document.body.dataset.tier = tier;
+      };
+
+      card.addEventListener("click", selectCard);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectCard();
+        }
+      });
     }
     appendCard(card);
   }
@@ -564,16 +667,33 @@ function renderReady(cacheAge = 0) {
   elements.placeName.textContent = `${state.place.name}${conditionSuffix}`;
   elements.openPlaces.setAttribute(
     "aria-label",
-    `选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`
+    `霞光预报 - 选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`
   );
-  elements.eventTime.textContent = `${eventLabel} · ${formatClock(eventTime, timeZone)}`;
+  const clockStr = formatClock(eventTime, timeZone);
+  elements.eventTime.innerHTML = `${clockStr} <small id="hero-time-sub">${eventLabel} · 最佳视窗</small>`;
   elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
+  if (elements.entryTag) {
+    elements.entryTag.textContent = `${formatEventDate(eventTime, timeZone)} · ${eventLabel}观测手记`;
+  }
   delete document.body.dataset.switching;
   $("event-pending").hidden = true;
   elements.score.textContent = String(score);
   if (!wasReady) elements.week.replaceChildren();
   elements.band.textContent = indexBand(score);
-  elements.verdict.textContent = waitAdvice(score);
+
+  // 朱砂印章研判与手记建议
+  let sealText = "微茫";
+  let sealSub = "宜煮茶";
+  if (score >= 85) { sealText = "紫金"; sealSub = "旷世绝景"; }
+  else if (score >= 70) { sealText = "晴金"; sealSub = "极力推荐"; }
+  else if (score >= 50) { sealText = "柔光"; sealSub = "值得驻足"; }
+  else if (score >= 30) { sealText = "休整"; sealSub = "不宜蹲守"; }
+
+  if (elements.sealGrade) elements.sealGrade.textContent = sealText;
+  if (elements.sealSub) elements.sealSub.textContent = sealSub;
+
+  const adviceText = photographicAdviceFor(metrics, score, state.event);
+  elements.verdict.textContent = `“${adviceText}”`;
   updateSourceStatus();
   elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
   elements.reasons.replaceChildren(...reasonsFor(metrics).map((reason) => {
@@ -640,6 +760,9 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
     if (renderReady(cached.age)) {
       announceReady();
       if (!keepReady) focusNewResult();
+    }
+    if (cached.age > 5 * 60 * 1000) {
+      loadPlace(normalized, { force: true });
     }
     return;
   }
@@ -1460,6 +1583,139 @@ if ("serviceWorker" in navigator) window.addEventListener("load", () => navigato
 
 applyLoaderStyle(currentLoaderStyle);
 renderFavorites();
+
+const SPECIMEN_JOURNALS = {
+  sunset: {
+    titlePrefix: "今晚落日",
+    titleSuffix: "值得等吗",
+    intro: "读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。",
+    photo: "assets/sayram_sunset.jpg",
+    photoAlt: "新疆赛里木湖西海落日雪山实景观测",
+    place: "新疆 · 赛里木湖 (2,073 m)",
+    target: "暮天火烧云与雪峰漫射实录 · 标杆观测",
+    stamp: "晚霞极佳 · 值得专程等待",
+    window: "21:25 – 22:15",
+    m1Title: "云幕受光",
+    m1Desc: "博罗科努高层卷云迎阳，预计触发 30 分钟火烧云",
+    m2Title: "地平光路",
+    m2Desc: "西海低云仅 8%，太阳落入地平前无遮挡",
+    m3Title: "高山空气",
+    m3Desc: "视距超 80km，瑞利散射纯净，雪山倒影赤红"
+  },
+  sunrise: {
+    titlePrefix: "明早破晓",
+    titleSuffix: "值得早起吗",
+    intro: "读取东方低层光路与高空卷云受光角，为明早第一缕晨光给出一份出行建言。",
+    photo: "assets/sayram_sunrise.jpg",
+    photoAlt: "新疆赛里木湖松树头晨曦霞光S弯实景观测",
+    place: "新疆 · 赛里木湖 (2,073 m)",
+    target: "晨曦破晓映S弯与金顶实录 · 标杆观测",
+    stamp: "朝霞极佳 · 建议定闹钟早起",
+    window: "06:40 – 07:25",
+    m1Title: "东方初阳",
+    m1Desc: "卷云受光仰角 14.8°，率先捕获第一缕晨曦金光",
+    m2Title: "地影天幕",
+    m2Desc: "反日点粉蓝地影弧（维纳斯带）横贯天际",
+    m3Title: "镜面水色",
+    m3Desc: "晨风微弱，松树头 S 弯水面静如明镜，倒映金山"
+  }
+};
+
+let currentSpecimenSlot = null;
+let specimenUserManual = false;
+
+function setSpecimenSlot(slot, manual = false) {
+  if (manual) specimenUserManual = true;
+  currentSpecimenSlot = slot;
+  const data = SPECIMEN_JOURNALS[slot];
+  if (!data) return;
+
+  const card = $("specimen-card");
+  if (!card) return;
+  card.dataset.slot = slot;
+
+  for (const tab of card.querySelectorAll(".specimen-tab")) {
+    const active = tab.dataset.slot === slot;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-checked", String(active));
+  }
+
+  const titlePrefix = $("welcome-title-prefix");
+  if (titlePrefix) titlePrefix.textContent = data.titlePrefix;
+  const titleSuffix = $("welcome-title-suffix");
+  if (titleSuffix) titleSuffix.textContent = data.titleSuffix;
+  const intro = $("welcome-intro");
+  if (intro) intro.textContent = data.intro;
+
+  const body = $("specimen-body");
+  const photo = $("specimen-photo");
+  const place = $("specimen-place");
+  const target = $("specimen-target");
+  const stamp = $("specimen-stamp-text");
+  const windowEl = $("specimen-time-val");
+  const m1T = $("specimen-m1-title"), m1D = $("specimen-m1-desc");
+  const m2T = $("specimen-m2-title"), m2D = $("specimen-m2-desc");
+  const m3T = $("specimen-m3-title"), m3D = $("specimen-m3-desc");
+
+  const apply = () => {
+    if (photo) { photo.src = data.photo; photo.alt = data.photoAlt; }
+    if (place) place.textContent = data.place;
+    if (target) target.textContent = data.target;
+    if (stamp) stamp.textContent = data.stamp;
+    if (windowEl) windowEl.textContent = data.window;
+    if (m1T && m1D) { m1T.textContent = data.m1Title; m1D.textContent = data.m1Desc; }
+    if (m2T && m2D) { m2T.textContent = data.m2Title; m2D.textContent = data.m2Desc; }
+    if (m3T && m3D) { m3T.textContent = data.m3Title; m3D.textContent = data.m3Desc; }
+  };
+
+  if (body) {
+    body.classList.add("fade-out");
+    if (photo) photo.classList.add("fade-out");
+    setTimeout(() => {
+      apply();
+      body.classList.remove("fade-out");
+      if (photo) photo.classList.remove("fade-out");
+    }, 120);
+  } else {
+    apply();
+  }
+}
+
+function syncWelcomeJournal() {
+  if (specimenUserManual) return;
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes() / 60;
+  const autoSlot = (h >= 4 && h < 19.5) ? "sunset" : "sunrise";
+  if (autoSlot !== currentSpecimenSlot) {
+    setSpecimenSlot(autoSlot, false);
+  }
+}
+
+function initWelcomeJournalEvents() {
+  const card = $("specimen-card");
+  if (!card) return;
+  const tabs = Array.from(card.querySelectorAll(".specimen-tab"));
+  tabs.forEach((tab, idx) => {
+    tab.addEventListener("click", () => setSpecimenSlot(tab.dataset.slot, true));
+    tab.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = tabs[(idx + 1) % tabs.length];
+        next.focus();
+        setSpecimenSlot(next.dataset.slot, true);
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+        prev.focus();
+        setSpecimenSlot(prev.dataset.slot, true);
+      }
+    });
+  });
+  syncWelcomeJournal();
+}
+
+initWelcomeJournalEvents();
+
 const lastPlace = normalizePlace(storage.get(PLACE_KEY));
-if (lastPlace) loadPlace(lastPlace);
+if (lastPlace) loadPlace(lastPlace, { preferCache: true });
 else setPanel("welcome");

@@ -18,12 +18,12 @@
   --status-info: #9dcced;
   --status-warning: #ffcb99;
   --status-error: #ff9f98;
-  --sky-top: #101b2c;
-  --sky-mid: #35434d;
-  --sky-horizon: #b37e61;
-  --sky-glow: rgba(241, 183, 115, 0.42);
-  --sky-cloud-opacity: 0.28;
-  --sky-texture-opacity: 0.2;
+  --sky-top: #1c5b94;
+  --sky-mid: #4a8eb8;
+  --sky-horizon: #a6cde2;
+  --sky-glow: rgba(255, 220, 170, 0.16);
+  --sky-cloud-opacity: 0;
+  --sky-texture-opacity: 0.04;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
@@ -354,7 +354,7 @@ body[data-weather="hail"] {
 
 html {
   min-height: 100%;
-  background: #101821;
+  background: var(--sky-top, #1c5b94);
 }
 
 body {
@@ -939,8 +939,9 @@ body[data-state="ready"][data-storm="severe"] .sky::before {
 
 body[data-state="ready"] .sky,
 body[data-state="loading"] .sky,
-body[data-state="error"] .sky {
-  filter: brightness(0.8) saturate(0.88);
+body[data-state="error"] .sky,
+body[data-state="welcome"] .sky {
+  filter: none;
 }
 
 .app-shell {
@@ -1154,9 +1155,9 @@ body[data-state="ready"] .top-actions {
 
 .welcome-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
-  gap: clamp(72px, 10vw, 132px);
-  align-items: end;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: clamp(48px, 6vw, 92px);
+  align-items: center;
 }
 
 .eyebrow {
@@ -1223,10 +1224,19 @@ body[data-state="ready"] .top-actions {
   color: #17202a;
 }
 
+.primary span:last-child {
+  display: inline-block;
+  transition: transform 140ms var(--ease-out);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .primary:hover {
     background: var(--accent-hover);
     border-color: var(--accent-hover);
+  }
+
+  .primary:hover span:last-child {
+    transform: translate(2px, -2px);
   }
 }
 
@@ -1321,6 +1331,312 @@ body[data-state="ready"] .top-actions {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.55;
+}
+
+/* ============================================================
+   WELCOME NOTEBOOK SPECIMEN (霞光观测手记 · 典范实录)
+   ============================================================ */
+.welcome-specimen {
+  min-width: 0;
+}
+
+.specimen-card {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 18px 20px 20px;
+  border-radius: 8px;
+  background: #faf6ee;
+  background-image:
+    radial-gradient(rgba(175, 155, 125, 0.22) 0.8px, transparent 0.8px),
+    linear-gradient(180deg, #fdfbf7 0%, #f5efe3 100%);
+  background-size: 16px 16px, 100% 100%;
+  border: 1px solid #dfd4c2;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 16px 38px rgba(10, 18, 28, 0.42),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+  position: relative;
+  color: #28221c;
+}
+
+/* 顶部手帐便签索引 */
+.specimen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid #e4dacb;
+}
+
+.specimen-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #7d7062;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.specimen-tag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c86829;
+}
+
+.specimen-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 6px;
+  background: #ebe2d4;
+  border: 1px solid #ded3c0;
+}
+
+.specimen-tab {
+  height: 24px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #594b3d;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 140ms var(--ease-out), background 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
+}
+
+.specimen-tab:hover {
+  color: #241e19;
+}
+
+.specimen-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.specimen-tab.active {
+  color: #241e19;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(40, 30, 20, 0.14);
+}
+
+/* 手帐野外冲印相框（带温润相纸留白与和纸胶带固定） */
+.specimen-photo-frame {
+  margin: 0;
+  position: relative;
+  border-radius: 3px;
+  background: #ffffff;
+  padding: 7px 7px 9px 7px;
+  border: 1px solid #e2d7c5;
+  box-shadow: 0 3px 10px rgba(40, 30, 20, 0.08);
+}
+
+/* 和纸胶带 (Washi Tape) 贴合固定感 */
+.specimen-photo-frame::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 72px;
+  height: 18px;
+  background: rgba(235, 218, 192, 0.85);
+  border-left: 2px dashed rgba(190, 168, 138, 0.45);
+  border-right: 2px dashed rgba(190, 168, 138, 0.45);
+  box-shadow: 0 1px 3px rgba(40, 30, 20, 0.1);
+  z-index: 2;
+  pointer-events: none;
+  transition: transform 200ms var(--ease-out);
+}
+
+/* 随卷别微妙变化的胶带贴角 (手作拼贴细节) */
+.specimen-card[data-slot="sunset"] .specimen-photo-frame::before {
+  transform: translateX(-50%) rotate(-1.2deg);
+}
+
+.specimen-card[data-slot="sunrise"] .specimen-photo-frame::before {
+  transform: translateX(-50%) rotate(1.4deg);
+}
+
+.specimen-photo {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+  transition: opacity 140ms var(--ease-out), transform 6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.specimen-photo.fade-out {
+  opacity: 0.25;
+}
+
+.specimen-photo-frame:hover .specimen-photo {
+  transform: scale(1.025);
+}
+
+.specimen-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 4px 2px;
+  border-top: 1px solid #f2ece3;
+  margin-top: 5px;
+}
+
+.specimen-caption-place {
+  font-family: var(--font-serif-title);
+  color: #28221c;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.specimen-caption-target {
+  font-family: var(--font-mono);
+  color: #7d7062;
+  font-size: 10.5px;
+}
+
+/* 手记内容区平滑过渡 */
+.specimen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  transition: opacity 140ms var(--ease-out);
+}
+
+.specimen-body.fade-out {
+  opacity: 0.2;
+}
+
+/* 手帐朱红评定印章行 (双圈金石印章) */
+.specimen-verdict-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid #e8dfd2;
+  border-bottom: 1px solid #e8dfd2;
+}
+
+.specimen-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1.5px solid #bd4632;
+  outline: 1px solid rgba(189, 70, 50, 0.35);
+  outline-offset: -3px;
+  background: rgba(189, 70, 50, 0.05);
+  color: #b33925;
+  box-shadow: 0 0 0 1px rgba(189, 70, 50, 0.12);
+  transition: transform 200ms var(--ease-out);
+}
+
+.specimen-card[data-slot="sunset"] .specimen-stamp {
+  transform: rotate(-1.5deg);
+}
+
+.specimen-card[data-slot="sunrise"] .specimen-stamp {
+  transform: rotate(1.2deg);
+}
+
+.stamp-star {
+  font-size: 11px;
+  color: #bd4632;
+}
+
+.stamp-text {
+  font-family: var(--font-serif-title);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.specimen-time-box {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  color: #63584e;
+}
+
+.time-box-label {
+  font-size: 10.5px;
+  color: #85786b;
+}
+
+.time-box-val {
+  font-family: var(--font-serif-num);
+  font-size: 13.5px;
+  color: #28221c;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* 手记三大观测依据 (信笺横格 01/02/03) */
+.specimen-metrics {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.specimen-metrics > div {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #e8dfd2;
+}
+
+.specimen-metrics > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.specimen-metrics dt {
+  color: #c86829;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.specimen-metrics dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.specimen-metrics strong {
+  font-family: var(--font-serif-title);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #28221c;
+  letter-spacing: 0.02em;
+}
+
+.specimen-metrics span {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #63574c;
 }
 
 .loading,
@@ -4026,7 +4342,7 @@ body[data-state="ready"] .ready {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 140ms ease-out;
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
 }
 .lens-speed-btn:active { transform: scale(0.95); }
 
@@ -4059,7 +4375,7 @@ body[data-state="ready"] .ready {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 16px rgba(0, 0, 0, 0.2);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
   backdrop-filter: blur(18px) saturate(180%);
-  transition: all 140ms ease-out;
+  transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out, transform 140ms ease-out;
 }
 .btn-liquid-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -4083,7 +4399,7 @@ body[data-state="ready"] .ready {
     0 4px 16px rgba(0, 0, 0, 0.3),
     0 1px 2px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 1);
-  transition: all 140ms ease-out;
+  transition: background-color 140ms ease-out, transform 140ms ease-out, box-shadow 140ms ease-out;
 }
 .btn-liquid-primary:hover {
   background: #f4f6f8;

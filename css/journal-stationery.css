@@ -1,0 +1,1641 @@
+/* ==========================================================================
+   《霞光观测手记》大师级手帐实体卡片系统与微物理互动样式库
+   Field Observation Journal - Master Stationery & Micro-physics Styling
+   ========================================================================== */
+
+:root {
+  --seal-cinnabar: #b53826;
+  --seal-vermilion: #d2482e;
+  --brass-gold: #c89c56;
+  --brass-highlight: #f8dfa4;
+  --brass-dark: #7c5c28;
+  --paper-cream: #fbf7ee;
+  --paper-card-bg: #fdfaf3;
+  --paper-border: rgba(195, 175, 145, 0.45);
+  --paper-shadow: 0 8px 28px rgba(60, 45, 30, 0.10), 0 2px 6px rgba(60, 45, 30, 0.05);
+  --font-serif: "Songti SC", "SimSun", "STSong", "Noto Serif SC", serif;
+  --font-num: "Times New Roman", "Baskerville", "Georgia", "Songti SC", serif;
+  --font-mono: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-peel: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* 🌟 前后双层气象 Canvas (穿透与背景融合) */
+.weather-background-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity 600ms ease;
+}
+
+.weather-foreground-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 1;
+  transition: opacity 600ms ease;
+}
+
+/* 宣纸底色与环境漫射 */
+body[data-tier="epic"],
+body[data-tier="great"],
+body[data-tier="fair"],
+body[data-tier="dull"] {
+  background: 
+    radial-gradient(circle at 50% 18%, rgba(255, 235, 205, 0.35) 0%, transparent 65%),
+    linear-gradient(180deg, #e4ecf7 0%, #fbede0 50%, #fbe8d6 100%);
+  background-attachment: fixed;
+  color: #28221c;
+}
+
+/* ==========================================================================
+   🌟 大师级主体手帐实体卡片 (Hero Master Journal Card)
+   ========================================================================== */
+.hero-master-card {
+  position: relative;
+  background: var(--paper-card-bg);
+  border-radius: 14px;
+  padding: 32px 34px 28px;
+  margin: 16px 0 26px;
+  border: 1px solid var(--paper-border);
+  box-shadow: var(--paper-shadow), inset 0 0 45px rgba(240, 230, 215, 0.35);
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.18) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(246, 239, 226, 0.4) 100%);
+  background-size: 16px 16px, 100% 100%;
+  transform: rotate(-0.35deg);
+  transition: transform 380ms var(--ease-spring), box-shadow 380ms ease, filter 300ms ease;
+  z-index: 15;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-master-card:hover {
+    transform: rotate(0deg) translateY(-2px);
+    box-shadow: 
+      0 12px 36px rgba(60, 45, 30, 0.14), 
+      0 3px 10px rgba(60, 45, 30, 0.08),
+      inset 0 0 50px rgba(240, 230, 215, 0.45);
+  }
+}
+
+/* 顶部活页手撕齿孔条 (Top Perforated Notch Holes) */
+.hero-paper-perforations {
+  position: absolute;
+  top: -8px;
+  left: 36px;
+  right: 36px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 4;
+}
+.hero-paper-perforations i {
+  width: 9px;
+  height: 9px;
+  background: #252e38;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.7), 0 1px 1px rgba(255, 255, 255, 0.6);
+  transition: background-color 260ms ease, box-shadow 260ms ease, transform 260ms ease;
+}
+
+/* 左上角斜贴手撕和纸胶带 (Torn Washi Tape) */
+.hero-washi-tape-topleft {
+  position: absolute;
+  top: -12px;
+  left: 22px;
+  width: 86px;
+  height: 25px;
+  background: rgba(225, 195, 150, 0.82);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(160, 130, 95, 0.16) 4px, rgba(160, 130, 95, 0.16) 8px);
+  transform: rotate(-8deg);
+  box-shadow: 0 1.5px 5px rgba(60, 45, 30, 0.16);
+  z-index: 20;
+  clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
+  transition: transform 300ms ease, opacity 300ms ease, filter 300ms ease;
+  pointer-events: none;
+}
+
+/* 右上角高光复古黄铜长尾夹 (Brass Metal Binder Clip) */
+.hero-brass-clip {
+  position: absolute;
+  top: -14px;
+  right: 30px;
+  width: 26px;
+  height: 48px;
+  background: linear-gradient(135deg, #f7d898 0%, #d4a357 50%, #986f32 100%);
+  border-radius: 4px;
+  box-shadow: 2px 3px 8px rgba(50, 35, 20, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  transform: rotate(4deg);
+  z-index: 25;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 200ms ease, filter 200ms ease, box-shadow 200ms ease;
+}
+.hero-brass-clip:active {
+  transform: rotate(4deg) scale(0.92);
+  filter: brightness(1.2);
+  transition-duration: 80ms;
+}
+.hero-brass-clip::before {
+  content: "";
+  position: absolute;
+  inset: -10px -12px;
+}
+.hero-brass-clip:focus-visible {
+  outline: 2px solid var(--seal-cinnabar);
+  outline-offset: 3px;
+}
+.hero-brass-clip::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  right: 4px;
+  bottom: 12px;
+  border: 1.5px solid rgba(110, 80, 35, 0.6);
+  border-radius: 2px;
+}
+
+/* Hero 内部排版网格 */
+.hero-journal-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 36px;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.hero-meta-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.journal-entry-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #9c8a77;
+  border-left: 2px solid var(--seal-cinnabar);
+  padding-left: 8px;
+}
+
+.hero-event-time {
+  font-family: var(--font-serif);
+  font-size: clamp(34px, 4.2vw, 50px);
+  font-weight: 500;
+  color: #221c17;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-event-time small {
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: #7b6d5e;
+  font-weight: 500;
+}
+
+.hero-countdown-tape {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(237, 181, 111, 0.22);
+  border: 1px dashed #d5a566;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #8c5218;
+  font-weight: 600;
+  transform: rotate(-0.5deg);
+  font-variant-numeric: tabular-nums;
+  transition: transform 300ms ease, background-color 300ms ease, border-color 300ms ease;
+}
+.hero-countdown-tape::before {
+  content: "⏱";
+  font-size: 11px;
+}
+
+.hero-verdict-quote {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: #3a3026;
+  margin-top: 6px;
+  position: relative;
+  padding-left: 14px;
+  border-left: 2px solid #dfd0be;
+  text-wrap: pretty;
+  transition: color 300ms ease;
+}
+
+.hero-score-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  position: relative;
+}
+
+.score-label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-serif);
+  color: #635445;
+  font-size: 12px;
+}
+
+.score-number-display {
+  font-family: var(--font-num);
+  font-size: clamp(96px, 11vw, 136px);
+  line-height: 0.88;
+  color: #c86829;
+  letter-spacing: -0.04em;
+  margin: 10px 0 6px;
+  font-variant-numeric: lining-nums tabular-nums;
+  display: flex;
+  align-items: baseline;
+  transition: color 300ms ease;
+}
+
+.score-number-display small {
+  font-size: 20px;
+  font-family: var(--font-serif);
+  color: #685848;
+  margin-left: 4px;
+}
+
+/* 真实朱砂印章 (Cinnabar Seal Stamp) */
+.cinnabar-seal-stamp {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border: 2px solid var(--seal-cinnabar);
+  outline: 1.5px solid var(--seal-cinnabar);
+  outline-offset: -4px;
+  border-radius: 8px;
+  background: rgba(189, 70, 50, 0.05);
+  color: var(--seal-cinnabar);
+  font-family: var(--font-serif);
+  transform: rotate(-3.5deg);
+  box-shadow: 0 2px 8px rgba(189, 70, 50, 0.15);
+  position: absolute;
+  bottom: -15px;
+  right: 170px;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  transition: transform 300ms ease, box-shadow 300ms ease, filter 300ms ease;
+}
+
+.cinnabar-seal-stamp:focus-visible {
+  outline: 2px solid var(--seal-cinnabar) !important;
+  outline-offset: 3px !important;
+}
+
+.cinnabar-seal-stamp:active {
+  transform: rotate(-3.5deg) scale(0.94);
+  box-shadow: 0 1px 4px rgba(189, 70, 50, 0.2);
+  transition-duration: 80ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cinnabar-seal-stamp:hover {
+    transform: rotate(-2deg) scale(1.05);
+    box-shadow: 0 4px 14px rgba(189, 70, 50, 0.25);
+  }
+}
+
+.seal-grade {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  padding-left: 2px;
+}
+
+.seal-sub {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   Section 03: 桌面端 7 日手帐活页卡片展廊 (Desktop Physical Binder Gallery)
+   ========================================================================== */
+.week-strip-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.day-journal-card {
+  background: #fdfaf3;
+  border: 1px solid rgba(195, 175, 145, 0.45);
+  border-radius: 9px;
+  padding: 16px 11px 13px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 204px;
+  box-shadow: 0 3px 12px rgba(60, 45, 30, 0.07), 0 1px 3px rgba(60, 45, 30, 0.05);
+  transition: transform 260ms var(--ease-spring), box-shadow 260ms ease, border-color 260ms ease;
+  position: relative;
+  cursor: pointer;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.14) 1px, transparent 0),
+    linear-gradient(180deg, #fff 0%, #faf5ec 100%);
+  background-size: 14px 14px, 100% 100%;
+}
+
+/* 自然微倾角交错排列 */
+.day-journal-card:nth-child(1) { transform: rotate(-0.8deg); }
+.day-journal-card:nth-child(2) { transform: rotate(0.6deg); }
+.day-journal-card:nth-child(3) { transform: rotate(-0.5deg); }
+.day-journal-card:nth-child(4) { transform: rotate(0.5deg); }
+.day-journal-card:nth-child(5) { transform: rotate(-0.7deg); }
+.day-journal-card:nth-child(6) { transform: rotate(0.6deg); }
+.day-journal-card:nth-child(7) { transform: rotate(-0.4deg); }
+
+@media (hover: hover) and (pointer: fine) {
+  .day-journal-card:hover {
+    transform: translateY(-6px) scale(1.03) rotate(0deg) !important;
+    box-shadow: 0 10px 24px rgba(60, 45, 30, 0.14), 0 2px 6px rgba(60, 45, 30, 0.08);
+    z-index: 5;
+  }
+}
+
+.day-journal-card:active {
+  transform: translateY(-2px) scale(0.98) rotate(0deg) !important;
+  transition-duration: 80ms;
+}
+
+/* 选中活跃态 (Active Focused Card) */
+.day-journal-card.is-active-day {
+  transform: translateY(-8px) scale(1.04) rotate(0deg) !important;
+  border-color: #d4a357 !important;
+  box-shadow: 0 14px 30px rgba(60, 45, 30, 0.18), 0 0 0 2px #d4a357, 0 0 16px rgba(212, 163, 87, 0.35) !important;
+  z-index: 8;
+}
+
+/* 顶部手撕撕边彩色和纸胶带 (Mini Washi Tape) */
+.day-journal-card::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 28%;
+  width: 44px;
+  height: 12px;
+  background: rgba(220, 195, 150, 0.72);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(160, 130, 95, 0.15) 3px, rgba(160, 130, 95, 0.15) 6px);
+  transform: rotate(-1.5deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+}
+
+/* 顶部活页打孔 */
+.day-card-perfs {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: -6px;
+  margin-bottom: 8px;
+}
+.day-card-perfs i {
+  width: 5px;
+  height: 5px;
+  background: #252e38;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.6);
+}
+
+.day-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4a3e32;
+  margin-top: 2px;
+}
+
+/* 水彩试色笔触小色块 */
+.day-card-watercolor {
+  height: 5px;
+  border-radius: 3px;
+  margin: 6px 0 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.day-journal-card[data-grade="epic"] .day-card-watercolor {
+  background: linear-gradient(90deg, #ff7e4a, #ffd07c);
+}
+.day-journal-card[data-grade="great"] .day-card-watercolor {
+  background: linear-gradient(90deg, #edb56f, #f7c586);
+}
+.day-journal-card[data-grade="fair"] .day-card-watercolor {
+  background: linear-gradient(90deg, #a4c4e8, #c6d9f0);
+}
+.day-journal-card[data-grade="dull"] .day-card-watercolor {
+  background: #b8c4c4;
+}
+
+.day-score-block {
+  margin: 4px 0 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-score-num {
+  font-family: var(--font-num);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1;
+  color: #c86829;
+}
+
+.day-score-tag {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  color: #7b6a58;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+/* 微型朱砂小印泥 */
+.day-mini-seal {
+  font-family: var(--font-serif);
+  font-size: 8px;
+  color: var(--seal-cinnabar);
+  border: 1px solid var(--seal-cinnabar);
+  border-radius: 3px;
+  padding: 0 3px;
+  display: inline-block;
+  transform: rotate(-2.5deg);
+  line-height: 1.2;
+}
+
+.day-tip-line {
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  line-height: 1.4;
+  box-sizing: border-box;
+  min-height: 46px;
+  color: #554433;
+  background: rgba(251, 244, 228, 0.75);
+  border-radius: 4px;
+  padding: 5px 6px;
+  border-left: 2px solid rgba(195, 175, 140, 0.45);
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   🌟 移动端专属：双实体手撕便签叠放卡册 (Mobile Dual Physical Deck)
+   ========================================================================== */
+.mobile-deck-container {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 12px;
+  position: relative;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mobile-deck-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 6px 4px 12px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mobile-deck-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.deck-tab-pill {
+  flex: 0 0 auto;
+  padding: 5px 11px;
+  background: rgba(180, 155, 125, 0.14);
+  border: 1px dashed rgba(175, 155, 125, 0.45);
+  border-radius: 6px;
+  font-size: 11px;
+  color: #6a5a4a;
+  font-family: var(--font-serif);
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out), border-color 160ms var(--ease-out), color 160ms var(--ease-out), transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.deck-tab-pill.active {
+  background: #faf6ee;
+  border-style: solid;
+  border-color: var(--seal-cinnabar);
+  color: #28221c;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(60, 45, 30, 0.12);
+  transform: translateY(-2px);
+}
+.deck-tab-pill.active::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--seal-cinnabar);
+}
+
+.mobile-deck-stage {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  perspective: 1200px;
+  touch-action: none;
+}
+
+.deck-shadow-plate {
+  position: absolute;
+  inset: 8px 10px 0;
+  background: #ede4d6;
+  background-image: 
+    linear-gradient(rgba(175, 155, 125, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(175, 155, 125, 0.15) 1px, transparent 1px);
+  background-size: 15px 15px;
+  border: 1.5px solid #dcd0be;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(60, 45, 30, 0.08);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-7px, 10px) scale(0.94) rotate(-2.2deg);
+  opacity: 0.75;
+  transition: transform 300ms var(--ease-peel), opacity 300ms ease;
+}
+
+.deck-card {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #faf7f0;
+  background-image: 
+    linear-gradient(rgba(175, 155, 125, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(175, 155, 125, 0.14) 1px, transparent 1px);
+  background-size: 15px 15px;
+  border: 1.5px solid #ded3c0;
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  will-change: transform, opacity, filter;
+  transform-origin: center 80%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+}
+
+.deck-card--top {
+  z-index: 10;
+  cursor: grab;
+  box-shadow: 0 10px 28px rgba(60, 45, 30, 0.14), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.deck-card--top:active {
+  cursor: grabbing;
+}
+
+.deck-card--under {
+  z-index: 5;
+  transform: translate(6px, -8px) scale(0.97) rotate(2.4deg);
+  opacity: 0.65;
+  box-shadow: 0 4px 16px rgba(60, 45, 30, 0.08);
+  pointer-events: none;
+  filter: blur(2px) grayscale(0.2) contrast(0.94) brightness(0.97);
+  transition: transform 300ms var(--ease-peel), opacity 300ms ease, filter 300ms ease;
+}
+
+.deck-paper-perforations {
+  position: absolute;
+  top: -1px;
+  left: 18px;
+  right: 18px;
+  height: 7px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 12;
+}
+.deck-paper-perforations i {
+  width: 6px;
+  height: 6px;
+  background: #e8ded0;
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 1px 2px rgba(60, 45, 30, 0.25);
+}
+
+.deck-washi-tape-torn {
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  width: 68px;
+  height: 20px;
+  background: rgba(235, 175, 105, 0.85);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255, 255, 255, 0.22) 4px, rgba(255, 255, 255, 0.22) 8px);
+  transform: rotate(-4deg);
+  box-shadow: 0 1.5px 5px rgba(60, 45, 30, 0.16);
+  clip-path: polygon(5% 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+  pointer-events: none;
+  z-index: 14;
+}
+
+.deck-brass-clip {
+  position: absolute;
+  top: -6px;
+  right: 20px;
+  width: 14px;
+  height: 30px;
+  border: 2px solid #b8985c;
+  border-radius: 8px 8px 3px 3px;
+  transform: rotate(5deg);
+  box-shadow: 1px 2px 4px rgba(60, 45, 30, 0.18);
+  pointer-events: none;
+  z-index: 14;
+}
+.deck-brass-clip::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 2px;
+  right: 2px;
+  bottom: 5px;
+  border: 1.5px solid #d8bf82;
+  border-radius: 6px 6px 2px 2px;
+  border-bottom: none;
+}
+
+.deck-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px dashed rgba(175, 155, 125, 0.45);
+  padding-bottom: 6px;
+  margin-top: 4px;
+}
+.deck-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: #92806e;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+.deck-meta-tag {
+  font-family: var(--font-serif);
+  color: #b05a30;
+  font-weight: 600;
+}
+.deck-date-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+  color: #28221c;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+.deck-date-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #8c7d6e;
+  margin-top: 2px;
+}
+
+.deck-appraisal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 0;
+  padding: 0 2px;
+}
+.deck-score-group {
+  display: flex;
+  flex-direction: column;
+}
+.deck-score-num-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.deck-score-num {
+  font-family: var(--font-num);
+  font-size: 38px;
+  line-height: 0.88;
+  font-weight: 500;
+  color: #c86829;
+}
+.deck-score-denom {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #9c8a78;
+}
+.deck-star-rating {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  color: #c88229;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.deck-cinnabar-seal {
+  border: 2px solid var(--seal-cinnabar);
+  border-radius: 6px;
+  padding: 3px 8px;
+  color: var(--seal-cinnabar);
+  transform: rotate(-3.5deg);
+  box-shadow: inset 0 0 0 1px var(--seal-cinnabar), 0 2px 6px rgba(189, 70, 50, 0.12);
+  background: rgba(254, 246, 243, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+.deck-seal-sub {
+  font-family: var(--font-serif);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  opacity: 0.85;
+}
+.deck-seal-text {
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 1px 0;
+}
+
+.deck-watercolor-row {
+  margin: 2px 0 6px;
+}
+.deck-watercolor-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #7b6c5c;
+  margin-bottom: 4px;
+}
+.deck-watercolor-label {
+  font-family: var(--font-serif);
+  font-size: 9.5px;
+  letter-spacing: 0.03em;
+  color: #8c7b6a;
+}
+.deck-weather-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3e3226;
+  letter-spacing: 0.02em;
+}
+.deck-watercolor-bar-wrap {
+  position: relative;
+  height: 8px;
+  background: rgba(180, 155, 125, 0.15);
+  border-radius: 4px;
+  padding: 1px;
+  box-shadow: inset 0 1px 2px rgba(60, 45, 30, 0.12);
+}
+.deck-watercolor-stroke {
+  height: 100%;
+  width: 100%;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.deck-kraft-sticky {
+  position: relative;
+  background: #fbf4e4;
+  border: 1px solid #e3d3b2;
+  border-radius: 6px;
+  padding: 8px 10px 7px;
+  box-shadow: 0 2px 6px rgba(60, 45, 30, 0.06);
+  background-image: repeating-linear-gradient(transparent, transparent 17px, rgba(195, 175, 140, 0.2) 18px);
+  transform: rotate(-0.4deg);
+}
+.deck-sticky-tape {
+  position: absolute;
+  top: -5px;
+  left: 42%;
+  width: 32px;
+  height: 10px;
+  background: rgba(220, 195, 150, 0.65);
+  transform: rotate(-1.5deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.deck-sticky-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.deck-sticky-highlighter {
+  background: rgba(255, 230, 110, 0.72);
+  color: #4a3822;
+  font-family: var(--font-serif);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  display: inline-block;
+  letter-spacing: 0.03em;
+}
+.deck-sticky-body {
+  font-size: 11px;
+  line-height: 18px;
+  color: #342a20;
+  margin-top: 3px;
+  font-family: var(--font-serif);
+  letter-spacing: 0.02em;
+}
+
+.deck-nav-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 14px;
+  padding: 0 4px;
+}
+.deck-nav-btn {
+  padding: 5px 12px;
+  background: rgba(180, 155, 125, 0.15);
+  border: 1px solid rgba(175, 155, 125, 0.35);
+  border-radius: 999px;
+  font-size: 11px;
+  color: #4a3c30;
+  font-family: var(--font-serif);
+  cursor: pointer;
+  transition: background-color 140ms ease, transform 140ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .deck-nav-btn:hover {
+    background: rgba(180, 155, 125, 0.28);
+  }
+}
+.deck-dots-indicator {
+  display: flex;
+  gap: 5px;
+}
+.deck-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(175, 155, 125, 0.35);
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+.deck-dot.active {
+  background: var(--seal-cinnabar);
+  transform: scale(1.25);
+}
+
+/* ==========================================================================
+   🌟 天气 × 页面元素微物理互动动画库 (Weather-Element Interaction Animation Library)
+   ========================================================================== */
+
+/* ⚡ 闪电劈中黄铜夹 → 金色火花闪烁 + 白热光芒 */
+.hero-brass-clip.is-lightning-struck,
+.deck-brass-clip.is-lightning-struck {
+  filter: brightness(3.5) drop-shadow(0 0 16px rgba(255, 240, 180, 0.95)) !important;
+  animation: clip-lightning-spark 320ms ease-out forwards !important;
+}
+@keyframes clip-lightning-spark {
+  0% { filter: brightness(4.5) drop-shadow(0 0 24px #fff); transform: rotate(5deg) scale(1.25); }
+  30% { filter: brightness(3.2) drop-shadow(0 0 18px rgba(255, 220, 100, 0.9)); transform: rotate(8deg) scale(1.15); }
+  60% { filter: brightness(1.8) drop-shadow(0 0 8px rgba(200, 180, 90, 0.6)); transform: rotate(3deg) scale(1.05); }
+  100% { filter: brightness(1) drop-shadow(none); transform: rotate(4deg) scale(1); }
+}
+
+/* ⚡ 闪电劈中朱砂印章 → 磷光余辉闪烁 */
+.cinnabar-seal-stamp.is-lightning-struck,
+.deck-cinnabar-seal.is-lightning-struck {
+  animation: seal-phosphor-glow 600ms ease-out forwards !important;
+}
+@keyframes seal-phosphor-glow {
+  0% { filter: brightness(3.5) drop-shadow(0 0 16px rgba(200, 50, 30, 0.95)); }
+  25% { filter: brightness(2.2) drop-shadow(0 0 10px rgba(200, 80, 40, 0.7)); }
+  60% { filter: brightness(1.4) drop-shadow(0 0 6px rgba(180, 60, 35, 0.4)); }
+  100% { filter: brightness(1) drop-shadow(none); }
+}
+
+/* ⚡ 闪电 → 分数与时间大字跳闪 */
+.score-number-display.is-lightning-flicker,
+.hero-event-time.is-lightning-flicker,
+.deck-score-num.is-lightning-flicker {
+  animation: score-neon-flicker 400ms steps(6) forwards !important;
+}
+@keyframes score-neon-flicker {
+  0%, 18%, 36%, 54% { opacity: 1; text-shadow: 0 0 8px rgba(200, 220, 255, 0.85); }
+  9%, 27%, 45% { opacity: 0.3; text-shadow: none; }
+  72% { opacity: 0.85; text-shadow: 0 0 4px rgba(180, 200, 240, 0.5); }
+  100% { opacity: 1; text-shadow: none; }
+}
+
+/* ☀️ 阳光照射朱砂印章 → 温润红艳光泽 */
+.cinnabar-seal-stamp.is-sun-warmed,
+.deck-cinnabar-seal.is-sun-warmed,
+.day-mini-seal.is-sun-warmed {
+  filter: saturate(1.45) brightness(1.12) drop-shadow(0 0 6px rgba(200, 80, 30, 0.35));
+  transition: filter 1.2s ease;
+}
+
+/* ☀️ 阳光照射黄铜夹 → 暖金光池投射 */
+.hero-brass-clip.is-sun-glowing,
+.deck-brass-clip.is-sun-glowing {
+  filter: brightness(1.25) drop-shadow(0 3px 10px rgba(237, 181, 111, 0.65));
+  transition: filter 800ms ease;
+}
+
+/* ☀️ 阳光下和纸胶带变半透 → 透出纸纤维底纹 */
+.hero-washi-tape-topleft.is-sun-translucent,
+.deck-washi-tape-torn.is-sun-translucent {
+  opacity: 0.52 !important;
+  filter: saturate(1.3) brightness(1.15);
+  transition: opacity 1.5s ease, filter 1.5s ease;
+}
+
+/* ☁️ 云影飘过 → 元素整体柔和暗淡 */
+.is-cloud-shadowed {
+  filter: brightness(0.85) contrast(0.95) !important;
+  transition: filter 1.8s ease;
+}
+
+/* ☁️ 厚云遮蔽分数 → 数字朦胧 */
+.score-number-display.is-cloud-obscured,
+.deck-score-num.is-cloud-obscured {
+  filter: blur(1.5px) brightness(0.75) !important;
+  transition: filter 2s ease;
+}
+
+/* 💨 大风吹动和纸胶带与黄铜夹振动 */
+body[data-wind-gust="high"] .hero-washi-tape-topleft,
+body[data-wind-gust="high"] .deck-washi-tape-torn {
+  animation: tape-wind-flutter 0.28s ease-in-out infinite alternate !important;
+}
+@keyframes tape-wind-flutter {
+  0% { transform: rotate(-6deg) skewX(0deg); }
+  100% { transform: rotate(-11deg) skewX(3deg) translateY(-3px); }
+}
+
+body[data-wind-gust="high"] .hero-brass-clip,
+body[data-wind-gust="high"] .deck-brass-clip {
+  animation: clip-tuning-fork 0.07s linear infinite alternate !important;
+}
+@keyframes clip-tuning-fork {
+  0% { transform: rotate(3.2deg) translateX(-0.5px); }
+  100% { transform: rotate(4.8deg) translateX(0.5px); }
+}
+
+body[data-wind-gust="high"] .hero-paper-perforations.is-wind-straining i,
+body[data-wind-gust="high"] .deck-paper-perforations.is-wind-straining i {
+  background: #d4c0a8 !important;
+  transform: scaleY(1.3);
+}
+
+body[data-wind-gust="high"] .deck-kraft-sticky {
+  animation: sticky-gust-shake 0.28s ease-in-out infinite alternate !important;
+}
+@keyframes sticky-gust-shake {
+  0% { transform: rotate(-0.4deg) skewX(0deg) translateX(0); }
+  50% { transform: rotate(-3.2deg) skewX(-2.8deg) translateX(-2px); }
+  100% { transform: rotate(1.2deg) skewX(1.5deg) translateX(1.5px); }
+}
+
+/* ❄️ 暴雪积雪压垮卡片 (Heavy Snow Collapse) */
+.hero-master-card.is-snow-collapsed,
+.deck-card--top.is-snow-collapsed {
+  transform: translate3d(0, 36px, 0) rotate(-16.8deg) scale(0.97) !important;
+  box-shadow: 0 20px 48px rgba(60, 45, 30, 0.25), 0 0 14px rgba(180, 215, 245, 0.45) !important;
+  transition: transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ❄️ 拂雪弹簧复原 (Spring Restore) */
+.hero-master-card.is-restoring,
+.deck-card--top.is-restoring {
+  animation: card-spring-restore 650ms var(--ease-spring) forwards !important;
+}
+@keyframes card-spring-restore {
+  0% { transform: translate3d(0, 36px, 0) rotate(-16.8deg); }
+  50% { transform: translate3d(0, -6px, 0) rotate(2.4deg); }
+  75% { transform: translate3d(0, 2px, 0) rotate(-0.8deg); }
+  100% { transform: translate3d(0, 0, 0) rotate(-0.35deg); }
+}
+
+/* ==========================================================================
+   响应式断点适配 (Responsive Breakpoints)
+   ========================================================================== */
+@media (max-width: 860px) {
+  .journal-interaction-deck {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 10px;
+    margin: 8px 0 14px;
+    gap: 6px;
+  }
+  .journal-interaction-deck::-webkit-scrollbar {
+    display: none;
+  }
+  .journal-deck-title {
+    flex-shrink: 0;
+  }
+  .journal-deck-btns {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+  .hero-master-card {
+    padding: 24px 18px 20px;
+  }
+  .hero-journal-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .hero-score-col {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .cinnabar-seal-stamp {
+    right: 18px;
+    bottom: 12px;
+  }
+}
+
+/* ==========================================================================
+   🌟 手帐细节深度打磨 (Stationery Aesthetic Polish Overrides)
+   ========================================================================== */
+
+/* 全局手帐明亮浅色主题色彩 Token (保障 WCAG AA 对比度) */
+body[data-state="ready"] {
+  --ink: #28221c;
+  --muted: #625242;
+  --faint: #786756;
+  --line: rgba(195, 175, 145, 0.48);
+  --surface: rgba(253, 250, 243, 0.88);
+}
+
+/* 顶栏品牌与时段栏（浮于深蓝天幕背景上，使用清晰亮色排版） */
+body[data-state="ready"] .brand-copy strong {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+body[data-state="ready"] .brand-copy small {
+  color: rgba(247, 241, 231, 0.92) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+body[data-state="ready"] .ready-toolbar p {
+  color: rgba(247, 241, 231, 0.88) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* 消除时间大字多余外框，保持典雅手帐标题 */
+.hero-event-time,
+h1#event-time {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hero 主卡片元数据对比度保障 */
+.hero-master-card .data-meta {
+  color: #6a5a4a !important;
+}
+.hero-master-card .data-meta #data-source {
+  color: #206d26 !important;
+  font-weight: 600;
+}
+.hero-master-card .data-meta #data-source::before {
+  background: #2e7d32 !important;
+  box-shadow: 0 0 4px #2e7d32 !important;
+}
+.hero-master-card .data-meta #data-source[data-status="stale"] {
+  color: #a05a00 !important;
+}
+.hero-master-card .data-meta #data-source[data-status="error"] {
+  color: #c62828 !important;
+}
+.hero-master-card .data-meta #updated-at {
+  color: #6a5a4a !important;
+}
+
+/* 7日手帐卡片温润宣纸底色与高对比度排版 */
+body[data-state="ready"] .day-card.day-journal-card,
+.day-card.day-journal-card {
+  background: #fdfaf3 !important;
+  color: #28221c !important;
+  border: 1px solid rgba(195, 175, 145, 0.55) !important;
+  box-shadow: 0 4px 14px rgba(60, 45, 30, 0.08), 0 1px 3px rgba(60, 45, 30, 0.05) !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.14) 1px, transparent 0),
+    linear-gradient(180deg, #fff 0%, #faf5ec 100%) !important;
+  background-size: 14px 14px, 100% 100% !important;
+}
+
+body[data-state="ready"] .day-card.day-journal-card:focus-visible {
+  outline: 2px solid var(--seal-cinnabar) !important;
+  outline-offset: 3px !important;
+}
+
+body[data-state="ready"] .day-card.day-journal-card .day-date-row {
+  color: #4a3e32 !important;
+}
+body[data-state="ready"] .day-card.day-journal-card .day-score-num {
+  color: #c86829 !important;
+}
+body[data-state="ready"] .day-card.day-journal-card .day-score-tag {
+  color: #7b6a58 !important;
+}
+body[data-state="ready"] .day-card.day-journal-card .day-tip-line {
+  background: rgba(251, 244, 228, 0.85) !important;
+  color: #554433 !important;
+  border-left: 2px solid rgba(195, 175, 140, 0.55) !important;
+  line-height: 1.4 !important;
+  min-height: 46px !important;
+}
+
+/* 01 天空线索与 02 观测数据手帐化 */
+body[data-state="ready"] .section-block {
+  background: rgba(253, 250, 243, 0.85);
+  border: 1px solid rgba(195, 175, 145, 0.4);
+  border-radius: 12px;
+  padding: 18px 22px;
+  box-shadow: 0 4px 16px rgba(60, 45, 30, 0.05);
+  margin-top: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+body[data-state="ready"] .section-head h2 {
+  font-family: var(--font-serif);
+  color: #28221c;
+  letter-spacing: 0.04em;
+}
+body[data-state="ready"] .section-head span {
+  font-family: var(--font-mono);
+  color: var(--seal-cinnabar);
+  font-weight: 700;
+}
+body[data-state="ready"] .section-head p {
+  color: #625242 !important;
+}
+
+/* 01 天空线索：便签网格呼吸留白 */
+body[data-state="ready"] .reason-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px 24px !important;
+  margin-top: 14px !important;
+}
+
+body[data-state="ready"] .reason-list span {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border: 1px solid rgba(195, 175, 145, 0.5) !important;
+  border-radius: 8px !important;
+  padding: 14px 16px 14px 44px !important;
+  color: #382c20 !important;
+  font-family: var(--font-serif) !important;
+  box-shadow: 0 1px 4px rgba(60, 45, 30, 0.04) !important;
+  min-height: auto !important;
+}
+
+body[data-state="ready"] .reason-list span::before {
+  top: 14px !important;
+  left: 14px !important;
+  color: var(--seal-cinnabar) !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+/* 02 观测数据：指标卡片 */
+body[data-state="ready"] .metrics article {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(195, 175, 145, 0.48) !important;
+  border-radius: 8px !important;
+  padding: 12px 10px !important;
+}
+body[data-state="ready"] .metrics article span {
+  font-family: var(--font-serif) !important;
+  color: #685848 !important;
+  font-weight: 500 !important;
+}
+body[data-state="ready"] .metrics article strong {
+  font-family: var(--font-num) !important;
+  color: #241e18 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* 03 未来 7 日：桌面端 7 列均分栅格 vs 移动端平滑吸附横滑 */
+@media (min-width: 961px) {
+  body[data-state="ready"] .week-strip {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    overflow: visible !important;
+    padding: 12px 4px 18px !important;
+  }
+  body[data-state="ready"] .day-journal-card {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+}
+@media (max-width: 960px) {
+  body[data-state="ready"] .week-strip {
+    display: flex !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    padding: 8px 4px 16px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  body[data-state="ready"] .day-journal-card {
+    flex: 0 0 clamp(145px, 40vw, 165px) !important;
+    scroll-snap-align: start !important;
+  }
+}
+
+/* ==========================================================================
+   减弱动效偏好适配 (Prefers-Reduced-Motion Support)
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .hero-master-card,
+  .day-journal-card,
+  .cinnabar-seal-stamp,
+  .hero-brass-clip,
+  .journal-fx-chip {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .day-journal-card:nth-child(n) {
+    transform: none !important;
+  }
+  .day-journal-card:hover,
+  .hero-master-card:hover {
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   📖 手帐地点索引弹窗系统 (Stationery Dialog & Sheet System)
+   ========================================================================== */
+
+/* 1. 弹窗天幕雾化遮罩 (Atmospheric Frosted Sky Backdrop) */
+dialog#places-dialog::backdrop,
+dialog#dev-lab-dialog::backdrop {
+  background: rgba(18, 36, 54, 0.42) !important;
+  backdrop-filter: blur(12px) brightness(0.92) !important;
+  -webkit-backdrop-filter: blur(12px) brightness(0.92) !important;
+}
+
+/* 2. 手帐索引折页实体卡本体 (Stationery Docket Card Frame) */
+dialog#places-dialog,
+dialog#dev-lab-dialog {
+  background: #fdfaf3 !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.16) 1px, transparent 0),
+    linear-gradient(180deg, #ffffff 0%, #faf5ec 100%) !important;
+  background-size: 15px 15px, 100% 100% !important;
+  color: #28221c !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.65) !important;
+  border-radius: 16px !important;
+  box-shadow: 
+    0 28px 72px rgba(45, 30, 15, 0.22),
+    0 6px 20px rgba(45, 30, 15, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  position: relative;
+  overflow: visible !important;
+}
+
+/* 弹窗顶部仿和纸胶带装饰 */
+dialog#places-dialog::before,
+dialog#dev-lab-dialog::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 36px;
+  width: 76px;
+  height: 22px;
+  background: rgba(235, 175, 105, 0.88);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255, 255, 255, 0.25) 4px, rgba(255, 255, 255, 0.25) 8px);
+  transform: rotate(-3deg);
+  box-shadow: 0 1.5px 4px rgba(60, 45, 30, 0.18);
+  clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* 3. 弹窗头部排版 */
+#places-dialog .dialog-head,
+#dev-lab-dialog .dialog-head {
+  border-bottom: 1px dashed rgba(185, 160, 130, 0.45) !important;
+  padding-bottom: 14px !important;
+  margin-top: 4px;
+}
+#places-dialog .dialog-head p,
+#dev-lab-dialog .dialog-head p {
+  color: var(--seal-cinnabar, #c23b22) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  margin-bottom: 2px !important;
+}
+#places-dialog .dialog-head h2,
+#dev-lab-dialog .dialog-head h2 {
+  color: #28221c !important;
+  font-family: var(--font-serif) !important;
+  font-size: 23px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* 4. 关闭按钮：精致圆形手帐木质/印泥按键 */
+#places-dialog .dialog-close,
+#dev-lab-dialog .dialog-close {
+  background: rgba(245, 235, 220, 0.9) !important;
+  border: 1px solid rgba(195, 175, 145, 0.55) !important;
+  color: #5a4838 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.08) !important;
+  transition: background-color 160ms ease, transform 120ms ease, color 160ms ease, border-color 160ms ease !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  #places-dialog .dialog-close:hover,
+  #dev-lab-dialog .dialog-close:hover {
+    background: #fae9d4 !important;
+    color: var(--seal-cinnabar, #c23b22) !important;
+    border-color: var(--seal-cinnabar, #c23b22) !important;
+    transform: rotate(90deg) scale(1.06) !important;
+  }
+}
+#places-dialog .dialog-close:active,
+#dev-lab-dialog .dialog-close:active {
+  transform: scale(0.92) !important;
+}
+
+/* 5. 定位当前位置条：罗盘观测卡片 */
+#places-dialog .location-row {
+  background: #fbf6ec !important;
+  border: 1px dashed rgba(195, 165, 130, 0.6) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 4px rgba(60, 45, 30, 0.05) !important;
+  color: #28221c !important;
+  padding: 12px 16px !important;
+  margin: 16px 0 12px !important;
+  transition: background-color 180ms ease, border-color 180ms ease, transform 140ms ease !important;
+}
+#places-dialog .location-row > svg {
+  stroke: var(--seal-cinnabar, #c23b22) !important;
+}
+#places-dialog .location-row strong {
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #28221c !important;
+}
+#places-dialog .location-row small {
+  font-family: var(--font-serif) !important;
+  color: #7b6a58 !important;
+  font-size: 11px !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  #places-dialog .location-row:hover {
+    background: #fdf2df !important;
+    border-style: solid !important;
+    border-color: #d49547 !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 4px 12px rgba(60, 45, 30, 0.08) !important;
+  }
+}
+#places-dialog .location-row:active {
+  transform: scale(0.985) !important;
+}
+
+/* 6. 搜索框：古风检索白宣条 */
+#places-dialog .search-field {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.55) !important;
+  border-radius: 9px !important;
+  box-shadow: inset 0 1.5px 3px rgba(60, 45, 30, 0.06) !important;
+  transition: border-color 180ms ease, box-shadow 180ms ease !important;
+}
+#places-dialog .search-field:focus-within {
+  border-color: var(--seal-cinnabar, #c23b22) !important;
+  box-shadow: 0 0 0 3px rgba(194, 59, 34, 0.15) !important;
+}
+#places-dialog .search-field > svg {
+  stroke: #8c7b6a !important;
+}
+#places-dialog .search-field input {
+  color: #28221c !important;
+  font-family: var(--font-serif) !important;
+  font-size: 15px !important;
+}
+#places-dialog .search-field input::placeholder {
+  color: #9c8a77 !important;
+  font-family: var(--font-serif) !important;
+}
+#places-dialog .search-spinner {
+  border-color: rgba(195, 175, 145, 0.4) !important;
+  border-top-color: var(--seal-cinnabar, #c23b22) !important;
+}
+
+/* 隐私提示文字与状态 */
+#places-dialog .dialog-privacy {
+  color: #8c7b6a !important;
+  font-size: 11px !important;
+  font-family: var(--font-serif) !important;
+  opacity: 0.9 !important;
+}
+#places-dialog .dialog-status {
+  color: #b05a20 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 12px !important;
+}
+
+/* 7. 搜索结果列表 */
+#places-dialog .search-results li button {
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.4) !important;
+  color: #28221c !important;
+  padding: 12px 6px !important;
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  #places-dialog .search-results li button:hover {
+    background: rgba(251, 244, 228, 0.8) !important;
+    transform: translateX(6px) !important;
+    color: var(--seal-cinnabar, #c23b22) !important;
+  }
+}
+#places-dialog .place-label {
+  font-family: var(--font-serif) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #28221c !important;
+}
+#places-dialog .search-results small {
+  color: #826e5b !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  margin-top: 3px !important;
+}
+
+/* 8. 收藏地点板块 */
+#places-dialog .favorites-section {
+  margin-top: 22px !important;
+  border-top: 1px solid rgba(195, 175, 145, 0.35) !important;
+  padding-top: 16px !important;
+}
+#places-dialog .favorites-section h3 {
+  font-family: var(--font-serif) !important;
+  color: #554433 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+}
+#places-dialog .favorites-section > p#favorites-empty {
+  background: #fbf6ec !important;
+  border: 1px dashed rgba(195, 175, 145, 0.5) !important;
+  border-radius: 8px !important;
+  color: #8c7b6a !important;
+  font-family: var(--font-serif) !important;
+  font-size: 12px !important;
+  padding: 14px 16px !important;
+}
+
+#places-dialog .favorite-row {
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.35) !important;
+}
+#places-dialog .favorite-place {
+  color: #28221c !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  #places-dialog .favorite-place:hover {
+    color: var(--seal-cinnabar, #c23b22) !important;
+    transform: translateX(5px) !important;
+  }
+}
+#places-dialog .delete-favorite {
+  color: #9c8a77 !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  #places-dialog .delete-favorite:hover {
+    background: rgba(194, 59, 34, 0.1) !important;
+    color: var(--seal-cinnabar, #c23b22) !important;
+  }
+}
+
+/* 收藏反馈吐司 */
+#places-dialog .favorite-feedback {
+  background: #fdf2df !important;
+  border: 1px solid #e8c792 !important;
+  border-radius: 8px !important;
+  color: #6a4418 !important;
+  font-family: var(--font-serif) !important;
+}
+#places-dialog .favorite-feedback .text-button {
+  color: var(--seal-cinnabar, #c23b22) !important;
+  font-weight: 700 !important;
+}
+
+/* 9. 移动端抽屉手柄 */
+#places-dialog .drawer-handle,
+#dev-lab-dialog .drawer-handle {
+  background: rgba(185, 160, 130, 0.5) !important;
+}
+
+/* 10. 开发观测台弹窗手帐化适配 (Dev Lab Stationery Polishing) */
+#dev-lab-dialog .lens-liquid-capsule {
+  background: #f3ebd8 !important;
+  border: 1px solid rgba(195, 175, 145, 0.5) !important;
+}
+#dev-lab-dialog .lens-tab {
+  color: #6a5a4a !important;
+  font-family: var(--font-serif) !important;
+}
+#dev-lab-dialog .lens-tab[data-active="true"] {
+  color: #28221c !important;
+  font-weight: 700 !important;
+}
+#dev-lab-dialog .lens-liquid-slider {
+  background: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(60, 45, 30, 0.12) !important;
+}
+#dev-lab-dialog .lens-liquid-toolbar {
+  border-top: 1px dashed rgba(195, 175, 145, 0.4) !important;
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.4) !important;
+  color: #6a5a4a !important;
+  font-family: var(--font-serif) !important;
+}
+#dev-lab-dialog .lens-speed-btn {
+  background: #f5eedc !important;
+  border: 1px solid rgba(195, 175, 145, 0.5) !important;
+  color: #5a4838 !important;
+}
+#dev-lab-dialog .lens-speed-btn[data-active="true"] {
+  background: var(--seal-cinnabar, #c23b22) !important;
+  border-color: var(--seal-cinnabar, #c23b22) !important;
+  color: #ffffff !important;
+}
+#dev-lab-dialog .btn-liquid-secondary {
+  background: #f4ecdc !important;
+  border: 1px solid rgba(195, 175, 145, 0.6) !important;
+  color: #4a3a2a !important;
+  font-family: var(--font-serif) !important;
+}
+#dev-lab-dialog .btn-liquid-primary {
+  background: var(--seal-cinnabar, #c23b22) !important;
+  color: #ffffff !important;
+  font-family: var(--font-serif) !important;
+  box-shadow: 0 3px 10px rgba(194, 59, 34, 0.25) !important;
+}
+#dev-lab-dialog .dev-hint {
+  color: #8c7b6a !important;
+  font-family: var(--font-serif) !important;
+}
+
+

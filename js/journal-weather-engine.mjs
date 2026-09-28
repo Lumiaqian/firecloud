@@ -1,0 +1,415 @@
+/**
+ * 《霞光观测手记》天幕气象微物理互动引擎
+ * Field Observation Journal - Sky Weather & Micro-physics Engine
+ */
+
+export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
+  if (!bgCanvas || !fgCanvas) return null;
+
+  const bgCtx = bgCanvas.getContext("2d");
+  const fgCtx = fgCanvas.getContext("2d");
+  let width = 0;
+  let height = 0;
+
+  // 粒子与物理状态
+  let bgParticles = [];
+  let activeCloudPuffs = [];
+  let activeLightningBolts = [];
+  let lightningSparks = [];
+  let windDebris = [];
+  let isSnowCollapsed = false;
+  let snowHeight = 0;
+
+  // 闪电与风暴状态
+  const stormLightning = {
+    active: false,
+    startTime: 0,
+    nextStrike: performance.now() + 4000
+  };
+
+  function resizeCanvases() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    bgCanvas.width = width * dpr;
+    bgCanvas.height = height * dpr;
+    bgCtx.scale(dpr, dpr);
+
+    fgCanvas.width = width * dpr;
+    fgCanvas.height = height * dpr;
+    fgCtx.scale(dpr, dpr);
+  }
+
+  window.addEventListener("resize", resizeCanvases);
+  resizeCanvases();
+
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let isReducedMotion = reducedMotionQuery.matches;
+  reducedMotionQuery.addEventListener?.("change", e => { isReducedMotion = e.matches; });
+
+  // ⚡ 1. 触发真实折线闪电分支击中长尾夹或印章
+  function triggerLightningStrike(target = "clip", customDuration = null) {
+    const heroCard = document.getElementById("hero-master-card");
+    const clipEl = document.querySelector(".hero-brass-clip") || document.querySelector(".deck-brass-clip");
+    const sealEl = document.querySelector(".cinnabar-seal-stamp") || document.querySelector(".deck-cinnabar-seal");
+    const scoreEl = document.querySelector(".score-number-display") || document.querySelector(".deck-score-num");
+    const timeEl = document.querySelector(".hero-event-time");
+
+    let hitX = width * 0.72;
+    let hitY = height * 0.28;
+
+    if (target === "seal" && sealEl) {
+      const rect = sealEl.getBoundingClientRect();
+      hitX = rect.left + rect.width * 0.5;
+      hitY = rect.top + rect.height * 0.5;
+    } else if (clipEl) {
+      const rect = clipEl.getBoundingClientRect();
+      hitX = rect.left + rect.width * 0.5;
+      hitY = rect.top + rect.height * 0.3;
+    }
+
+    const startX = hitX + (Math.random() - 0.5) * 260 + (Math.random() > 0.5 ? 120 : -120);
+    const startY = -40;
+
+    const boltSegments = [];
+    let curX = startX;
+    let curY = startY;
+    const steps = 14;
+
+    for (let s = 1; s <= steps; s++) {
+      const t = s / steps;
+      const targetInterpX = startX + (hitX - startX) * t;
+      const targetInterpY = startY + (hitY - startY) * t;
+      const jitter = (1 - t * 0.6) * 45;
+
+      const nextX = s === steps ? hitX : targetInterpX + (Math.random() - 0.5) * jitter;
+      const nextY = s === steps ? hitY : targetInterpY + (Math.random() - 0.5) * 8;
+      boltSegments.push({ x1: curX, y1: curY, x2: nextX, y2: nextY });
+
+      // 偶发小旁支
+      if (s > 3 && s < 11 && Math.random() < 0.45) {
+        boltSegments.push({
+          x1: curX,
+          y1: curY,
+          x2: curX + (Math.random() - 0.5) * 60,
+          y2: curY + Math.random() * 38 + 10
+        });
+      }
+      curX = nextX;
+      curY = nextY;
+    }
+
+    activeLightningBolts.push({
+      segments: boltSegments,
+      hitX,
+      hitY,
+      startTime: performance.now(),
+      duration: customDuration || 480
+    });
+
+    // 喷发白热金黄电火花粒子
+    for (let k = 0; k < 32; k++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 9.0 + 3.0;
+      lightningSparks.push({
+        x: hitX + (Math.random() - 0.5) * 6,
+        y: hitY + (Math.random() - 0.5) * 6,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2.8,
+        radius: Math.random() * 2.4 + 1.2,
+        alpha: 1.0,
+        color: Math.random() > 0.35 ? "rgba(255, 245, 195," : "rgba(255, 205, 80,"
+      });
+    }
+
+    // 触发 DOM 元素受击反应
+    if (target === "seal" && sealEl) {
+      sealEl.classList.add("is-lightning-struck");
+      setTimeout(() => sealEl.classList.remove("is-lightning-struck"), 650);
+    } else if (clipEl) {
+      clipEl.classList.add("is-lightning-struck");
+      setTimeout(() => clipEl.classList.remove("is-lightning-struck"), 380);
+    }
+
+    // EMP 电磁波及：主体时间/分数大字跳闪
+    if (scoreEl) {
+      scoreEl.classList.add("is-lightning-flicker");
+      setTimeout(() => scoreEl.classList.remove("is-lightning-flicker"), 450);
+    }
+    if (timeEl) {
+      timeEl.classList.add("is-lightning-flicker");
+      setTimeout(() => timeEl.classList.remove("is-lightning-flicker"), 450);
+    }
+
+    stormLightning.active = true;
+    stormLightning.startTime = performance.now();
+  }
+
+  // ☀️ 2. 晴阳透射与暖光照耀
+  function triggerSunWarm() {
+    const heroCard = document.getElementById("hero-master-card");
+    const seal = document.querySelector(".cinnabar-seal-stamp") || document.querySelector(".deck-cinnabar-seal");
+    const clip = document.querySelector(".hero-brass-clip") || document.querySelector(".deck-brass-clip");
+    const washi = document.querySelector(".hero-washi-tape-topleft") || document.querySelector(".deck-washi-tape-torn");
+
+    if (seal) seal.classList.add("is-sun-warmed");
+    if (clip) clip.classList.add("is-sun-glowing");
+    if (washi) washi.classList.add("is-sun-translucent");
+
+    setTimeout(() => {
+      document.querySelectorAll(".is-sun-warmed").forEach(el => el.classList.remove("is-sun-warmed"));
+      document.querySelectorAll(".is-sun-glowing").forEach(el => el.classList.remove("is-sun-glowing"));
+      document.querySelectorAll(".is-sun-translucent").forEach(el => el.classList.remove("is-sun-translucent"));
+    }, 3600);
+  }
+
+  // ☁️ 3. 云影光线漫射过渡
+  function triggerCloudShadow() {
+    const targetCard = document.getElementById("hero-master-card") || document.querySelector(".deck-card--top");
+    if (!targetCard) return;
+
+    // 主体轻微柔和天光漫射折射
+    targetCard.classList.add("is-cloud-shadowed");
+    const scoreEl = targetCard.querySelector(".score-number-display") || targetCard.querySelector(".deck-score-num");
+    if (scoreEl) scoreEl.classList.add("is-cloud-obscured");
+
+    setTimeout(() => {
+      targetCard.classList.remove("is-cloud-shadowed");
+      if (scoreEl) scoreEl.classList.remove("is-cloud-obscured");
+    }, 4200);
+  }
+
+  // 💨 4. 狂风呼啸掀起便签与风屑
+  function triggerWindGust() {
+    document.body.setAttribute("data-wind-gust", "high");
+
+    const heroCard = document.getElementById("hero-master-card") || document.querySelector(".deck-card--top");
+    const rect = heroCard ? heroCard.getBoundingClientRect() : { top: height * 0.3, height: 260 };
+
+    for (let k = 0; k < 28; k++) {
+      windDebris.push({
+        x: -30,
+        y: rect.top + (Math.random() - 0.2) * rect.height,
+        vx: Math.random() * 14 + 10,
+        vy: (Math.random() - 0.4) * 4,
+        size: Math.random() * 8 + 4,
+        angle: Math.random() * Math.PI,
+        vrot: (Math.random() - 0.5) * 0.3,
+        alpha: 0.85,
+        type: Math.random() > 0.4 ? "chaff" : "leaf"
+      });
+    }
+
+    setTimeout(() => {
+      document.body.removeAttribute("data-wind-gust");
+    }, 3800);
+  }
+
+  // ❄️ 5. 暴雪压垮卡片
+  function triggerSnowCollapse() {
+    isSnowCollapsed = true;
+    const heroCard = document.getElementById("hero-master-card");
+    const deckCard = document.querySelector(".deck-card--top");
+    if (heroCard) heroCard.classList.add("is-snow-collapsed");
+    if (deckCard) deckCard.classList.add("is-snow-collapsed");
+  }
+
+  // ❄️ 6. 拂雪复原
+  function restoreSnowCard() {
+    isSnowCollapsed = false;
+    const heroCard = document.getElementById("hero-master-card");
+    const deckCard = document.querySelector(".deck-card--top");
+    [heroCard, deckCard].forEach(card => {
+      if (!card) return;
+      card.classList.remove("is-snow-collapsed");
+      card.classList.add("is-restoring");
+      setTimeout(() => card.classList.remove("is-restoring"), 700);
+    });
+  }
+
+  // 🌟 根据实际气象数据自动联动卡片微物理状态 (Automatic Weather x Stationery Elements Linkage)
+  let weatherSyncInterval = null;
+  function syncWeatherConditions({ weather, windSpeed = 0, windGust = 0, cloudCover = 0, isDay = true } = {}) {
+    const heroCard = document.getElementById("hero-master-card");
+    const seal = document.querySelector(".cinnabar-seal-stamp");
+    const clip = document.querySelector(".hero-brass-clip");
+    const washi = document.querySelector(".hero-washi-tape-topleft");
+
+    if (weatherSyncInterval) {
+      clearInterval(weatherSyncInterval);
+      weatherSyncInterval = null;
+    }
+
+    // 1. ⚡ 雷暴/闪电天气：自动触发闪电劈向黄铜长尾夹
+    if (weather === "thunder") {
+      triggerLightningStrike("clip");
+      weatherSyncInterval = setInterval(() => {
+        if (Math.random() < 0.65) triggerLightningStrike("clip");
+      }, 7000 + Math.random() * 5000);
+    }
+
+    // 2. ☀️ 晴朗阳光：黄铜夹暖金反光，朱砂印温润生辉
+    if ((weather === "clear" || weather === "sunny") && isDay) {
+      if (clip) clip.classList.add("is-sun-glowing");
+      if (seal) seal.classList.add("is-sun-warmed");
+      if (washi) washi.classList.add("is-sun-translucent");
+    } else {
+      if (clip) clip.classList.remove("is-sun-glowing");
+      if (seal) seal.classList.remove("is-sun-warmed");
+      if (washi) washi.classList.remove("is-sun-translucent");
+    }
+
+    // 3. 💨 大风天气：纸边抖动振颤，偶见飞屑掠过
+    if (windSpeed >= 18 || windGust >= 28) {
+      if (washi) washi.classList.add("is-wind-breeze");
+      if (clip) clip.classList.add("is-wind-vibrating");
+      if (Math.random() < 0.4) triggerWindGust();
+    } else {
+      if (washi) washi.classList.remove("is-wind-breeze");
+      if (clip) clip.classList.remove("is-wind-vibrating");
+    }
+
+    // 4. ☁️ 多云/阴天：光线柔和漫射
+    if (cloudCover >= 75 || weather === "cloudy") {
+      if (heroCard) heroCard.classList.add("is-cloud-shadowed");
+    } else {
+      if (heroCard) heroCard.classList.remove("is-cloud-shadowed");
+    }
+
+    // 5. ❄️ 降雪天气：黄铜夹边缘微霜
+    if (weather === "snow") {
+      if (clip) clip.classList.add("is-frost-edged");
+      if (seal) seal.classList.add("is-frost-cracked");
+    } else {
+      if (clip) clip.classList.remove("is-frost-edged");
+      if (seal) seal.classList.remove("is-frost-cracked");
+    }
+  }
+
+  // 渲染主循环
+  function renderLoop() {
+    requestAnimationFrame(renderLoop);
+
+    bgCtx.clearRect(0, 0, width, height);
+    fgCtx.clearRect(0, 0, width, height);
+
+    const now = performance.now();
+
+    // ----------------------------------------------------------------------
+    // ⚡ 真实折线闪电分支与电弧火花绘制
+    // ----------------------------------------------------------------------
+    for (let b = activeLightningBolts.length - 1; b >= 0; b--) {
+      const bolt = activeLightningBolts[b];
+      const elapsed = now - bolt.startTime;
+      if (elapsed > bolt.duration) {
+        activeLightningBolts.splice(b, 1);
+        continue;
+      }
+      const alpha = Math.max(0, 1 - (elapsed / bolt.duration));
+
+      fgCtx.save();
+      // 外层辉光电弧
+      fgCtx.beginPath();
+      for (let s = 0; s < bolt.segments.length; s++) {
+        const seg = bolt.segments[s];
+        if (s === 0) fgCtx.moveTo(seg.x1, seg.y1);
+        fgCtx.lineTo(seg.x2, seg.y2);
+      }
+      fgCtx.strokeStyle = `rgba(255, 240, 180, ${alpha * 0.85})`;
+      fgCtx.lineWidth = 5.5 * alpha;
+      fgCtx.shadowBlur = 18;
+      fgCtx.shadowColor = "rgba(255, 220, 120, 0.95)";
+      fgCtx.stroke();
+
+      // 内层白炽主芯
+      fgCtx.beginPath();
+      for (let s = 0; s < bolt.segments.length; s++) {
+        const seg = bolt.segments[s];
+        if (s === 0) fgCtx.moveTo(seg.x1, seg.y1);
+        fgCtx.lineTo(seg.x2, seg.y2);
+      }
+      fgCtx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+      fgCtx.lineWidth = 2.2;
+      fgCtx.stroke();
+
+      // 击中点强烈辐射闪光晕环
+      fgCtx.beginPath();
+      fgCtx.arc(bolt.hitX, bolt.hitY, (14 + (1 - alpha) * 24), 0, Math.PI * 2);
+      fgCtx.fillStyle = `rgba(255, 245, 210, ${alpha * 0.75})`;
+      fgCtx.fill();
+
+      fgCtx.restore();
+    }
+
+    // 电火花粒子更新与绘制
+    for (let s = lightningSparks.length - 1; s >= 0; s--) {
+      const sp = lightningSparks[s];
+      sp.x += sp.vx;
+      sp.y += sp.vy;
+      sp.vy += 0.28; // 重力
+      sp.alpha *= 0.94;
+
+      fgCtx.beginPath();
+      fgCtx.arc(sp.x, sp.y, sp.radius, 0, Math.PI * 2);
+      fgCtx.fillStyle = `${sp.color} ${sp.alpha})`;
+      fgCtx.shadowColor = "rgba(255, 220, 100, 0.8)";
+      fgCtx.shadowBlur = 6;
+      fgCtx.fill();
+
+      if (sp.alpha < 0.05) {
+        lightningSparks.splice(s, 1);
+      }
+    }
+
+    // ----------------------------------------------------------------------
+    // 💨 狂风纸屑碎叶粒子
+    // ----------------------------------------------------------------------
+    for (let w = windDebris.length - 1; w >= 0; w--) {
+      const db = windDebris[w];
+      db.x += db.vx;
+      db.y += db.vy;
+      db.angle += db.vrot;
+
+      fgCtx.save();
+      fgCtx.translate(db.x, db.y);
+      fgCtx.rotate(db.angle);
+
+      if (db.type === "chaff") {
+        fgCtx.fillStyle = `rgba(240, 230, 210, ${db.alpha})`;
+        fgCtx.fillRect(-db.size * 0.5, -db.size * 0.3, db.size, db.size * 0.6);
+      } else {
+        fgCtx.fillStyle = `rgba(185, 125, 75, ${db.alpha})`;
+        fgCtx.beginPath();
+        fgCtx.ellipse(0, 0, db.size * 0.7, db.size * 0.35, 0, 0, Math.PI * 2);
+        fgCtx.fill();
+      }
+      fgCtx.restore();
+
+      if (db.x > width + 60) {
+        windDebris.splice(w, 1);
+      }
+    }
+  }
+
+  requestAnimationFrame(renderLoop);
+
+  // 挂载到全局，方便快速体验和调用
+  window.triggerLightningStrike = triggerLightningStrike;
+  window.triggerSunWarm = triggerSunWarm;
+  window.triggerCloudShadow = triggerCloudShadow;
+  window.triggerWindGust = triggerWindGust;
+  window.triggerSnowCollapse = triggerSnowCollapse;
+  window.restoreSnowCard = restoreSnowCard;
+  window.syncWeatherConditions = syncWeatherConditions;
+
+  return {
+    triggerLightningStrike,
+    triggerSunWarm,
+    triggerCloudShadow,
+    triggerWindGust,
+    triggerSnowCollapse,
+    restoreSnowCard,
+    syncWeatherConditions
+  };
+}

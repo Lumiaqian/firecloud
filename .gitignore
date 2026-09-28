@@ -37,3 +37,8 @@ yarn-error.log*
 design/*.psd
 design/*.sketch
 design/*.fig
+
+# Temporary review artifacts & screenshots
+/*.png
+/*.txt
+lighthouse/
