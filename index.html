@@ -12,8 +12,8 @@
   <link rel="icon" href="icons/icon-192.png?v=2">
   <link rel="manifest" href="manifest.webmanifest?v=3">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
-  <link rel="stylesheet" href="css/style.css?v=52">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=53">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=11">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -347,12 +347,13 @@
   </dialog>
 
   <!-- 🌟 夜间月相天文观测详情抽屉 (Lunar Observation Modal) -->
-  <dialog class="liquid-glass glass-sheet lunar-dialog" id="lunar-dialog" aria-labelledby="lunar-dialog-title">
+  <!-- 🌟 夜间月相天文观测手帐抽屉 (Stationery Lunar Observation Modal) -->
+  <dialog class="journal-stationery-dialog lunar-dialog" id="lunar-dialog" aria-labelledby="lunar-dialog-title">
     <div class="drawer-handle" aria-hidden="true"></div>
     <form method="dialog" class="dialog-head">
       <div>
-        <p class="dev-badge">ASTRONOMY · LUNAR OBSERVATION</p>
-        <h2 id="lunar-dialog-title">夜间月相天文观测</h2>
+        <p class="lunar-tag-pill">今宵月相 · 观象手记</p>
+        <h2 id="lunar-dialog-title">夜巡月相札记</h2>
       </div>
       <button class="icon-button dialog-close" value="cancel" aria-label="关闭">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -366,23 +367,24 @@
       </div>
       <div class="lunar-grid">
         <div class="lunar-cell">
-          <small>照亮比例</small>
+          <small>照亮面比例</small>
           <strong id="lunar-cell-fraction">—</strong>
         </div>
         <div class="lunar-cell">
-          <small>月龄 / 朔望</small>
+          <small>月龄 · 朔望纪日</small>
           <strong id="lunar-cell-age">—</strong>
         </div>
         <div class="lunar-cell">
-          <small>地平高度角</small>
+          <small>地平仰角</small>
           <strong id="lunar-cell-alt">—</strong>
         </div>
         <div class="lunar-cell">
-          <small>天球方位角</small>
+          <small>天球方位向</small>
           <strong id="lunar-cell-az">—</strong>
         </div>
       </div>
       <div class="lunar-advice-box">
+        <span class="lunar-advice-stamp">宜赏月</span>
         <p id="lunar-dialog-advice">—</p>
       </div>
     </div>

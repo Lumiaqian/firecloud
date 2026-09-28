@@ -193,19 +193,19 @@ export function sunDiskPosition(azimuthDeg, elevationDeg, {
 
 /**
  * 将月球方位/高度角映射到屏幕百分比坐标
- * 映射至顶部空旷天幕视觉走廊 (X: 18% ~ 82%, Y: 7% ~ 15%)，避免遮挡顶栏操作或卡片
+ * 映射至中央偏右空旷天幕视觉走廊 (X: 30% ~ 66%, Y: 7% ~ 15%)，确保绝不与顶栏收藏刷新胶囊或时段胶囊按钮产生重叠夹逼
  */
 export function moonDiskPosition(azimuthDeg, elevationDeg, {
-  fallbackX = 76,
-  fallbackY = 12
+  fallbackX = 56,
+  fallbackY = 11
 } = {}) {
   if (!Number.isFinite(azimuthDeg) || !Number.isFinite(elevationDeg) || elevationDeg < -1) {
     return { x: fallbackX, y: fallbackY, valid: false, aboveHorizon: false };
   }
-  // 水平方位：东方(90°)偏右(~78%)，南方(180°)居中(~50%)，西方(270°)偏左(~22%)
-  const x = Math.min(84, Math.max(16, 50 + Math.sin(azimuthDeg * RAD) * 28));
-  // 垂直高度：天顶(90°)位于顶部(~7%)，地平线(0°)位于天幕底部(~14%)
-  const y = Math.min(16, Math.max(6, 14 - (Math.min(Math.max(0, elevationDeg), 90) / 90) * 7));
+  // 水平方位：东方(90°)偏右(~64%)，南方(180°)居中(~48%)，西方(270°)偏左(~32%)，开阔无遮挡
+  const x = Math.min(66, Math.max(30, 48 + Math.sin(azimuthDeg * RAD) * 16));
+  // 垂直高度：天顶(90°)位于穹顶(~8%)，地平线(0°)位于天幕底部(~14%)
+  const y = Math.min(16, Math.max(7, 14 - (Math.min(Math.max(0, elevationDeg), 90) / 90) * 6));
   return { x, y, valid: true, aboveHorizon: true };
 }
 
@@ -359,44 +359,71 @@ export function lunarSvgPath(fraction, isWaxing, R = 40, cx = 50, cy = 50) {
 }
 
 /**
- * 生成包含地照、月海与受光曲面的月球完整 SVG 矢量图形
+ * 生成手帐素描与水墨晕染质感的真实月相 SVG 矢量图形
+ * 杜绝生硬几何色块与卡通斑点，采用连续自然月海流线与羽化水墨浸染，大尺寸模式附带复古天象刻度环
  */
 export function buildMoonSvg(fraction, isWaxing, size = 72, idPrefix = "moon") {
-  const litPath = lunarSvgPath(fraction, isWaxing, 40, 50, 50);
-  const gradId = `${idPrefix}-grad-${Math.round(fraction * 100)}-${isWaxing ? "w" : "wn"}`;
-  const clipId = `${idPrefix}-clip-${Math.round(fraction * 100)}-${isWaxing ? "w" : "wn"}`;
+  const isLarge = size >= 80;
+  const R = isLarge ? 38 : 40;
+  const cx = 50;
+  const cy = 50;
+  const litPath = lunarSvgPath(fraction, isWaxing, R, cx, cy);
+  const gradId = `${idPrefix}-ivory-wash-${Math.round(fraction * 100)}-${isWaxing ? "w" : "wn"}`;
+  const clipId = `${idPrefix}-lit-clip-${Math.round(fraction * 100)}-${isWaxing ? "w" : "wn"}`;
+  const blurId = `${idPrefix}-ink-blur`;
 
   return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" class="lunar-moon-svg">
   <defs>
-    <radialGradient id="${gradId}" cx="45%" cy="38%" r="58%">
-      <stop offset="0%" stop-color="#fffef8"/>
-      <stop offset="60%" stop-color="#ebe3cd"/>
-      <stop offset="100%" stop-color="#cfc4a6"/>
+    <!-- 温润素雅的象牙和纸月辉渐变 (契合手帐质感，去除暗哑死黄) -->
+    <radialGradient id="${gradId}" cx="42%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#fbf7ee"/>
+      <stop offset="76%" stop-color="#eee5d4"/>
+      <stop offset="100%" stop-color="#dfd3bf"/>
     </radialGradient>
-    <radialGradient id="${idPrefix}-earthshine" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="rgba(125, 160, 205, 0.16)"/>
-      <stop offset="85%" stop-color="rgba(35, 60, 90, 0.28)"/>
-      <stop offset="100%" stop-color="rgba(12, 22, 36, 0.45)"/>
-    </radialGradient>
+
+    <!-- 真实水墨晕染羽化滤镜 (让月海暗斑柔润渗化在和纸上，消除突兀硬圆) -->
+    <filter id="${blurId}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.4"/>
+    </filter>
+
     ${litPath ? `<clipPath id="${clipId}"><path d="${litPath}" /></clipPath>` : ""}
   </defs>
-  <!-- 暗面地照微光轮廓 (Earthshine & Dark Limb) -->
-  <circle cx="50" cy="50" r="40" fill="#091322" stroke="rgba(165, 195, 235, 0.25)" stroke-width="0.75"/>
-  <circle cx="50" cy="50" r="40" fill="url(#${idPrefix}-earthshine)" />
-  
-  <!-- 受光月面与月海暗影 (Lit Surface & Lunar Maria) -->
-  ${litPath ? `<path d="${litPath}" fill="url(#${gradId})" />
-  <g clip-path="url(#${clipId})" opacity="0.42">
-    <!-- 月海暗影特征 (风暴洋、雨海、澄海、静海、危海) -->
-    <ellipse cx="38" cy="42" rx="13" ry="16" fill="#758292" />
-    <circle cx="48" cy="29" r="9" fill="#6d7988" />
-    <ellipse cx="64" cy="40" rx="9" ry="12" fill="#788698" />
-    <circle cx="75" cy="38" r="5" fill="#758292" />
-    <ellipse cx="66" cy="62" rx="8" ry="11" fill="#707c8c" />
-    <circle cx="40" cy="66" r="8" fill="#748090" />
-  </g>` : ""}
+
+  ${isLarge ? `<!-- 复古天象观测刻度规环 (Vintage Celestial Reticle) -->
+  <circle cx="${cx}" cy="${cy}" r="46" fill="none" stroke="rgba(195, 175, 145, 0.45)" stroke-width="0.75" stroke-dasharray="2 3"/>
+  <line x1="50" y1="1" x2="50" y2="6" stroke="rgba(185, 160, 125, 0.65)" stroke-width="1"/>
+  <line x1="50" y1="94" x2="50" y2="99" stroke="rgba(185, 160, 125, 0.65)" stroke-width="1"/>
+  <line x1="1" y1="50" x2="6" y2="50" stroke="rgba(185, 160, 125, 0.65)" stroke-width="1"/>
+  <line x1="94" y1="50" x2="99" y2="50" stroke="rgba(185, 160, 125, 0.65)" stroke-width="1"/>` : ""}
+
+  <!-- 暗面微光地照底盘 (淡素描铅灰平涂，无黑框突兀边缘) -->
+  <circle cx="${cx}" cy="${cy}" r="${R}" fill="rgba(60, 50, 40, 0.15)" stroke="rgba(195, 175, 145, 0.4)" stroke-width="0.75"/>
+
+  <!-- 受光月体 -->
+  ${litPath ? `<!-- 受光本体象牙和纸月相 -->
+  <path d="${litPath}" fill="url(#${gradId})" />
+
+  <!-- 真实连贯的自然月海水墨流线 (风暴洋、雨海、澄海、静海、危海柔润水墨层) -->
+  <g clip-path="url(#${clipId})" filter="url(#${blurId})" opacity="0.30" fill="#4d4235">
+    <!-- 西北风暴洋与雨海水墨大团 -->
+    <path d="M 35 29 C 26 36, 28 51, 36 57 C 43 61, 47 51, 44 42 C 43 33, 39 26, 35 29 Z"/>
+    <!-- 雨海暗影核心 -->
+    <ellipse cx="41" cy="35" rx="7" ry="5.5"/>
+    <!-- 澄海与静海 (中央偏东水墨层) -->
+    <path d="M 46 37 C 52 31, 63 33, 62 44 C 60 52, 49 54, 46 47 C 43 42, 45 39, 46 37 Z"/>
+    <!-- 丰富海与危海 (东侧自然暗晕) -->
+    <ellipse cx="67" cy="42" rx="4.5" ry="5.5"/>
+    <ellipse cx="62" cy="57" rx="5.5" ry="6.5"/>
+    <!-- 南部云海与第谷辐射柔影 -->
+    <ellipse cx="45" cy="66" rx="7.5" ry="4.5"/>
+  </g>
+
+  <!-- 手绘细线素描轮廓 -->
+  <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(185, 165, 135, 0.55)" stroke-width="0.8"/>` : ""}
 </svg>`;
 }
+
 
 export function destinationPoint(lat, lng, bearingDeg, distanceKm) {
   const angularDistance = distanceKm / EARTH_RADIUS_KM;

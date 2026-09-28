@@ -1850,89 +1850,209 @@ dialog#dev-lab-dialog::before {
 }
 
 /* ==========================================================================
-   🌙 夜间月相天文观测详情弹窗 (Lunar Astronomy Dialog)
+   🌙 夜间月相天文观测手帐抽屉 (Stationery Lunar Observation Dialog)
    ========================================================================== */
 .lunar-dialog {
-  max-width: 420px;
-  width: 90vw;
-  padding: 24px 22px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(12, 22, 38, 0.92);
-  backdrop-filter: blur(28px) saturate(1.8);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
-  color: #eaf1fa;
-  box-shadow: 0 24px 60px rgba(0, 8, 20, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  max-width: 420px !important;
+  width: 90vw !important;
+  padding: 28px 22px 22px !important;
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.65) !important;
+  background: #fcf8f0 !important;
+  background-image: 
+    radial-gradient(circle at 100% 0%, rgba(240, 225, 200, 0.3) 0%, transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(235, 220, 195, 0.25) 0%, transparent 50%) !important;
+  color: #28221c !important;
+  position: relative !important;
+  box-shadow: 0 24px 60px rgba(35, 25, 15, 0.38), 0 2px 6px rgba(60, 45, 30, 0.08) !important;
 }
+
+/* 顶部实体和纸美纹胶带固定装订效果 */
+.lunar-dialog::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -12px !important;
+  left: 50% !important;
+  transform: translateX(-50%) rotate(-0.8deg) !important;
+  width: 104px !important;
+  height: 24px !important;
+  background: rgba(228, 206, 172, 0.82) !important;
+  border-left: 2px dashed rgba(185, 160, 125, 0.7) !important;
+  border-right: 2px dashed rgba(185, 160, 125, 0.7) !important;
+  box-shadow: 0 2px 4px rgba(60, 45, 30, 0.12) !important;
+  backdrop-filter: blur(2px) !important;
+  z-index: 10 !important;
+}
+
 .lunar-dialog::backdrop {
-  background: rgba(2, 6, 12, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(10, 18, 30, 0.62) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
+
+.lunar-dialog .dialog-head {
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.5) !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 16px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+}
+
+.lunar-dialog .lunar-tag-pill {
+  font-family: var(--font-serif) !important;
+  color: var(--seal-cinnabar, #c23b22) !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  background: rgba(194, 59, 34, 0.08) !important;
+  display: inline-block !important;
+  padding: 1px 7px !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(194, 59, 34, 0.28) !important;
+  margin-bottom: 4px !important;
+}
+
+.lunar-dialog .dialog-head h2 {
+  font-family: var(--font-serif) !important;
+  color: #28221c !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  margin: 0 !important;
+}
+
+.lunar-dialog .dialog-close {
+  background: rgba(245, 235, 220, 0.95) !important;
+  border: 1px solid rgba(195, 175, 145, 0.6) !important;
+  color: #5a4838 !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.08) !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: transform 140ms ease, background-color 140ms ease, color 140ms ease !important;
+}
+.lunar-dialog .dialog-close:hover {
+  background: #fae9d4 !important;
+  color: var(--seal-cinnabar, #c23b22) !important;
+  border-color: var(--seal-cinnabar, #c23b22) !important;
+  transform: rotate(90deg) scale(1.06) !important;
+}
+.lunar-dialog .dialog-close:active {
+  transform: scale(0.92) !important;
+}
+
 .lunar-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px 0 12px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 10px 0 14px !important;
+  background: radial-gradient(circle at 50% 45%, rgba(246, 238, 222, 0.85) 0%, transparent 70%) !important;
+  border-radius: 12px !important;
 }
+
 .lunar-stage-moon {
-  width: 96px;
-  height: 96px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  filter: drop-shadow(0 0 24px rgba(220, 240, 255, 0.75));
-  margin-bottom: 12px;
+  width: 104px !important;
+  height: 104px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  filter: drop-shadow(0 4px 16px rgba(185, 160, 120, 0.35)) !important;
+  margin-bottom: 8px !important;
 }
 .lunar-stage-moon svg {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
+
 .lunar-stage-name {
-  font-size: 20px;
-  font-family: var(--font-serif);
-  font-weight: 600;
-  color: #f6f0dd;
-  letter-spacing: 0.05em;
+  font-family: var(--font-serif) !important;
+  color: #28221c !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  margin-top: 4px !important;
 }
+
 .lunar-stage-date {
-  font-size: 13px;
-  color: rgba(200, 225, 250, 0.75);
-  margin: 4px 0 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-serif) !important;
+  color: #7b6854 !important;
+  font-size: 13px !important;
+  margin: 3px 0 0 !important;
 }
+
+/* 4格手帐实况参数卡片 */
 .lunar-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 16px 0;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin: 14px 0 !important;
 }
+
 .lunar-cell {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  background: #fbf5ea !important;
+  border: 1px dashed rgba(190, 165, 130, 0.65) !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.04) !important;
 }
+
 .lunar-cell small {
-  font-size: 11px;
-  color: rgba(185, 210, 235, 0.65);
+  font-family: var(--font-serif) !important;
+  color: #8c7660 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
 }
+
 .lunar-cell strong {
-  font-size: 15px;
-  color: #f0f5fc;
-  font-family: var(--font-mono);
+  font-family: var(--font-serif) !important;
+  color: #28221c !important;
+  font-size: 15.5px !important;
+  font-weight: 700 !important;
 }
+
+/* 手札朱砂题跋观象建议 */
 .lunar-advice-box {
-  background: rgba(180, 215, 255, 0.08);
-  border-left: 3px solid #c89c56;
-  padding: 10px 12px;
-  border-radius: 4px 8px 8px 4px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: rgba(230, 242, 255, 0.85);
+  background: #fdf3e2 !important;
+  border: 1px solid #ebd3b2 !important;
+  border-left: 3.5px solid var(--seal-cinnabar, #c23b22) !important;
+  border-radius: 6px !important;
+  padding: 11px 14px !important;
+  color: #553b22 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 12.5px !important;
+  line-height: 1.65 !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.04) !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
 }
+
+.lunar-advice-stamp {
+  flex-shrink: 0 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: var(--seal-cinnabar, #c23b22) !important;
+  border: 1.2px solid var(--seal-cinnabar, #c23b22) !important;
+  padding: 2px 4px !important;
+  border-radius: 3px !important;
+  line-height: 1.2 !important;
+  transform: rotate(-3deg) !important;
+  display: inline-block !important;
+}
+
+.lunar-advice-box p {
+  margin: 0 !important;
+}
+
 
 
