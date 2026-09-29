@@ -213,6 +213,22 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
   }
 }
 
+/* 航空气象邮戳水印 (Aeronautical Postmark Watermark) */
+.hero-master-card::before {
+  content: "";
+  position: absolute;
+  bottom: 18px;
+  right: 28px;
+  width: 120px;
+  height: 120px;
+  border: 1.5px dashed rgba(195, 165, 130, 0.25);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  background-image: 
+    radial-gradient(circle at center, transparent 38px, rgba(195, 165, 130, 0.15) 39px, rgba(195, 165, 130, 0.15) 40px, transparent 41px);
+}
+
 /* 水膜轻薄漫反射层 (Moisture & Wet Sheen Layer) */
 .hero-master-card::after {
   content: "";
@@ -339,10 +355,22 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
 .journal-entry-tag {
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.12em;
-  color: #9c8a77;
-  border-left: 2px solid var(--seal-cinnabar);
-  padding-left: 8px;
+  letter-spacing: 0.10em;
+  color: #8c4228;
+  background: rgba(181, 56, 38, 0.06);
+  border: 1px dashed rgba(181, 56, 38, 0.45);
+  border-radius: 4px;
+  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 2px rgba(181, 56, 38, 0.08);
+  line-height: 1.3;
+}
+.journal-entry-tag::before {
+  content: "✦";
+  font-size: 9px;
+  color: var(--seal-cinnabar);
 }
 
 /* 🌙 夜间月相观测便签印签 (Stationery Lunar Observation Badge) */
@@ -618,22 +646,25 @@ body[data-light="night"] .hero-lunar-badge {
   z-index: 8;
 }
 
-/* 顶部手撕撕边彩色和纸胶带 (Mini Washi Tape) */
-.day-journal-card::before {
-  content: "";
-  position: absolute;
-  top: -6px;
-  left: 28%;
-  width: 44px;
-  height: 11px;
-  background: rgba(224, 198, 155, 0.82);
-  background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(160, 130, 95, 0.15) 3px, rgba(160, 130, 95, 0.15) 6px);
-  border-left: 1px dashed rgba(160, 130, 95, 0.45);
-  border-right: 1px dashed rgba(160, 130, 95, 0.45);
-  border-radius: 1px;
-  transform: rotate(-1.5deg);
-  box-shadow: 0 1px 2px rgba(60, 45, 30, 0.08);
-  z-index: 2;
+/* 顶部手撕撕边彩色和纸胶带 (Mini Washi Tape Pinned to Journal) */
+body[data-state="ready"] .day-card.day-journal-card::before {
+  content: "" !important;
+  position: absolute !important;
+  top: -6px !important;
+  left: 50% !important;
+  right: auto !important;
+  width: 44px !important;
+  height: 11px !important;
+  transform: translateX(-50%) rotate(-1.5deg) !important;
+  background: rgba(226, 186, 130, 0.85) !important;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 255, 255, 0.25) 3px, rgba(255, 255, 255, 0.25) 6px) !important;
+  border-left: 1px dashed rgba(160, 130, 95, 0.45) !important;
+  border-right: 1px dashed rgba(160, 130, 95, 0.45) !important;
+  border-radius: 1px !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.12) !important;
+  z-index: 6 !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
 }
 
 /* 顶部活页打孔 */
@@ -723,16 +754,17 @@ body[data-light="night"] .hero-lunar-badge {
 
 .day-tip-line {
   font-family: var(--font-serif);
-  font-size: 10.5px;
-  line-height: 1.4;
+  font-size: 11px;
+  line-height: 16px;
   box-sizing: border-box;
-  min-height: 46px;
-  color: #554433;
-  background: rgba(251, 244, 228, 0.75);
+  min-height: 48px;
+  color: #4c3b2c;
+  background: rgba(251, 244, 228, 0.85);
+  background-image: repeating-linear-gradient(transparent, transparent 15px, rgba(195, 175, 145, 0.35) 15px, rgba(195, 175, 145, 0.35) 16px);
   border-radius: 4px;
-  padding: 5px 6px;
-  border-left: 2px solid rgba(195, 175, 140, 0.45);
-  margin-top: 4px;
+  padding: 4px 6px;
+  border-left: 2.5px solid rgba(195, 175, 140, 0.6);
+  margin-top: 5px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -1770,8 +1802,27 @@ body[data-state="ready"] .day-journal-card[data-grade] {
   background-size: 14px 14px, 100% 100% !important;
 }
 
-body[data-state="ready"] .day-card[data-tier]::before {
-  display: none !important;
+/* 7日卡片顶部和纸胶带：替代旧版的发光条 */
+body[data-state="ready"] .day-card[data-tier]::before,
+body[data-state="ready"] .day-card.day-journal-card::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: -6px !important;
+  left: 50% !important;
+  right: auto !important;
+  width: 44px !important;
+  height: 11px !important;
+  transform: translateX(-50%) rotate(-1.5deg) !important;
+  background: rgba(226, 186, 130, 0.85) !important;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 255, 255, 0.25) 3px, rgba(255, 255, 255, 0.25) 6px) !important;
+  border-left: 1px dashed rgba(160, 130, 95, 0.45) !important;
+  border-right: 1px dashed rgba(160, 130, 95, 0.45) !important;
+  border-radius: 1px !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.12) !important;
+  z-index: 6 !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
 }
 
 body[data-state="ready"] .day-card.day-journal-card:focus-visible {
@@ -1796,73 +1847,86 @@ body[data-state="ready"] .day-card.day-journal-card .day-tip-line {
   min-height: 46px !important;
 }
 
-/* 01 天空线索与 02 观测数据手帐化 */
+/* 01 天空线索、02 观测数据、03 未来 7 日：移除多余全包底板，还原天幕原生穿透 */
 body[data-state="ready"] .section-block {
-  background: #fdfaf3 !important;
-  background-image: 
-    radial-gradient(rgba(180, 160, 135, 0.16) 1px, transparent 0),
-    linear-gradient(180deg, #ffffff 0%, #faf5ec 100%) !important;
-  background-size: 15px 15px, 100% 100% !important;
-  border: 1.5px solid rgba(195, 175, 145, 0.6) !important;
-  border-radius: 16px !important;
-  padding: 22px 24px !important;
-  box-shadow: 0 6px 22px rgba(60, 45, 30, 0.08), inset 0 0 30px rgba(240, 230, 215, 0.3) !important;
-  margin-top: 18px !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 36px !important;
 }
 
 @media (max-width: 640px) {
   body[data-state="ready"] .section-block {
-    padding: 18px 16px !important;
-    margin-top: 14px !important;
-    border-radius: 14px !important;
+    padding: 0 !important;
+    margin-top: 26px !important;
   }
 }
 
+/* 章节头部：和纸索引标签 + 烫金墨印风格 (Stationery Field Docket Header) */
 body[data-state="ready"] .section-head {
-  border-bottom: 1px dashed rgba(195, 175, 145, 0.45) !important;
+  border-bottom: 1.5px dashed rgba(235, 215, 185, 0.45) !important;
   padding-bottom: 10px !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 16px !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: baseline !important;
+  position: relative !important;
 }
 
 body[data-state="ready"] .section-head div {
   display: flex !important;
-  align-items: baseline !important;
-  gap: 8px !important;
+  align-items: center !important;
+  gap: 10px !important;
 }
 
+/* 章节编号：手札红色印泥/黄铜索引标签 (Red Ink Stamp Tab) */
 body[data-state="ready"] .section-head span {
   font-family: var(--font-mono) !important;
-  font-size: 13px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   color: var(--seal-cinnabar, #b53826) !important;
+  background: rgba(253, 248, 238, 0.94) !important;
+  border: 1px solid rgba(195, 175, 145, 0.75) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), inset 0 1px 0 #ffffff !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
+/* 章节标题：宋体典雅墨印 (Serif Field Journal Title) */
 body[data-state="ready"] .section-head h2 {
   font-family: var(--font-serif) !important;
-  font-size: 18px !important;
+  font-size: 18.5px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  color: #241e17 !important;
+  letter-spacing: 0.08em !important;
+  color: #f7f1e7 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
   margin: 0 !important;
 }
 
+/* 章节副标：复古手写铅笔小注 */
 body[data-state="ready"] .section-head p {
   font-family: var(--font-serif) !important;
-  font-size: 12px !important;
-  color: #7d6b59 !important;
+  font-size: 11.5px !important;
+  color: rgba(247, 241, 231, 0.88) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  letter-spacing: 0.04em !important;
   margin: 0 !important;
 }
 
-/* 01 天空线索：便笺便签条 */
+/* 01 天空线索：实体手撕便签条 (Physical Techo Memo Slips) */
 @media (max-width: 640px) {
   body[data-state="ready"] .reason-list {
     display: flex !important;
     flex-direction: column !important;
-    gap: 10px !important;
-    margin-top: 12px !important;
+    gap: 12px !important;
+    margin-top: 14px !important;
   }
 }
 
@@ -1870,27 +1934,56 @@ body[data-state="ready"] .section-head p {
   body[data-state="ready"] .reason-list {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 12px 20px !important;
-    margin-top: 14px !important;
+    gap: 14px 20px !important;
+    margin-top: 16px !important;
   }
 }
 
 body[data-state="ready"] .reason-list span {
-  background: #fffdf9 !important;
-  border: 1px solid rgba(195, 175, 145, 0.55) !important;
-  border-left: 3.5px solid rgba(200, 104, 41, 0.8) !important;
-  border-radius: 8px !important;
-  padding: 12px 14px 12px 42px !important;
+  background: #faf6ee !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.16) 1px, transparent 0),
+    linear-gradient(180deg, #ffffff 0%, #faf4e8 100%) !important;
+  background-size: 14px 14px, 100% 100% !important;
+  border: 1px solid rgba(195, 175, 145, 0.6) !important;
+  border-left: 3.5px solid rgba(200, 104, 41, 0.75) !important;
+  border-radius: 6px !important;
+  padding: 13px 14px 13px 44px !important;
   color: #2c2218 !important;
   font-family: var(--font-serif) !important;
   font-size: 13.5px !important;
-  line-height: 1.55 !important;
-  box-shadow: 0 2px 6px rgba(60, 45, 30, 0.05) !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: 
+    0 4px 14px rgba(40, 30, 20, 0.14),
+    0 1px 3px rgba(40, 30, 20, 0.08),
+    inset 0 0 16px rgba(240, 230, 210, 0.35) !important;
   position: relative !important;
+  transition: transform 220ms var(--ease-spring), box-shadow 220ms ease !important;
 }
 
+/* 每一个便条上方自然微撕和纸胶带 (Mini Washi Tape Pinned to Desk) */
+body[data-state="ready"] .reason-list span::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 18px;
+  width: 44px;
+  height: 11px;
+  background: rgba(226, 186, 130, 0.82);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255, 255, 255, 0.25) 3px, rgba(255, 255, 255, 0.25) 6px);
+  border-left: 1px dashed rgba(160, 130, 95, 0.45);
+  border-right: 1px dashed rgba(160, 130, 95, 0.45);
+  border-radius: 1px;
+  transform: rotate(-2deg);
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.14);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 便笺左侧装订序号印戳 (Numbered Ledger Stamp) */
 body[data-state="ready"] .reason-list span::before {
-  top: 12px !important;
+  top: 13px !important;
   left: 10px !important;
   color: var(--seal-cinnabar, #b53826) !important;
   font-family: var(--font-mono) !important;
@@ -1899,7 +1992,29 @@ body[data-state="ready"] .reason-list span::before {
   background: rgba(181, 56, 38, 0.08) !important;
   padding: 1px 5px !important;
   border-radius: 3px !important;
-  border: 1px solid rgba(181, 56, 38, 0.22) !important;
+  border: 1px solid rgba(181, 56, 38, 0.35) !important;
+  box-shadow: inset 0 1px 2px rgba(181, 56, 38, 0.1) !important;
+  transform: rotate(-1deg) !important;
+}
+
+/* 桌面端自然交错微倾角 (桌面实物摆放手札便签感) */
+@media (min-width: 641px) {
+  body[data-state="ready"] .reason-list span:nth-child(1) { transform: rotate(-0.4deg); }
+  body[data-state="ready"] .reason-list span:nth-child(2) { transform: rotate(0.4deg); }
+  body[data-state="ready"] .reason-list span:nth-child(3) { transform: rotate(-0.3deg); }
+  body[data-state="ready"] .reason-list span:nth-child(4) { transform: rotate(0.5deg); }
+  body[data-state="ready"] .reason-list span:nth-child(5) { transform: rotate(-0.4deg); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body[data-state="ready"] .reason-list span:hover {
+    transform: translateY(-2px) scale(1.01) rotate(0deg) !important;
+    box-shadow: 
+      0 8px 22px rgba(40, 30, 20, 0.20),
+      0 2px 6px rgba(40, 30, 20, 0.10),
+      inset 0 0 20px rgba(240, 230, 210, 0.45) !important;
+    z-index: 5 !important;
+  }
 }
 
 /* 02 观测数据：野外气象方格记录单 */
@@ -1941,54 +2056,97 @@ body[data-state="ready"] .horizontal-scroll-region.can-scroll::before {
     display: grid !important;
     grid-auto-flow: row !important;
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+    gap: 10px !important;
   }
 }
 
 body[data-state="ready"] .metrics article {
-  background: #fcf9f2 !important;
+  background: #faf6ee !important;
   background-image: 
-    radial-gradient(rgba(180, 160, 135, 0.12) 1px, transparent 0),
+    radial-gradient(rgba(180, 160, 135, 0.14) 1px, transparent 0),
     linear-gradient(180deg, #ffffff 0%, #faf4e8 100%) !important;
-  border: 1px dashed rgba(190, 165, 130, 0.6) !important;
+  background-size: 14px 14px, 100% 100% !important;
+  border: 1px solid rgba(190, 165, 130, 0.55) !important;
+  border-top: 3px double rgba(185, 60, 40, 0.5) !important;
   border-radius: 8px !important;
-  padding: 12px 8px !important;
+  padding: 12px 8px 10px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   text-align: center !important;
   gap: 4px !important;
-  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.04) !important;
+  box-shadow: 
+    0 4px 14px rgba(40, 30, 20, 0.12),
+    0 1px 3px rgba(40, 30, 20, 0.06),
+    inset 0 0 12px rgba(240, 230, 210, 0.25) !important;
   width: auto !important;
   min-width: 0 !important;
   min-height: auto !important;
+  position: relative !important;
+  transition: transform 200ms var(--ease-spring), box-shadow 200ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body[data-state="ready"] .metrics article:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 
+      0 8px 20px rgba(40, 30, 20, 0.16),
+      0 2px 6px rgba(40, 30, 20, 0.08) !important;
+    border-color: rgba(185, 60, 40, 0.6) !important;
+    z-index: 5 !important;
+  }
 }
 
 body[data-state="ready"] .metrics article::after {
   display: none !important;
 }
 
+/* 气象台账标准要素符号印 (WMO Scientific Field Ledger Codes) */
+body[data-state="ready"] .metrics article::before {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-family: var(--font-mono) !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: #a8947e !important;
+  opacity: 0.75 !important;
+  pointer-events: none !important;
+}
+
+body[data-state="ready"] .metrics article:nth-child(1)::before { content: "CL" !important; }
+body[data-state="ready"] .metrics article:nth-child(2)::before { content: "CM" !important; }
+body[data-state="ready"] .metrics article:nth-child(3)::before { content: "CH" !important; }
+body[data-state="ready"] .metrics article:nth-child(4)::before { content: "OP" !important; }
+body[data-state="ready"] .metrics article:nth-child(5)::before { content: "VIS" !important; }
+body[data-state="ready"] .metrics article:nth-child(6)::before { content: "RH" !important; }
+body[data-state="ready"] .metrics article:nth-child(7)::before { content: "AOD" !important; }
+
 body[data-state="ready"] .metrics article:first-child,
 body[data-state="ready"] .metrics article:last-child {
-  padding: 12px 8px !important;
+  padding: 12px 8px 10px !important;
 }
 
 body[data-state="ready"] .metrics article span {
   font-family: var(--font-serif) !important;
-  color: #7b6a58 !important;
+  color: #6d5b4a !important;
   font-size: 11.5px !important;
   font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
   white-space: nowrap !important;
 }
 
 body[data-state="ready"] .metrics article strong {
   font-family: var(--font-num) !important;
-  color: #241e17 !important;
-  font-size: 21px !important;
+  color: #1e1812 !important;
+  font-size: 22px !important;
   font-weight: 700 !important;
   font-variant-numeric: tabular-nums !important;
   line-height: 1.1 !important;
+  margin-top: 2px !important;
 }
+
 
 /* 03 未来 7 日：标本签卡册 */
 body[data-state="ready"] .section-head p {
