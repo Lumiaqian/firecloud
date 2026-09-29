@@ -197,8 +197,9 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
   background-image: 
     radial-gradient(rgba(180, 160, 135, 0.18) 1px, transparent 0),
     linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(246, 239, 226, 0.4) 100%);
-  background-size: 16px 16px, 100% 100%;
-  transform: rotate(-0.35deg);
+  --card-rot: -0.35deg;
+  transform: rotate(var(--card-rot));
+  transform-origin: top center;
   transition: transform 220ms var(--ease-out), box-shadow 260ms ease, filter 260ms ease;
   z-index: 15;
 }
@@ -616,14 +617,36 @@ body[data-light="night"] .hero-lunar-badge {
   }
 }
 
+/* 覆盖入场动画，确保入场后自然保持各日标本卡的微倾角 (--card-rot) */
+@keyframes day-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98) rotate(var(--card-rot, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(var(--card-rot, 0deg));
+  }
+}
+
 /* 自然微倾角交错排列 */
-.day-journal-card:nth-child(1) { transform: rotate(-0.8deg); }
-.day-journal-card:nth-child(2) { transform: rotate(0.6deg); }
-.day-journal-card:nth-child(3) { transform: rotate(-0.5deg); }
-.day-journal-card:nth-child(4) { transform: rotate(0.5deg); }
-.day-journal-card:nth-child(5) { transform: rotate(-0.7deg); }
-.day-journal-card:nth-child(6) { transform: rotate(0.6deg); }
-.day-journal-card:nth-child(7) { transform: rotate(-0.4deg); }
+.day-journal-card {
+  --card-rot: 0deg;
+  transform: rotate(var(--card-rot));
+  transform-origin: top center;
+}
+.day-journal-card:nth-child(1) { --card-rot: -0.8deg; }
+.day-journal-card:nth-child(2) { --card-rot: 0.6deg; }
+.day-journal-card:nth-child(3) { --card-rot: -0.5deg; }
+.day-journal-card:nth-child(4) { --card-rot: 0.5deg; }
+.day-journal-card:nth-child(5) { --card-rot: -0.7deg; }
+.day-journal-card:nth-child(6) { --card-rot: 0.6deg; }
+.day-journal-card:nth-child(7) { --card-rot: -0.4deg; }
+
+/* 入场完成后固化为就绪静止态，无风时停止动画执行，杜绝风止时重新播放入场动效造成突兀跳动 */
+body[data-state="ready"] .day-card.day-journal-card.is-settled {
+  animation: none;
+}
 
 @media (hover: hover) and (pointer: fine) {
   .day-journal-card:hover {
@@ -1271,59 +1294,76 @@ body[data-state="ready"] .day-card.day-journal-card::before {
 
 /* 启用硬件加速合成层与平滑过渡 */
 body[data-paper-wind] .hero-master-card,
+body[data-paper-wind] .hero-master-card,
 body[data-paper-wind] .reason-list span,
 body[data-paper-wind] .metrics article,
 body[data-paper-wind] .day-journal-card,
-body[data-wind-gust] .hero-master-card,
-body[data-wind-gust] .reason-list span,
-body[data-wind-gust] .metrics article,
-body[data-wind-gust] .day-journal-card {
+body[data-wind-gust="high"] .hero-master-card,
+body[data-wind-gust="high"] .reason-list span,
+body[data-wind-gust="high"] .metrics article,
+body[data-wind-gust="high"] .day-journal-card,
+body[data-wind-gust="gentle"] .hero-master-card,
+body[data-wind-gust="gentle"] .reason-list span,
+body[data-wind-gust="gentle"] .metrics article,
+body[data-wind-gust="gentle"] .day-journal-card {
   will-change: transform;
 }
 
 /* 1. 主手札大便签纸面下摆受风掀动与自然浮沉 (Hero Master Card Wind Lift) */
 body[data-paper-wind="high"] .hero-master-card,
 body[data-wind-gust="high"] .hero-master-card {
-  animation: hero-wind-lift-high 2.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation: hero-wind-lift-high 2.0s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
   transform-origin: top center !important;
 }
 body[data-paper-wind="gentle"] .hero-master-card,
 body[data-wind-gust="gentle"] .hero-master-card {
-  animation: hero-wind-lift-gentle 1.8s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation: hero-wind-lift-gentle 1.6s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
   transform-origin: top center !important;
 }
 
-/* 纯 GPU translate3d / rotate 动画，彻底杜绝 box-shadow 与 3D 软件投影重绘 */
+/* 纯 GPU translate3d / rotate 动画，带气垫软着陆物理阻尼，精确回归原始静止角 */
 @keyframes hero-wind-lift-high {
   0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, -0.35deg));
   }
-  22% {
-    transform: translate3d(0, -6px, 0) rotate(-0.8deg);
+  18% {
+    transform: translate3d(0, -7px, 0) rotate(calc(var(--card-rot, -0.35deg) - 1.2deg));
   }
-  48% {
-    transform: translate3d(0, -2px, 0) rotate(0.4deg);
+  38% {
+    transform: translate3d(0, -2.2px, 0) rotate(calc(var(--card-rot, -0.35deg) + 0.5deg));
   }
-  72% {
-    transform: translate3d(0, -3.5px, 0) rotate(-0.3deg);
+  58% {
+    transform: translate3d(0, -3.4px, 0) rotate(calc(var(--card-rot, -0.35deg) - 0.25deg));
   }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  76% {
+    transform: translate3d(0, -0.8px, 0) rotate(calc(var(--card-rot, -0.35deg) + 0.1deg));
+  }
+  88% {
+    transform: translate3d(0, -0.15px, 0) rotate(calc(var(--card-rot, -0.35deg) - 0.03deg));
+  }
+  96%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, -0.35deg));
   }
 }
 
 @keyframes hero-wind-lift-gentle {
   0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, -0.35deg));
   }
-  30% {
-    transform: translate3d(0, -3px, 0) rotate(-0.4deg);
+  22% {
+    transform: translate3d(0, -3.2px, 0) rotate(calc(var(--card-rot, -0.35deg) - 0.55deg));
   }
-  65% {
-    transform: translate3d(0, -1px, 0) rotate(0.2deg);
+  48% {
+    transform: translate3d(0, -1.0px, 0) rotate(calc(var(--card-rot, -0.35deg) + 0.2deg));
   }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  72% {
+    transform: translate3d(0, -0.35px, 0) rotate(calc(var(--card-rot, -0.35deg) - 0.06deg));
+  }
+  88% {
+    transform: translate3d(0, -0.08px, 0) rotate(var(--card-rot, -0.35deg));
+  }
+  96%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, -0.35deg));
   }
 }
 
@@ -1377,66 +1417,90 @@ body[data-wind-gust="high"] .deck-paper-perforations.is-wind-straining i {
 
 /* 3. Section 01 天空线索便签条波浪式顺风抖动 (Staggered Wave Downwards - 纯 GPU 偏移) */
 body[data-paper-wind] .reason-list span,
-body[data-wind-gust] .reason-list span {
-  animation: note-wind-wave 1.4s cubic-bezier(0.25, 1, 0.5, 1) !important;
+body[data-wind-gust="high"] .reason-list span,
+body[data-wind-gust="gentle"] .reason-list span {
+  animation: note-wind-wave 1.2s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
   transform-origin: left center !important;
 }
 body[data-paper-wind] .reason-list span:nth-child(1),
-body[data-wind-gust] .reason-list span:nth-child(1) { animation-delay: 0.04s !important; }
+body[data-wind-gust="high"] .reason-list span:nth-child(1),
+body[data-wind-gust="gentle"] .reason-list span:nth-child(1) { animation-delay: 0.04s !important; }
 body[data-paper-wind] .reason-list span:nth-child(2),
-body[data-wind-gust] .reason-list span:nth-child(2) { animation-delay: 0.10s !important; }
+body[data-wind-gust="high"] .reason-list span:nth-child(2),
+body[data-wind-gust="gentle"] .reason-list span:nth-child(2) { animation-delay: 0.08s !important; }
 body[data-paper-wind] .reason-list span:nth-child(3),
-body[data-wind-gust] .reason-list span:nth-child(3) { animation-delay: 0.16s !important; }
+body[data-wind-gust="high"] .reason-list span:nth-child(3),
+body[data-wind-gust="gentle"] .reason-list span:nth-child(3) { animation-delay: 0.12s !important; }
 body[data-paper-wind] .reason-list span:nth-child(4),
-body[data-wind-gust] .reason-list span:nth-child(4) { animation-delay: 0.22s !important; }
+body[data-wind-gust="high"] .reason-list span:nth-child(4),
+body[data-wind-gust="gentle"] .reason-list span:nth-child(4) { animation-delay: 0.16s !important; }
 body[data-paper-wind] .reason-list span:nth-child(5),
-body[data-wind-gust] .reason-list span:nth-child(5) { animation-delay: 0.28s !important; }
+body[data-wind-gust="high"] .reason-list span:nth-child(5),
+body[data-wind-gust="gentle"] .reason-list span:nth-child(5) { animation-delay: 0.20s !important; }
 
 @keyframes note-wind-wave {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  0% {
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, 0deg));
   }
-  25% {
-    transform: translate3d(4px, -2px, 0) rotate(0.6deg);
+  22% {
+    transform: translate3d(4px, -2.5px, 0) rotate(calc(var(--card-rot, 0deg) + 0.8deg));
   }
-  55% {
-    transform: translate3d(-1px, 0, 0) rotate(-0.3deg);
+  50% {
+    transform: translate3d(-0.8px, -0.6px, 0) rotate(calc(var(--card-rot, 0deg) - 0.3deg));
+  }
+  74% {
+    transform: translate3d(0.4px, -0.15px, 0) rotate(calc(var(--card-rot, 0deg) + 0.08deg));
+  }
+  88%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, 0deg));
   }
 }
 
 /* 4. Section 02 观测数据小方格微颤 (Ledger Tiles Breeze Jiggle - 纯 GPU 抬升) */
 body[data-paper-wind] .metrics article,
-body[data-wind-gust] .metrics article {
-  animation: tile-wind-jiggle 1.2s ease-out !important;
+body[data-wind-gust="high"] .metrics article,
+body[data-wind-gust="gentle"] .metrics article {
+  animation: tile-wind-jiggle 1.0s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
 }
 body[data-paper-wind] .metrics article:nth-child(odd),
-body[data-wind-gust] .metrics article:nth-child(odd) { animation-delay: 0.05s !important; }
+body[data-wind-gust="high"] .metrics article:nth-child(odd),
+body[data-wind-gust="gentle"] .metrics article:nth-child(odd) { animation-delay: 0.04s !important; }
 body[data-paper-wind] .metrics article:nth-child(even),
-body[data-wind-gust] .metrics article:nth-child(even) { animation-delay: 0.12s !important; }
+body[data-wind-gust="high"] .metrics article:nth-child(even),
+body[data-wind-gust="gentle"] .metrics article:nth-child(even) { animation-delay: 0.09s !important; }
 
 @keyframes tile-wind-jiggle {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  30% { transform: translate3d(0, -3px, 0); }
-  65% { transform: translate3d(0, -0.8px, 0); }
+  0% { transform: translate3d(0, 0, 0); }
+  26% { transform: translate3d(0, -3px, 0); }
+  55% { transform: translate3d(0, -0.8px, 0); }
+  78% { transform: translate3d(0, -0.15px, 0); }
+  90%, 100% { transform: translate3d(0, 0, 0); }
 }
 
 /* 5. Section 03 未来 7 日标本卡琴键式顺风涟漪掀起 (Wind Ripple Across 7 Days - 纯 GPU 偏移) */
 body[data-paper-wind] .day-journal-card,
-body[data-wind-gust] .day-journal-card {
-  animation: day-card-wind-ripple 1.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  animation-delay: calc(var(--day-idx, 0) * 0.06s + 0.08s) !important;
+body[data-wind-gust="high"] .day-journal-card,
+body[data-wind-gust="gentle"] .day-journal-card {
+  animation: day-card-wind-ripple 1.2s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
+  animation-delay: calc(var(--day-idx, 0) * 0.05s + 0.06s) !important;
   transform-origin: top center !important;
 }
 
 @keyframes day-card-wind-ripple {
-  0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+  0% {
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, 0deg));
   }
-  28% {
-    transform: translate3d(0, -6px, 0) rotate(-1.2deg);
+  24% {
+    transform: translate3d(0, -5.5px, 0) rotate(calc(var(--card-rot, 0deg) - 1.2deg));
   }
-  60% {
-    transform: translate3d(0, -1.5px, 0) rotate(0.5deg);
+  50% {
+    transform: translate3d(0, -1.6px, 0) rotate(calc(var(--card-rot, 0deg) + 0.35deg));
+  }
+  74% {
+    transform: translate3d(0, -0.35px, 0) rotate(calc(var(--card-rot, 0deg) - 0.08deg));
+  }
+  88%, 100% {
+    transform: translate3d(0, 0, 0) rotate(var(--card-rot, 0deg));
   }
 }
 
@@ -1981,6 +2045,9 @@ body[data-state="ready"] .reason-list span {
     0 1px 3px rgba(40, 30, 20, 0.08),
     inset 0 0 16px rgba(240, 230, 210, 0.35) !important;
   position: relative !important;
+  --card-rot: 0deg;
+  transform: rotate(var(--card-rot));
+  transform-origin: left center !important;
   transition: transform 220ms var(--ease-spring), box-shadow 220ms ease !important;
 }
 
@@ -2021,11 +2088,11 @@ body[data-state="ready"] .reason-list span::before {
 
 /* 桌面端自然交错微倾角 (桌面实物摆放手札便签感) */
 @media (min-width: 641px) {
-  body[data-state="ready"] .reason-list span:nth-child(1) { transform: rotate(-0.4deg); }
-  body[data-state="ready"] .reason-list span:nth-child(2) { transform: rotate(0.4deg); }
-  body[data-state="ready"] .reason-list span:nth-child(3) { transform: rotate(-0.3deg); }
-  body[data-state="ready"] .reason-list span:nth-child(4) { transform: rotate(0.5deg); }
-  body[data-state="ready"] .reason-list span:nth-child(5) { transform: rotate(-0.4deg); }
+  body[data-state="ready"] .reason-list span:nth-child(1) { --card-rot: -0.4deg; }
+  body[data-state="ready"] .reason-list span:nth-child(2) { --card-rot: 0.4deg; }
+  body[data-state="ready"] .reason-list span:nth-child(3) { --card-rot: -0.3deg; }
+  body[data-state="ready"] .reason-list span:nth-child(4) { --card-rot: 0.5deg; }
+  body[data-state="ready"] .reason-list span:nth-child(5) { --card-rot: -0.4deg; }
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -19,7 +19,7 @@ import {
   weatherTheme
 } from "./forecast.mjs?v=8";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
-import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=6";
+import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=7";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
@@ -651,6 +651,13 @@ function renderWeek(bundle) {
     card.className = "day-card day-journal-card";
     card.style.setProperty("--day-idx", String(day));
     if (day === 0) card.classList.add("is-active-day");
+
+    // 入场动效完成后固化为就绪静止态，避免后续风吹交互结束时误触发入场回放
+    const markSettled = () => card.classList.add("is-settled");
+    card.addEventListener("animationend", (e) => {
+      if (e.animationName === "day-card-in") markSettled();
+    }, { once: true });
+    setTimeout(markSettled, 600);
 
     if (!eventTime) {
       card.dataset.tier = "unavailable";

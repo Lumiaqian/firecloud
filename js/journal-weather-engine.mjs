@@ -194,6 +194,12 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
     if (isReducedMotion) return;
 
     clearTimeout(windGustTimer);
+
+    // 若当前正在起风，先清空并触发重绘以平滑重启风动，避免被切断
+    if (document.body.getAttribute("data-paper-wind")) {
+      document.body.removeAttribute("data-paper-wind");
+      void document.body.offsetWidth;
+    }
     document.body.setAttribute("data-paper-wind", intensity);
 
     const count = intensity === "high" ? 14 : 7;
@@ -221,7 +227,9 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
       });
     }
 
-    const duration = intensity === "high" ? 2200 : 1800;
+    // 主卡片动效 2.0s/1.6s，子卡片 stagger 最大 0.36s。
+    // 设置 2500ms (强风) / 2100ms (微风)，确保卡片通过气垫阻尼 100% 沉降静止后才移除属性，消除突兀跳跃
+    const duration = intensity === "high" ? 2500 : 2100;
     windGustTimer = setTimeout(() => {
       document.body.removeAttribute("data-paper-wind");
     }, duration);
