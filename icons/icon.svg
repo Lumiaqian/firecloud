@@ -1,18 +1,126 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#211733"/>
-      <stop offset=".48" stop-color="#843c68"/>
-      <stop offset="1" stop-color="#ff9a5e"/>
-    </linearGradient>
-    <radialGradient id="sun">
-      <stop offset="0" stop-color="#fff5bf"/>
-      <stop offset="1" stop-color="#ffc06f"/>
+    <!-- 全局背景底色渐变 (Deep Twilight App Icon Background) -->
+    <radialGradient id="app-bg" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#211b3b"/>
+      <stop offset="60%" stop-color="#141126"/>
+      <stop offset="100%" stop-color="#0a0814"/>
     </radialGradient>
+
+    <!-- 徽章裁切区 (218px 半径圆) -->
+    <clipPath id="emblem-clip">
+      <circle cx="256" cy="256" r="218"/>
+    </clipPath>
+
+    <!-- 暮色晚霞天幕渐变 (Zenith Twilight Sky) -->
+    <linearGradient id="twilight-sky" x1="256" y1="38" x2="256" y2="474" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#16132b"/>
+      <stop offset="32%" stop-color="#441f43"/>
+      <stop offset="58%" stop-color="#8d3251"/>
+      <stop offset="80%" stop-color="#e05b39"/>
+      <stop offset="100%" stop-color="#fba84d"/>
+    </linearGradient>
+
+    <!-- 霞日微晕轮漫射 (Sun Atmospheric Halo) -->
+    <radialGradient id="sun-halo" cx="256" cy="268" r="175" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffd56b" stop-opacity="0.75"/>
+      <stop offset="35%" stop-color="#f87147" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#8d3251" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#16132b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 霞日本体 (Sun Core) -->
+    <radialGradient id="sun-core" cx="256" cy="268" r="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="36%" stop-color="#ffea9f"/>
+      <stop offset="75%" stop-color="#ff9a35"/>
+      <stop offset="100%" stop-color="#e8590c"/>
+    </radialGradient>
+
+    <!-- 复古黄铜金属外圈渐变 (Antique Brass Rim) -->
+    <linearGradient id="brass-rim" x1="40" y1="40" x2="472" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fcf0d5"/>
+      <stop offset="26%" stop-color="#c99c58"/>
+      <stop offset="52%" stop-color="#fcf0cb"/>
+      <stop offset="76%" stop-color="#885e25"/>
+      <stop offset="100%" stop-color="#dfbc82"/>
+    </linearGradient>
+
+    <!-- 远景紫粉霞云渐变 -->
+    <linearGradient id="cloud-back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f79872"/>
+      <stop offset="100%" stop-color="#552044"/>
+    </linearGradient>
+
+    <!-- 近景火烧云渐变 -->
+    <linearGradient id="cloud-front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffb885"/>
+      <stop offset="38%" stop-color="#be4454"/>
+      <stop offset="100%" stop-color="#281330"/>
+    </linearGradient>
+
+    <!-- 凸透镜弧面高光渐变 -->
+    <linearGradient id="lens-gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
   </defs>
-  <rect width="512" height="512" fill="url(#sky)"/>
-  <circle cx="350" cy="224" r="76" fill="url(#sun)"/>
-  <path d="M0 332c84-30 148-24 220 5 86 35 171 32 292-23v198H0z" fill="#261b39"/>
-  <path d="M0 367c105-22 174-11 246 18 74 30 164 24 266-19v146H0z" fill="#151224" opacity=".85"/>
-  <path d="M105 186c45-31 90-29 132 5 28-20 62-20 96 7-40-9-73-2-99 20-39-30-82-34-129-12z" fill="#fff" opacity=".18"/>
+
+  <!-- 1. 全幅深邃暮光背景 (Full Bleed Dark Twilight Canvas) -->
+  <rect width="512" height="512" fill="url(#app-bg)"/>
+
+  <!-- 2. 徽章外层微阴影与环境光晕 -->
+  <circle cx="256" cy="260" r="236" fill="rgba(0, 0, 0, 0.45)"/>
+  <circle cx="256" cy="256" r="236" fill="none" stroke="rgba(255, 215, 140, 0.12)" stroke-width="2"/>
+
+  <!-- 3. 徽章核心天象内容区 (Clipped Emblem) -->
+  <g clip-path="url(#emblem-clip)">
+    <!-- 晚霞天幕 -->
+    <rect x="38" y="38" width="436" height="436" fill="url(#twilight-sky)"/>
+
+    <!-- 放射霞光金线 (Antique Astronomical Ray Lines) -->
+    <g opacity="0.38" stroke="#ffebc2" stroke-width="2.5" stroke-dasharray="3 6">
+      <line x1="256" y1="268" x2="256" y2="45"/>
+      <line x1="256" y1="268" x2="95" y2="105"/>
+      <line x1="256" y1="268" x2="417" y2="105"/>
+      <line x1="256" y1="268" x2="48" y2="222"/>
+      <line x1="256" y1="268" x2="464" y2="222"/>
+      <line x1="256" y1="268" x2="152" y2="58"/>
+      <line x1="256" y1="268" x2="360" y2="58"/>
+    </g>
+
+    <!-- 太阳微晕轮 -->
+    <circle cx="256" cy="268" r="175" fill="url(#sun-halo)"/>
+
+    <!-- 霞日金乌 -->
+    <circle cx="256" cy="268" r="70" fill="url(#sun-core)"/>
+
+    <!-- 暮星天象闪烁 (Evening Star) -->
+    <g transform="translate(378, 110)" opacity="0.92">
+      <path d="M0 -34 L7 -7 L34 0 L7 7 L0 34 L-7 7 L-34 0 L-7 -7 Z" fill="#fff7db"/>
+      <circle cx="0" cy="0" r="8" fill="#ffffff"/>
+    </g>
+    <circle cx="116" cy="145" r="7" fill="#ffeec2" opacity="0.75"/>
+    <circle cx="395" cy="180" r="4.5" fill="#ffd9a6" opacity="0.65"/>
+
+    <!-- 远景紫粉霞云 (Back Cloud Silhouette) -->
+    <path d="M35 344 C82 302, 140 312, 186 332 C227 300, 291 300, 326 320 C373 291, 431 300, 477 332 L477 474 L35 474 Z" fill="url(#cloud-back)" opacity="0.92"/>
+    <path d="M35 344 C82 302, 140 312, 186 332 C227 300, 291 300, 326 320 C373 291, 431 300, 477 332" stroke="#ffc993" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
+
+    <!-- 近景火烧云与金边 (Front Sunset Clouds) -->
+    <path d="M24 384 C71 352, 123 358, 169 378 C216 346, 286 352, 321 372 C368 355, 426 366, 490 401 L490 474 L24 474 Z" fill="url(#cloud-front)"/>
+    <path d="M24 384 C71 352, 123 358, 169 378 C216 346, 286 352, 321 372 C368 355, 426 366, 490 401" stroke="#ffe2ba" stroke-width="3.5" stroke-linecap="round" fill="none" opacity="0.92"/>
+
+    <!-- 手札天文弧形经纬刻度 (Astronomical Horizon Arc) -->
+    <ellipse cx="256" cy="442" rx="198" ry="64" fill="none" stroke="rgba(255, 235, 205, 0.32)" stroke-width="2.5" stroke-dasharray="8 6"/>
+
+    <!-- 弧面凸透镜复古光泽 (Convex Lens Specular Gloss) -->
+    <path d="M58 198 C82 110, 158 58, 250 58 C285 58, 320 70, 355 82 C262 105, 151 163, 93 256 C72 235, 60 215, 58 198 Z" fill="url(#lens-gloss)" opacity="0.24"/>
+  </g>
+
+  <!-- 4. 复古黄铜双圈外框 (Vintage Brass Double Ring) -->
+  <circle cx="256" cy="256" r="233" stroke="url(#brass-rim)" stroke-width="25" fill="none"/>
+  <!-- 内层高光细圈与点状罗盘刻度 -->
+  <circle cx="256" cy="256" r="218" stroke="rgba(255, 245, 220, 0.55)" stroke-width="3" stroke-dasharray="10 5" fill="none"/>
+  <circle cx="256" cy="256" r="245" stroke="rgba(140, 98, 41, 0.6)" stroke-width="2" fill="none"/>
 </svg>

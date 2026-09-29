@@ -1,4 +1,4 @@
-const SHELL_CACHE = "firecloud-shell-v70";
+const SHELL_CACHE = "firecloud-shell-v71";
 const SHELL = [
   "./",
   "./index.html",
@@ -9,11 +9,11 @@ const SHELL = [
   "./js/weather-fx.mjs?v=9",
   "./js/journal-weather-engine.mjs?v=7",
   "./js/app.mjs?v=stationery_v11",
-  "./manifest.webmanifest?v=3",
-  "./icons/icon.svg?v=2",
-  "./icons/icon-192.png?v=2",
-  "./icons/icon-512.png?v=2",
-  "./icons/apple-touch-icon.png?v=2"
+  "./manifest.webmanifest?v=4",
+  "./icons/icon.svg?v=3",
+  "./icons/icon-192.png?v=3",
+  "./icons/icon-512.png?v=3",
+  "./icons/apple-touch-icon.png?v=3"
 ];
 
 self.addEventListener("install", (event) => {
