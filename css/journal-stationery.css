@@ -63,13 +63,158 @@ body[data-light="night"] {
   color: #e5edf7;
 }
 
-body[data-light="night"] .brand-copy strong,
-body[data-light="night"] .ready-toolbar > p,
-body[data-light="night"] .ready-footer {
-  color: #e5edf7 !important;
+/* 当进入手帐观测 (ready) 状态时，日间天幕底色作为温润水彩晕染层与宣纸背景融合，杜绝压抑死灰遮蔽整屏 */
+body[data-state="ready"]::after {
+  display: none !important;
 }
-body[data-light="night"] .brand-copy small {
-  color: rgba(229, 237, 247, 0.82) !important;
+
+body[data-state="ready"] .sky {
+  opacity: 0.14 !important;
+  mix-blend-mode: normal !important;
+  transition: opacity 600ms ease;
+}
+
+body[data-light="night"][data-state="ready"] .sky {
+  opacity: 0.82 !important;
+  mix-blend-mode: normal !important;
+}
+
+/* 顶栏品牌区古风手札化 */
+body[data-state="ready"] .brand {
+  gap: 10px;
+}
+body[data-state="ready"] .brand-mark {
+  border-color: rgba(185, 155, 120, 0.65) !important;
+  background: radial-gradient(circle at 35% 35%, #fffdf8 0%, #faeee0 75%) !important;
+  box-shadow: 0 2px 6px rgba(60, 45, 30, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+body[data-state="ready"] .brand-copy strong {
+  font-family: var(--font-serif) !important;
+  font-size: 15.5px !important;
+  letter-spacing: 0.06em !important;
+  color: #241e17 !important;
+}
+body[data-state="ready"] .brand-copy small {
+  font-family: var(--font-serif) !important;
+  font-size: 11.5px !important;
+  color: #6a5848 !important;
+}
+
+/* 顶栏操作区：告别深色玻璃胶囊，进化为实体手帐复古木质印章卡槽 */
+body[data-state="ready"] .top-actions.liquid-glass {
+  background: rgba(253, 248, 238, 0.92) !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.65) !important;
+  box-shadow: 
+    0 3px 12px rgba(60, 45, 30, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+body[data-state="ready"] .top-actions.liquid-glass .icon-button {
+  color: #5c4838 !important;
+  transition: all 180ms ease !important;
+}
+body[data-state="ready"] .top-actions.liquid-glass .icon-button:hover {
+  background: rgba(235, 185, 130, 0.22) !important;
+  color: var(--seal-cinnabar, #b53826) !important;
+}
+body[data-state="ready"] .top-actions.liquid-glass .icon-button.favorite-button[aria-pressed="true"] {
+  color: #d48222 !important;
+}
+body[data-state="ready"] .top-actions.liquid-glass .icon-button.favorite-button[aria-pressed="true"] svg {
+  fill: #d48222 !important;
+}
+
+/* 观测时段条手札化 */
+body[data-state="ready"] .ready-toolbar {
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+body[data-state="ready"] .ready-toolbar > p {
+  font-family: var(--font-serif) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  color: #5c4e40 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+/* 🌟 和纸索引书签贴 (Washi Index Tabs) */
+body[data-state="ready"] .event-tabs.liquid-glass {
+  background: rgba(236, 227, 213, 0.88) !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.65) !important;
+  box-shadow: 
+    0 2px 8px rgba(60, 45, 30, 0.08),
+    inset 0 1px 2px rgba(60, 45, 30, 0.05) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  padding: 3px !important;
+  border-radius: 999px !important;
+}
+
+body[data-state="ready"] .event-tabs.liquid-glass::before {
+  /* 滑块书签：温润和纸底贴 */
+  background: #ffffff !important;
+  box-shadow: 
+    0 2px 6px rgba(60, 45, 30, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(220, 200, 175, 0.7) !important;
+}
+
+body[data-state="ready"] .event-tabs.liquid-glass button {
+  font-family: var(--font-serif) !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0.06em !important;
+  color: #786552 !important;
+  font-weight: 500 !important;
+  transition: all 180ms ease !important;
+}
+
+body[data-state="ready"] .event-tabs.liquid-glass button[aria-pressed="true"] {
+  color: #241e17 !important;
+  font-weight: 700 !important;
+}
+
+/* 夜间模式适配：手札墨染与古风青黛质感 */
+body[data-light="night"][data-state="ready"] .brand-mark {
+  background: radial-gradient(circle at 35% 35%, #2a3848 0%, #152230 75%) !important;
+  border-color: rgba(220, 190, 150, 0.5) !important;
+}
+body[data-light="night"][data-state="ready"] .brand-copy strong {
+  color: #f7ede1 !important;
+}
+body[data-light="night"][data-state="ready"] .brand-copy small {
+  color: #d8c6b2 !important;
+}
+body[data-light="night"][data-state="ready"] .top-actions.liquid-glass {
+  background: rgba(30, 42, 58, 0.90) !important;
+  border: 1.5px solid rgba(220, 190, 150, 0.45) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+body[data-light="night"][data-state="ready"] .top-actions.liquid-glass .icon-button {
+  color: #e5ded2 !important;
+}
+body[data-light="night"][data-state="ready"] .ready-toolbar > p {
+  color: #e2d5c2 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass {
+  background: rgba(26, 38, 52, 0.88) !important;
+  border: 1.5px solid rgba(215, 185, 145, 0.45) !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
+}
+body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass::before {
+  background: rgba(245, 238, 226, 0.95) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(215, 185, 145, 0.6) !important;
+}
+body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button {
+  color: rgba(235, 225, 210, 0.75) !important;
+}
+body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[aria-pressed="true"] {
+  color: #241e17 !important;
 }
 
 /* ==========================================================================
@@ -1555,74 +1700,191 @@ body[data-state="ready"] .day-card.day-journal-card .day-tip-line {
 
 /* 01 天空线索与 02 观测数据手帐化 */
 body[data-state="ready"] .section-block {
-  background: rgba(253, 250, 243, 0.85);
-  border: 1px solid rgba(195, 175, 145, 0.4);
-  border-radius: 12px;
-  padding: 18px 22px;
-  box-shadow: 0 4px 16px rgba(60, 45, 30, 0.05);
-  margin-top: 20px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: #fdfaf3 !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.16) 1px, transparent 0),
+    linear-gradient(180deg, #ffffff 0%, #faf5ec 100%) !important;
+  background-size: 15px 15px, 100% 100% !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.6) !important;
+  border-radius: 16px !important;
+  padding: 22px 24px !important;
+  box-shadow: 0 6px 22px rgba(60, 45, 30, 0.08), inset 0 0 30px rgba(240, 230, 215, 0.3) !important;
+  margin-top: 18px !important;
+}
+
+@media (max-width: 640px) {
+  body[data-state="ready"] .section-block {
+    padding: 18px 16px !important;
+    margin-top: 14px !important;
+    border-radius: 14px !important;
+  }
+}
+
+body[data-state="ready"] .section-head {
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.45) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 14px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: baseline !important;
+}
+
+body[data-state="ready"] .section-head div {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 8px !important;
+}
+
+body[data-state="ready"] .section-head span {
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--seal-cinnabar, #b53826) !important;
 }
 
 body[data-state="ready"] .section-head h2 {
-  font-family: var(--font-serif);
-  color: #28221c;
-  letter-spacing: 0.04em;
-}
-body[data-state="ready"] .section-head span {
-  font-family: var(--font-mono);
-  color: var(--seal-cinnabar);
-  font-weight: 700;
-}
-body[data-state="ready"] .section-head p {
-  color: #625242 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  color: #241e17 !important;
+  margin: 0 !important;
 }
 
-/* 01 天空线索：便签网格呼吸留白 */
-body[data-state="ready"] .reason-list {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 12px 24px !important;
-  margin-top: 14px !important;
+body[data-state="ready"] .section-head p {
+  font-family: var(--font-serif) !important;
+  font-size: 12px !important;
+  color: #7d6b59 !important;
+  margin: 0 !important;
+}
+
+/* 01 天空线索：便笺便签条 */
+@media (max-width: 640px) {
+  body[data-state="ready"] .reason-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+  }
+}
+
+@media (min-width: 641px) {
+  body[data-state="ready"] .reason-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px 20px !important;
+    margin-top: 14px !important;
+  }
 }
 
 body[data-state="ready"] .reason-list span {
-  background: rgba(255, 255, 255, 0.78) !important;
-  border: 1px solid rgba(195, 175, 145, 0.5) !important;
+  background: #fffdf9 !important;
+  border: 1px solid rgba(195, 175, 145, 0.55) !important;
+  border-left: 3.5px solid rgba(200, 104, 41, 0.8) !important;
   border-radius: 8px !important;
-  padding: 14px 16px 14px 44px !important;
-  color: #382c20 !important;
+  padding: 12px 14px 12px 42px !important;
+  color: #2c2218 !important;
   font-family: var(--font-serif) !important;
-  box-shadow: 0 1px 4px rgba(60, 45, 30, 0.04) !important;
-  min-height: auto !important;
+  font-size: 13.5px !important;
+  line-height: 1.55 !important;
+  box-shadow: 0 2px 6px rgba(60, 45, 30, 0.05) !important;
+  position: relative !important;
 }
 
 body[data-state="ready"] .reason-list span::before {
-  top: 14px !important;
-  left: 14px !important;
-  color: var(--seal-cinnabar) !important;
+  top: 12px !important;
+  left: 10px !important;
+  color: var(--seal-cinnabar, #b53826) !important;
   font-family: var(--font-mono) !important;
   font-weight: 700 !important;
   font-size: 11px !important;
+  background: rgba(181, 56, 38, 0.08) !important;
+  padding: 1px 5px !important;
+  border-radius: 3px !important;
+  border: 1px solid rgba(181, 56, 38, 0.22) !important;
 }
 
-/* 02 观测数据：指标卡片 */
-body[data-state="ready"] .metrics article {
-  background: rgba(255, 255, 255, 0.75) !important;
-  border: 1px solid rgba(195, 175, 145, 0.48) !important;
-  border-radius: 8px !important;
-  padding: 12px 10px !important;
+/* 02 观测数据：野外气象方格记录单 */
+body[data-state="ready"] .metrics-block .horizontal-scroll-region {
+  overflow: visible !important;
 }
+
+body[data-state="ready"] .horizontal-scroll-region.can-scroll::before {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  body[data-state="ready"] .metrics {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-columns: auto !important;
+    gap: 10px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  body[data-state="ready"] .metrics article:last-child {
+    grid-column: span 2 !important;
+  }
+}
+
+@media (min-width: 641px) {
+  body[data-state="ready"] .metrics {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+}
+
+body[data-state="ready"] .metrics article {
+  background: #fcf9f2 !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.12) 1px, transparent 0),
+    linear-gradient(180deg, #ffffff 0%, #faf4e8 100%) !important;
+  border: 1px dashed rgba(190, 165, 130, 0.6) !important;
+  border-radius: 8px !important;
+  padding: 12px 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  gap: 4px !important;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.04) !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: auto !important;
+}
+
+body[data-state="ready"] .metrics article::after {
+  display: none !important;
+}
+
+body[data-state="ready"] .metrics article:first-child,
+body[data-state="ready"] .metrics article:last-child {
+  padding: 12px 8px !important;
+}
+
 body[data-state="ready"] .metrics article span {
   font-family: var(--font-serif) !important;
-  color: #685848 !important;
-  font-weight: 500 !important;
+  color: #7b6a58 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
 }
+
 body[data-state="ready"] .metrics article strong {
   font-family: var(--font-num) !important;
-  color: #241e18 !important;
+  color: #241e17 !important;
+  font-size: 21px !important;
+  font-weight: 700 !important;
   font-variant-numeric: tabular-nums !important;
+  line-height: 1.1 !important;
+}
+
+/* 03 未来 7 日：标本签卡册 */
+body[data-state="ready"] .section-head p {
+  visibility: visible !important;
 }
 
 /* 03 未来 7 日：桌面端 7 列均分栅格 vs 移动端平滑吸附横滑 */
