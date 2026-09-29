@@ -186,30 +186,57 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
     }, 4200);
   }
 
-  // 💨 4. 狂风呼啸掀起便签与风屑
-  function triggerWindGust() {
-    document.body.setAttribute("data-wind-gust", "high");
+  let windGustTimer = null;
+  let ambientWindInterval = null;
 
-    const heroCard = document.getElementById("hero-master-card") || document.querySelector(".deck-card--top");
-    const rect = heroCard ? heroCard.getBoundingClientRect() : { top: height * 0.3, height: 260 };
+  // 💨 4. 自然风拂过与狂风呼啸掀起便签与风屑 (Paper Flutter & Wind Debris)
+  function triggerWindGust(intensity = "high") {
+    if (isReducedMotion) return;
 
-    for (let k = 0; k < 28; k++) {
+    clearTimeout(windGustTimer);
+    document.body.setAttribute("data-wind-gust", intensity);
+
+    const count = intensity === "high" ? 36 : 18;
+    const speedBase = intensity === "high" ? 11 : 6;
+    const speedVar = intensity === "high" ? 13 : 8;
+
+    for (let k = 0; k < count; k++) {
+      // 粒子错落分布在全屏高度（从顶部主卡片一直到未来 7 日区域）
+      const spawnY = Math.random() * (height * 0.88) + height * 0.04;
+      const typeRand = Math.random();
+      let type = "chaff";
+      if (typeRand > 0.62) type = "leaf";
+      else if (typeRand > 0.32) type = "petal";
+
       windDebris.push({
-        x: -30,
-        y: rect.top + (Math.random() - 0.2) * rect.height,
-        vx: Math.random() * 14 + 10,
-        vy: (Math.random() - 0.4) * 4,
+        x: -40 - Math.random() * 200, // 从屏幕左侧外错开进入
+        y: spawnY,
+        vx: Math.random() * speedVar + speedBase,
+        vy: (Math.random() - 0.42) * (intensity === "high" ? 4.5 : 2.5),
         size: Math.random() * 8 + 4,
-        angle: Math.random() * Math.PI,
-        vrot: (Math.random() - 0.5) * 0.3,
-        alpha: 0.85,
-        type: Math.random() > 0.4 ? "chaff" : "leaf"
+        angle: Math.random() * Math.PI * 2,
+        vrot: (Math.random() - 0.5) * (intensity === "high" ? 0.32 : 0.16),
+        alpha: intensity === "high" ? (Math.random() * 0.25 + 0.7) : (Math.random() * 0.2 + 0.5),
+        type
       });
     }
 
-    setTimeout(() => {
+    const duration = intensity === "high" ? 2800 : 2200;
+    windGustTimer = setTimeout(() => {
       document.body.removeAttribute("data-wind-gust");
-    }, 3800);
+    }, duration);
+  }
+
+  // 🍃 周期性自然微风调度器 (Periodic Natural Breeze Loop)
+  function startAmbientWindLoop(windSpeed = 5) {
+    if (ambientWindInterval) clearInterval(ambientWindInterval);
+    // 根据实际风速自适应微风周期：大风 10~14s，微风 16~22s，静风 24~30s
+    const intervalMs = windSpeed >= 20 ? 12000 : (windSpeed >= 8 ? 18000 : 25000);
+    ambientWindInterval = setInterval(() => {
+      if (document.hidden) return; // 页面切后台时不空耗
+      const isStrong = (windSpeed >= 18 && Math.random() < 0.65);
+      triggerWindGust(isStrong ? "high" : "gentle");
+    }, intervalMs);
   }
 
   // ❄️ 5. 暴雪压垮卡片
@@ -299,14 +326,17 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
       if (washi) washi.classList.remove("is-sun-translucent");
     }
 
-    // 3. 💨 大风天气：纸边抖动振颤，偶见飞屑掠过
+    // 3. 💨 气象风力联动与自然微风周期启动 (Ambient Wind Loop & Gust)
+    startAmbientWindLoop(windSpeed);
     if (windSpeed >= 18 || windGust >= 28) {
       if (washi) washi.classList.add("is-wind-breeze");
       if (clip) clip.classList.add("is-wind-vibrating");
-      if (Math.random() < 0.4) triggerWindGust();
+      triggerWindGust("high");
     } else {
       if (washi) washi.classList.remove("is-wind-breeze");
       if (clip) clip.classList.remove("is-wind-vibrating");
+      // 页面载入 1.2 秒后轻拂过一阵温和的自然桌面微风
+      setTimeout(() => triggerWindGust("gentle"), 1200);
     }
 
     // 4. ☁️ 多云/阴天：光线柔和漫射
@@ -423,10 +453,15 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
       fgCtx.rotate(db.angle);
 
       if (db.type === "chaff") {
-        fgCtx.fillStyle = `rgba(240, 230, 210, ${db.alpha})`;
+        fgCtx.fillStyle = `rgba(244, 236, 222, ${db.alpha})`;
         fgCtx.fillRect(-db.size * 0.5, -db.size * 0.3, db.size, db.size * 0.6);
+      } else if (db.type === "petal") {
+        fgCtx.fillStyle = `rgba(235, 172, 142, ${db.alpha * 0.9})`;
+        fgCtx.beginPath();
+        fgCtx.arc(0, 0, db.size * 0.42, 0, Math.PI * 2);
+        fgCtx.fill();
       } else {
-        fgCtx.fillStyle = `rgba(185, 125, 75, ${db.alpha})`;
+        fgCtx.fillStyle = `rgba(186, 126, 72, ${db.alpha})`;
         fgCtx.beginPath();
         fgCtx.ellipse(0, 0, db.size * 0.7, db.size * 0.35, 0, 0, Math.PI * 2);
         fgCtx.fill();

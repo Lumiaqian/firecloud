@@ -84,6 +84,40 @@ $("seal-stamp")?.addEventListener("keydown", (e) => {
   }
 });
 
+// 绑定手撕条纹和纸胶带吹风交互 (Tap Washi Tape to blow wind)
+$("hero-washi-tape")?.addEventListener("click", () => {
+  triggerHaptic([12, 22]);
+  journalWeather?.triggerWindGust("high");
+});
+$("hero-washi-tape")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    triggerHaptic([12, 22]);
+    journalWeather?.triggerWindGust("high");
+  }
+});
+
+// 手机端向右滑扫清风微手势 (Swipe Right to summon ambient breeze)
+let touchWindStartX = 0;
+let touchWindStartY = 0;
+document.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    touchWindStartX = e.touches[0].clientX;
+    touchWindStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+document.addEventListener("touchend", (e) => {
+  if (e.changedTouches.length === 1) {
+    const deltaX = e.changedTouches[0].clientX - touchWindStartX;
+    const deltaY = e.changedTouches[0].clientY - touchWindStartY;
+    if (deltaX > 90 && Math.abs(deltaY) < 55) {
+      triggerHaptic(12);
+      journalWeather?.triggerWindGust(deltaX > 160 ? "high" : "gentle");
+    }
+  }
+}, { passive: true });
+
 // 手帐主体卡片物理微倾动效 (Subtle 3D Physics Tilt)
 const heroMasterCard = $("hero-master-card");
 if (heroMasterCard) {
