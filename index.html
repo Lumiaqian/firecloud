@@ -157,31 +157,66 @@
 
     <section class="panel welcome" id="panel-welcome">
       <div class="welcome-layout">
-        <div class="welcome-copy">
-          <p class="eyebrow"><span aria-hidden="true"></span>霞光观测手记 · 自然光象实录</p>
-          <h1 id="welcome-title"><span id="welcome-title-prefix">今晚落日</span><br><span id="welcome-title-suffix">值得等吗</span></h1>
-          <p class="intro" id="welcome-intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
-          <div class="welcome-actions">
-            <button class="primary" id="locate-button" type="button" aria-describedby="privacy-note">
-              <span>使用当前位置</span><span aria-hidden="true">↗</span>
-            </button>
-            <button class="text-button" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市</button>
+        <!-- 🌟 左侧：手帐扉页·观测前言 (Preface Journal Folio) -->
+        <article class="welcome-journal-folio" id="welcome-folio" data-weather-surface>
+          <!-- 顶部活页手撕齿孔 -->
+          <div class="folio-paper-perforations" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
           </div>
-          <p class="privacy-note" id="privacy-note">无自有后端 · 定位、搜索与气象请求由浏览器直接发送至第三方服务</p>
-          <p class="notice" id="geo-notice" role="status"></p>
-        </div>
 
+          <!-- 左上角手撕条纹和纸胶带 (点击吹动清风) -->
+          <div class="folio-washi-tape" id="folio-washi-tape" title="手撕和纸胶带 (点击吹动清风)" role="button" tabindex="0" aria-label="手撕和纸胶带，点击唤起清风拂过桌面"></div>
+
+          <!-- 右上角复古黄铜折角针 -->
+          <div class="folio-brass-pin" aria-hidden="true"></div>
+
+          <div class="folio-inner">
+            <div class="folio-header">
+              <div class="folio-tag-wrap">
+                <span class="folio-dot" aria-hidden="true"></span>
+                <span class="folio-tag">VOL. 01 · 晨昏启封</span>
+                <span class="folio-subtitle">自然光象实录</span>
+              </div>
+              <span class="folio-seal-mark" aria-hidden="true">観象司</span>
+            </div>
+
+            <div class="welcome-copy">
+              <h1 id="welcome-title"><span id="welcome-title-prefix">今晚落日</span><br><span id="welcome-title-suffix">值得等吗</span></h1>
+              <p class="intro" id="welcome-intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
+              <div class="welcome-actions">
+                <button class="primary folio-btn-locate" id="locate-button" type="button" aria-describedby="privacy-note">
+                  <span>使用当前位置</span><span aria-hidden="true">↗</span>
+                </button>
+                <button class="text-button folio-btn-search" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市</button>
+              </div>
+              <p class="privacy-note" id="privacy-note">※ 观测手札注：无自有后端 · 定位与气象直发第三方服务</p>
+              <p class="notice" id="geo-notice" role="status"></p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 🌟 右侧：手帐标杆实录·典范手记卡片 (Specimen Journal Card) -->
         <aside class="welcome-specimen" aria-label="典范天幕观测手记">
-          <div class="specimen-card" id="specimen-card" data-slot="sunset">
+          <div class="specimen-card" id="specimen-card" data-slot="sunset" data-weather-surface>
+            <!-- 顶部活页手撕齿孔 -->
+            <div class="specimen-paper-perforations" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+
+            <!-- 右上角复古长尾夹 -->
+            <div class="specimen-brass-clip" aria-hidden="true"></div>
+
             <!-- 手帐卡片顶部书签与便签 -->
             <div class="specimen-header">
               <span class="specimen-tag">FIELD SPECIMEN · 标杆实录</span>
               <div class="specimen-tabs" role="radiogroup" aria-label="观测手记卷别">
                 <button type="button" class="specimen-tab active" data-slot="sunset" id="tab-journal-sunset" role="radio" aria-checked="true">
-                  <span>🌅 暮天卷</span>
+                  <svg class="specimen-tab-icon" viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="#e26d36"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="#e26d36" stroke-width="1.1" stroke-linecap="round"/><path d="M1 14h14" stroke="#7a5538" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  <span>暮天卷</span>
                 </button>
                 <button type="button" class="specimen-tab" data-slot="sunrise" id="tab-journal-sunrise" role="radio" aria-checked="false">
-                  <span>🌄 破晓卷</span>
+                  <svg class="specimen-tab-icon" viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><circle cx="8" cy="8.5" r="3.2" fill="#d98926"/><path d="M8 2v2M2.5 8.5h2M11.5 8.5h2M3.8 4.3l1.4 1.4M10.8 5.7l1.4-1.4" stroke="#d98926" stroke-width="1.1" stroke-linecap="round"/><path d="M1 13.5h14" stroke="#7a5538" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  <span>破晓卷</span>
                 </button>
               </div>
             </div>
@@ -199,9 +234,11 @@
             <div class="specimen-body" id="specimen-body">
               <!-- 手帐评定印章与视窗 -->
               <div class="specimen-verdict-row">
-                <div class="specimen-stamp" id="specimen-stamp">
-                  <span class="stamp-star" aria-hidden="true">★</span>
-                  <strong class="stamp-text" id="specimen-stamp-text">晚霞极佳 · 值得专程等待</strong>
+                <div class="specimen-cinnabar-seal" id="specimen-stamp">
+                  <span class="specimen-seal-border">
+                    <span class="specimen-seal-tag">实录研判</span>
+                    <strong class="specimen-seal-title" id="specimen-stamp-text">晚霞极佳 · 值得专程等待</strong>
+                  </span>
                 </div>
                 <div class="specimen-time-box" id="specimen-time-box">
                   <span class="time-box-label">最佳视窗</span>

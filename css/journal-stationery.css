@@ -2852,5 +2852,475 @@ dialog#dev-lab-dialog::before {
   margin: 0 !important;
 }
 
+/* ==========================================================================
+   📖 欢迎页手帐扉页与标杆手记双联跨页系统 (Welcome Journal Folio & Dual-Spread)
+   ========================================================================== */
+
+.welcome {
+  padding: clamp(36px, 6vh, 64px) 0 64px !important;
+}
+
+.welcome-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr) !important;
+  gap: clamp(32px, 4vw, 56px) !important;
+  align-items: start !important;
+}
+
+/* 🌟 左侧：手帐扉页·观测前言 (Preface Journal Folio) */
+.welcome-journal-folio {
+  position: relative !important;
+  background: var(--paper-card-bg, #fdfaf3) !important;
+  border-radius: 14px !important;
+  padding: 34px 36px 30px !important;
+  border: 1px solid var(--paper-border, rgba(195, 175, 145, 0.45)) !important;
+  box-shadow: 
+    0 12px 32px rgba(60, 45, 30, 0.12),
+    0 2px 8px rgba(60, 45, 30, 0.06),
+    inset 0 0 45px rgba(240, 230, 215, 0.35) !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.18) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(246, 239, 226, 0.45) 100%) !important;
+  background-size: 20px 20px, 100% 100% !important;
+  --card-rot: -0.45deg;
+  --folio-rot: -0.45deg;
+  transform: rotate(var(--folio-rot));
+  transform-origin: top center;
+  transition: transform 220ms var(--ease-out), box-shadow 260ms ease;
+  z-index: 10;
+  color: #28211a;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .welcome-journal-folio:hover {
+    transform: rotate(0deg) translateY(-2px);
+    box-shadow: 
+      0 16px 42px rgba(60, 45, 30, 0.16),
+      0 4px 12px rgba(60, 45, 30, 0.08),
+      inset 0 0 50px rgba(240, 230, 215, 0.45) !important;
+  }
+}
+
+/* 扉页活页手撕孔条 */
+.folio-paper-perforations {
+  position: absolute;
+  top: -8px;
+  left: 36px;
+  right: 36px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.folio-paper-perforations i {
+  width: 9px;
+  height: 9px;
+  background: #252e38;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.7), 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+/* 扉页左上角和纸胶带 */
+.folio-washi-tape {
+  position: absolute;
+  top: -12px;
+  left: 24px;
+  width: 86px;
+  height: 25px;
+  background: rgba(225, 195, 150, 0.85);
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(160, 130, 95, 0.18) 4px, rgba(160, 130, 95, 0.18) 8px);
+  transform: rotate(-7.5deg);
+  box-shadow: 0 1.5px 5px rgba(60, 45, 30, 0.16);
+  z-index: 20;
+  -webkit-clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
+  clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
+  cursor: pointer;
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.folio-washi-tape:hover {
+  transform: rotate(-5deg) scale(1.02);
+}
+
+/* 扉页右上角复古黄铜折角针 */
+.folio-brass-pin {
+  position: absolute;
+  top: -10px;
+  right: 30px;
+  width: 22px;
+  height: 28px;
+  pointer-events: none;
+  z-index: 18;
+}
+
+.folio-brass-pin::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 5px;
+  width: 10px;
+  height: 24px;
+  border: 2px solid #caa05b;
+  border-radius: 6px 6px 4px 4px;
+  background: linear-gradient(135deg, #f7e6be 0%, #c89c56 60%, #886227 100%);
+  box-shadow: 0 2px 5px rgba(40, 30, 20, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: rotate(6deg);
+}
+
+/* 扉页手帐印记顶栏 */
+.folio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.55);
+}
+
+.folio-tag-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folio-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c86829;
+}
+
+.folio-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #7d7062;
+}
+
+.folio-subtitle {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  color: #9c8a76;
+  letter-spacing: 0.04em;
+}
+
+.folio-seal-mark {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  color: var(--seal-cinnabar, #b53826);
+  border: 1px solid rgba(181, 56, 38, 0.45);
+  background: rgba(181, 56, 38, 0.04);
+  padding: 1px 5px;
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+  transform: rotate(2deg);
+  box-shadow: 0 0 0 0.5px rgba(181, 56, 38, 0.12);
+}
+
+.welcome-journal-folio #welcome-title {
+  max-width: 100%;
+  margin: 0;
+  font-family: var(--font-serif-title) !important;
+  font-size: clamp(40px, 4.4vw, 56px) !important;
+  font-weight: 400 !important;
+  line-height: 1.12 !important;
+  letter-spacing: 0.02em !important;
+  color: #261f18 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+.welcome-journal-folio #welcome-intro {
+  max-width: 100%;
+  margin: 18px 0 28px !important;
+  color: #5c4c3d !important;
+  font-family: var(--font-serif) !important;
+  font-size: 14.5px !important;
+  line-height: 1.85 !important;
+}
+
+.welcome-journal-folio .welcome-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+}
+
+.folio-btn-locate {
+  min-width: 168px !important;
+  min-height: 48px !important;
+  padding: 0 22px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #bd7222 !important;
+  background: linear-gradient(180deg, #ea9f52 0%, #d4802a 100%) !important;
+  color: #271403 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 
+    0 4px 12px rgba(180, 95, 25, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  cursor: pointer !important;
+  transition: all 180ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .folio-btn-locate:hover {
+    background: linear-gradient(180deg, #f0a95e 0%, #dc8932 100%) !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 
+      0 6px 18px rgba(180, 95, 25, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  }
+}
+
+.folio-btn-search {
+  min-height: 48px !important;
+  padding: 0 20px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid rgba(195, 175, 145, 0.75) !important;
+  background: rgba(253, 248, 238, 0.95) !important;
+  color: #5c4838 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 13.5px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 
+    0 2px 6px rgba(60, 45, 30, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  cursor: pointer !important;
+  transition: all 180ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .folio-btn-search:hover {
+    background: #ffffff !important;
+    border-color: rgba(165, 140, 105, 0.95) !important;
+    color: #241c14 !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 4px 12px rgba(60, 45, 30, 0.12) !important;
+  }
+}
+
+.welcome-journal-folio #privacy-note {
+  margin: 22px 0 0 !important;
+  color: #8c7b69 !important;
+  font-family: var(--font-serif) !important;
+  font-size: 11.5px !important;
+  line-height: 1.55 !important;
+}
+
+/* 🌟 右侧标杆手记卡片升级 (Specimen Card) */
+.specimen-card {
+  position: relative !important;
+  border-radius: 14px !important;
+  padding: 24px 24px 22px !important;
+  background: var(--paper-card-bg, #fdfaf3) !important;
+  border: 1px solid var(--paper-border, rgba(195, 175, 145, 0.45)) !important;
+  box-shadow: 
+    0 12px 32px rgba(60, 45, 30, 0.12),
+    0 2px 8px rgba(60, 45, 30, 0.06),
+    inset 0 0 45px rgba(240, 230, 215, 0.35) !important;
+  background-image: 
+    radial-gradient(rgba(180, 160, 135, 0.18) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(246, 239, 226, 0.45) 100%) !important;
+  background-size: 20px 20px, 100% 100% !important;
+  --card-rot: 0.5deg;
+  --specimen-rot: 0.5deg;
+  transform: rotate(var(--specimen-rot));
+  transform-origin: top center;
+  transition: transform 220ms var(--ease-out), box-shadow 260ms ease;
+  z-index: 10;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .specimen-card:hover {
+    transform: rotate(0deg) translateY(-2px);
+    box-shadow: 
+      0 16px 42px rgba(60, 45, 30, 0.16),
+      0 4px 12px rgba(60, 45, 30, 0.08),
+      inset 0 0 50px rgba(240, 230, 215, 0.45) !important;
+  }
+}
+
+.specimen-paper-perforations {
+  position: absolute;
+  top: -8px;
+  left: 32px;
+  right: 32px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.specimen-paper-perforations i {
+  width: 9px;
+  height: 9px;
+  background: #252e38;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.7), 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.specimen-brass-clip {
+  position: absolute;
+  top: -12px;
+  right: 28px;
+  width: 22px;
+  height: 24px;
+  pointer-events: none;
+  z-index: 18;
+}
+
+.specimen-brass-clip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 18px;
+  border: 2px solid #caa05b;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #f7e6be 0%, #c89c56 60%, #886227 100%);
+  box-shadow: 0 2px 5px rgba(40, 30, 20, 0.22);
+  transform: rotate(3deg);
+}
+
+/* 标杆实录朱砂金石印章 */
+.specimen-cinnabar-seal {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1.5px solid var(--seal-cinnabar, #b53826);
+  background: rgba(181, 56, 38, 0.06);
+  color: var(--seal-cinnabar, #b53826);
+  box-shadow: 
+    0 0 0 1px rgba(181, 56, 38, 0.16),
+    inset 0 0 6px rgba(181, 56, 38, 0.06);
+  transform: rotate(-1.2deg);
+  transition: transform 200ms ease;
+}
+
+.specimen-seal-border {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.specimen-seal-tag {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  opacity: 0.85;
+  border-right: 1px solid rgba(181, 56, 38, 0.4);
+  padding-right: 6px;
+  line-height: 1;
+}
+
+.specimen-seal-title {
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.specimen-tab-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* 微物理风动响应 (Paper Wind Flutter) */
+body[data-paper-wind] .welcome-journal-folio,
+body[data-paper-wind] .specimen-card,
+body[data-wind-gust="high"] .welcome-journal-folio,
+body[data-wind-gust="high"] .specimen-card,
+body[data-wind-gust="gentle"] .welcome-journal-folio,
+body[data-wind-gust="gentle"] .specimen-card {
+  will-change: transform;
+}
+
+body[data-paper-wind="high"] .welcome-journal-folio,
+body[data-wind-gust="high"] .welcome-journal-folio,
+body[data-paper-wind="high"] .specimen-card,
+body[data-wind-gust="high"] .specimen-card {
+  animation: hero-wind-lift-high 2.0s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
+  transform-origin: top center !important;
+}
+
+body[data-paper-wind="gentle"] .welcome-journal-folio,
+body[data-wind-gust="gentle"] .welcome-journal-folio,
+body[data-paper-wind="gentle"] .specimen-card,
+body[data-wind-gust="gentle"] .specimen-card {
+  animation: hero-wind-lift-gentle 1.6s cubic-bezier(0.25, 1, 0.4, 1) forwards !important;
+  transform-origin: top center !important;
+}
+
+/* 移动端紧凑排版适配 */
+@media (max-width: 820px) {
+  .welcome {
+    padding: 16px 0 44px !important;
+  }
+
+  .welcome-layout {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .welcome-journal-folio {
+    padding: 22px 20px 20px !important;
+    --card-rot: 0deg !important;
+    --folio-rot: 0deg !important;
+    transform: none !important;
+  }
+
+  .welcome-journal-folio #welcome-title {
+    font-size: clamp(32px, 8.2vw, 42px) !important;
+    line-height: 1.15 !important;
+    margin-bottom: 12px !important;
+  }
+
+  .welcome-journal-folio #welcome-intro {
+    font-size: 13.5px !important;
+    line-height: 1.7 !important;
+    margin: 12px 0 18px !important;
+  }
+
+  .welcome-journal-folio .welcome-actions {
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .folio-btn-locate,
+  .folio-btn-search {
+    flex: 1 !important;
+    min-height: 44px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  .welcome-journal-folio #privacy-note {
+    margin-top: 14px !important;
+  }
+
+  .specimen-card {
+    padding: 18px 16px 18px !important;
+    --card-rot: 0deg !important;
+    --specimen-rot: 0deg !important;
+    transform: none !important;
+  }
+}
+
+
 
 

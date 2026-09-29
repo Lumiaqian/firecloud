@@ -86,15 +86,22 @@ $("seal-stamp")?.addEventListener("keydown", (e) => {
 });
 
 // 绑定手撕条纹和纸胶带吹风交互 (Tap Washi Tape to blow wind)
-$("hero-washi-tape")?.addEventListener("click", () => {
+const triggerWindFromTape = () => {
   triggerHaptic([12, 22]);
   journalWeather?.triggerWindGust("high");
-});
+};
+$("hero-washi-tape")?.addEventListener("click", triggerWindFromTape);
 $("hero-washi-tape")?.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
-    triggerHaptic([12, 22]);
-    journalWeather?.triggerWindGust("high");
+    triggerWindFromTape();
+  }
+});
+$("folio-washi-tape")?.addEventListener("click", triggerWindFromTape);
+$("folio-washi-tape")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    triggerWindFromTape();
   }
 });
 
