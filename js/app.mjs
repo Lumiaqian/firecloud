@@ -707,7 +707,7 @@ function renderWeek(bundle) {
               <span>云况待测</span>
             </div>
           </div>
-          <p class="day-tip-line">暂缺高空云层预报数据</p>
+          <p class="day-tip-line">高空云层要素暂缺</p>
         `;
         appendCard(card);
         continue;
@@ -786,13 +786,13 @@ function renderWeek(bundle) {
 }
 
 function updateSourceStatus() {
-  elements.source.textContent = state.refreshing ? "更新中" : state.refreshFailed ? "更新失败 · 显示上次数据" : state.stale ? "缓存数据" : "实时数据";
+  elements.source.textContent = state.refreshing ? "更新中" : state.refreshFailed ? "更新未果 · 沿用先前记录" : state.stale ? "先前记录" : "实时数据";
   elements.source.dataset.status = state.refreshing ? "loading" : state.refreshFailed ? "error" : state.stale ? "stale" : "live";
 }
 
 function announceReady() {
   const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
-  const freshness = state.refreshFailed ? "更新失败，显示上次数据（非最新）" : state.stale ? "缓存数据（非最新）" : "实时数据";
+  const freshness = state.refreshFailed ? "更新未果，沿用先前观测记录" : state.stale ? "先前观测记录" : "实时数据";
   elements.status.textContent = `${state.place.name}，${eventLabel}，霞光指数 ${elements.score.textContent}，${freshness}`;
 }
 
@@ -803,7 +803,7 @@ function focusNewResult() {
 function renderReady(cacheAge = 0) {
   const eventTime = currentEventTime();
   if (!eventTime) {
-    showError("未来三天没有可预测的日出或日落");
+    showError("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
     return false;
   }
   if (!state.bundle) {
@@ -812,7 +812,7 @@ function renderReady(cacheAge = 0) {
   }
   const metrics = metricsAt(state.bundle, eventTime);
   if (!hasLocalCloudForecast(metrics)) {
-    showError("当前时段暂缺当地高空分层云量数据，无法完成指数测算，请稍后重试或选择临近地点");
+    showError("当地高空分层云量暂缺，无法完成研判，请稍后重试或选择临近城市");
     return false;
   }
   const wasReady = document.body.dataset.state === "ready";
@@ -892,7 +892,7 @@ function showError(message) {
 async function loadPlace(place, { preferCache = false, force = false } = {}) {
   const requestId = ++state.loadRequestId;
   const normalized = normalizePlace(place);
-  if (!normalized) return showError("地点信息无效，请重新搜索");
+  if (!normalized) return showError("未获取到有效地点信息，请重新搜索");
   const eventType = state.event;
   const keepReady = document.body.dataset.state === "ready"
     && state.bundle && placeIdentity(state.bundle.place) === placeIdentity(normalized);
@@ -922,11 +922,11 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
     return;
   }
   const eventTime = nextEvent(eventType, normalized.lat, normalized.lon, new Date());
-  if (!eventTime) return showError("未来三天没有可预测的日出或日落");
+  if (!eventTime) return showError("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
   if (keepReady && !sameReady) {
     stopTicker();
     document.body.dataset.switching = "true";
-    $("event-pending").textContent = `正在读取${eventType === "sunset" ? "晚霞" : "朝霞"}预报，下方暂保留上次结果`;
+    $("event-pending").textContent = `正在测算最新${eventType === "sunset" ? "晚霞" : "朝霞"}天象，手札稍后翻页…`;
     $("event-pending").hidden = false;
     syncEventTabs();
   }
@@ -995,12 +995,12 @@ function openPlaces() {
 async function locate() {
   const requestId = ++state.locateRequestId;
   if (!navigator.geolocation) {
-    setLocationStatus("无法获取位置，请搜索城市");
+    setLocationStatus("未能获取设备定位，请尝试搜索城市");
     openPlaces();
     elements.search.focus();
     return;
   }
-  setLocationStatus("正在定位…");
+  setLocationStatus("正在探寻当前位置…");
   navigator.geolocation.getCurrentPosition(async ({ coords }) => {
     if (requestId !== state.locateRequestId) return;
     const point = { lat: coords.latitude, lon: coords.longitude };
@@ -1013,7 +1013,7 @@ async function locate() {
     loadPlace(place);
   }, () => {
     if (requestId !== state.locateRequestId) return;
-    setLocationStatus("无法获取位置，请搜索城市");
+    setLocationStatus("未能获取设备定位，请尝试搜索城市");
     openPlaces();
     elements.search.focus();
   }, { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 });
@@ -1078,11 +1078,11 @@ elements.search.addEventListener("input", () => {
       const results = await searchCities(query);
       if (requestId !== searchRequestId) return;
       renderSearchResults(results);
-      elements.searchStatus.textContent = results.length ? `找到 ${results.length} 个地点` : "没有找到匹配城市";
+      elements.searchStatus.textContent = results.length ? `找到 ${results.length} 处地点` : "未寻得匹配城市，建议尝试输入省市全称";
     } catch {
       if (requestId !== searchRequestId) return;
       elements.searchResults.replaceChildren();
-      elements.searchStatus.textContent = "城市搜索暂不可用";
+      elements.searchStatus.textContent = "城市检索网络未通，请稍后重试";
     } finally {
       if (requestId === searchRequestId) {
         elements.searchSpinner.hidden = true;
@@ -1106,10 +1106,10 @@ function renderFavoriteFeedback() {
   }
   if (pendingFavorite) {
     const message = pendingFavorite.error
-      ? "最多收藏 8 个地点，请先移除一个收藏，再撤销"
+      ? "最多珍藏 8 处地点，请先移出一处后再撤销"
       : pendingFavorite.retryRemoved
-        ? `已删除收藏 ${pendingFavorite.retryRemoved}，可撤销先前删除的 ${pendingFavorite.place.name}`
-        : `已删除收藏 ${pendingFavorite.place.name}`;
+        ? `已移出「${pendingFavorite.retryRemoved}」，可撤销先前移出的「${pendingFavorite.place.name}」`
+        : `已移出收藏「${pendingFavorite.place.name}」`;
     (inDialog ? elements.dialogFavoriteMessage : elements.favoriteMessage).textContent = message;
   }
   scheduleFavoriteUndo();
@@ -1211,7 +1211,7 @@ function renderFavorites() {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "delete-favorite";
-    remove.setAttribute("aria-label", `删除收藏 ${place.name}`);
+    remove.setAttribute("aria-label", `移出收藏 ${place.name}`);
     remove.textContent = "×";
     remove.addEventListener("click", () => removeFavorite(place));
     item.append(choose, remove);
@@ -1258,7 +1258,7 @@ function toggleFavorite() {
     return;
   }
   if (state.favorites.length >= 8) {
-    setLocationStatus("最多收藏 8 个地点");
+    setLocationStatus("最多珍藏 8 处地点");
     openPlaces();
     return;
   }
@@ -1808,7 +1808,7 @@ const SPECIMEN_JOURNALS = {
   sunrise: {
     titlePrefix: "明早破晓",
     titleSuffix: "值得早起吗",
-    intro: "读取东方低层光路与高空卷云受光角，为明早第一缕晨光给出一份出行建言。",
+    intro: "读取东方低层光路与高空卷云受光角，为明早第一缕晨光给出一份出行参考。",
     photo: "assets/sayram_sunrise.jpg",
     photoAlt: "新疆赛里木湖松树头晨曦霞光S弯实景观测",
     place: "新疆 · 赛里木湖 (2,073 m)",
