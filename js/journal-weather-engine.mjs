@@ -189,16 +189,16 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
   let windGustTimer = null;
   let ambientWindInterval = null;
 
-  // 💨 4. 自然风拂过与狂风呼啸掀起便签与风屑 (Paper Flutter & Wind Debris)
+  // 💨 4. 自然风拂过与狂风呼啸掀起便签与风屑 (Paper Flutter & Wind Debris - 60fps GPU Composited)
   function triggerWindGust(intensity = "high") {
     if (isReducedMotion) return;
 
     clearTimeout(windGustTimer);
-    document.body.setAttribute("data-wind-gust", intensity);
+    document.body.setAttribute("data-paper-wind", intensity);
 
-    const count = intensity === "high" ? 36 : 18;
-    const speedBase = intensity === "high" ? 11 : 6;
-    const speedVar = intensity === "high" ? 13 : 8;
+    const count = intensity === "high" ? 14 : 7;
+    const speedBase = intensity === "high" ? 8 : 4.5;
+    const speedVar = intensity === "high" ? 9 : 5.5;
 
     for (let k = 0; k < count; k++) {
       // 粒子错落分布在全屏高度（从顶部主卡片一直到未来 7 日区域）
@@ -209,33 +209,32 @@ export function createJournalWeatherEngine(bgCanvas, fgCanvas) {
       else if (typeRand > 0.32) type = "petal";
 
       windDebris.push({
-        x: -40 - Math.random() * 200, // 从屏幕左侧外错开进入
+        x: -40 - Math.random() * 120, // 从屏幕左侧外错开进入
         y: spawnY,
         vx: Math.random() * speedVar + speedBase,
-        vy: (Math.random() - 0.42) * (intensity === "high" ? 4.5 : 2.5),
-        size: Math.random() * 8 + 4,
+        vy: (Math.random() - 0.42) * (intensity === "high" ? 3.0 : 1.8),
+        size: Math.random() * 6 + 3,
         angle: Math.random() * Math.PI * 2,
-        vrot: (Math.random() - 0.5) * (intensity === "high" ? 0.32 : 0.16),
-        alpha: intensity === "high" ? (Math.random() * 0.25 + 0.7) : (Math.random() * 0.2 + 0.5),
+        vrot: (Math.random() - 0.5) * (intensity === "high" ? 0.20 : 0.10),
+        alpha: intensity === "high" ? (Math.random() * 0.22 + 0.6) : (Math.random() * 0.18 + 0.4),
         type
       });
     }
 
-    const duration = intensity === "high" ? 2800 : 2200;
+    const duration = intensity === "high" ? 2200 : 1800;
     windGustTimer = setTimeout(() => {
-      document.body.removeAttribute("data-wind-gust");
+      document.body.removeAttribute("data-paper-wind");
     }, duration);
   }
 
   // 🍃 周期性自然微风调度器 (Periodic Natural Breeze Loop)
   function startAmbientWindLoop(windSpeed = 5) {
     if (ambientWindInterval) clearInterval(ambientWindInterval);
-    // 根据实际风速自适应微风周期：大风 10~14s，微风 16~22s，静风 24~30s
-    const intervalMs = windSpeed >= 20 ? 12000 : (windSpeed >= 8 ? 18000 : 25000);
+    // 根据实际风速自适应微风周期：大风 32s，微风 45s，静风 60s
+    const intervalMs = windSpeed >= 20 ? 32000 : (windSpeed >= 8 ? 45000 : 60000);
     ambientWindInterval = setInterval(() => {
       if (document.hidden) return; // 页面切后台时不空耗
-      const isStrong = (windSpeed >= 18 && Math.random() < 0.65);
-      triggerWindGust(isStrong ? "high" : "gentle");
+      triggerWindGust("gentle");
     }, intervalMs);
   }
 

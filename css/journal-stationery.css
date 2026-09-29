@@ -1266,59 +1266,68 @@ body[data-state="ready"] .day-card.day-journal-card::before {
 }
 
 /* ==========================================================================
-   💨 手帐纸张微物理风动系统 (Paper Card Wind & Breeze Physics)
+   💨 手帐纸张微物理风动系统 (Paper Card Wind & Breeze Physics - 60fps GPU Composited)
    ========================================================================== */
 
+/* 启用硬件加速合成层与平滑过渡 */
+body[data-paper-wind] .hero-master-card,
+body[data-paper-wind] .reason-list span,
+body[data-paper-wind] .metrics article,
+body[data-paper-wind] .day-journal-card,
+body[data-wind-gust] .hero-master-card,
+body[data-wind-gust] .reason-list span,
+body[data-wind-gust] .metrics article,
+body[data-wind-gust] .day-journal-card {
+  will-change: transform;
+}
+
 /* 1. 主手札大便签纸面下摆受风掀动与自然浮沉 (Hero Master Card Wind Lift) */
+body[data-paper-wind="high"] .hero-master-card,
 body[data-wind-gust="high"] .hero-master-card {
-  animation: hero-wind-lift-high 2.6s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation: hero-wind-lift-high 2.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
   transform-origin: top center !important;
 }
+body[data-paper-wind="gentle"] .hero-master-card,
 body[data-wind-gust="gentle"] .hero-master-card {
-  animation: hero-wind-lift-gentle 2.2s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation: hero-wind-lift-gentle 1.8s cubic-bezier(0.22, 1, 0.36, 1) !important;
   transform-origin: top center !important;
 }
 
+/* 纯 GPU translate3d / rotate 动画，彻底杜绝 box-shadow 与 3D 软件投影重绘 */
 @keyframes hero-wind-lift-high {
   0% {
-    transform: perspective(1000px) rotateX(0deg) rotateZ(0deg) translateY(0);
-    box-shadow: 0 4px 20px rgba(60, 45, 30, 0.08);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
-  20% {
-    transform: perspective(1000px) rotateX(4.2deg) rotateZ(-0.9deg) translateY(-6px) skewX(-0.8deg);
-    box-shadow: 0 16px 36px rgba(60, 45, 30, 0.16), 0 3px 10px rgba(60, 45, 30, 0.08);
+  22% {
+    transform: translate3d(0, -6px, 0) rotate(-0.8deg);
   }
-  45% {
-    transform: perspective(1000px) rotateX(1.5deg) rotateZ(0.6deg) translateY(-2px) skewX(0.4deg);
-    box-shadow: 0 8px 24px rgba(60, 45, 30, 0.10);
+  48% {
+    transform: translate3d(0, -2px, 0) rotate(0.4deg);
   }
-  70% {
-    transform: perspective(1000px) rotateX(2.8deg) rotateZ(-0.4deg) translateY(-4px) skewX(-0.3deg);
-    box-shadow: 0 12px 28px rgba(60, 45, 30, 0.12);
+  72% {
+    transform: translate3d(0, -3.5px, 0) rotate(-0.3deg);
   }
   100% {
-    transform: perspective(1000px) rotateX(0deg) rotateZ(0deg) translateY(0);
-    box-shadow: 0 4px 20px rgba(60, 45, 30, 0.08);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
 }
 
 @keyframes hero-wind-lift-gentle {
   0% {
-    transform: perspective(1000px) rotateX(0deg) translateY(0);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
-  28% {
-    transform: perspective(1000px) rotateX(2.2deg) rotateZ(-0.5deg) translateY(-3.5px);
-    box-shadow: 0 10px 24px rgba(60, 45, 30, 0.12);
+  30% {
+    transform: translate3d(0, -3px, 0) rotate(-0.4deg);
   }
-  60% {
-    transform: perspective(1000px) rotateX(0.8deg) rotateZ(0.3deg) translateY(-1.5px);
+  65% {
+    transform: translate3d(0, -1px, 0) rotate(0.2deg);
   }
   100% {
-    transform: perspective(1000px) rotateX(0deg) translateY(0);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
 }
 
-/* 2. 和纸胶带与黄铜夹抖动 (Washi Tape & Brass Clip Wind Response) */
+/* 2. 和纸胶带与黄铜夹抖动 (Washi Tape & Brass Clip Wind Response - 衰减式，非无限) */
 .hero-washi-tape-topleft {
   cursor: pointer;
   transition: transform 180ms var(--ease-spring), filter 180ms ease;
@@ -1331,90 +1340,103 @@ body[data-wind-gust="gentle"] .hero-master-card {
   transform: rotate(-10deg) scale(0.96);
 }
 
+body[data-paper-wind="high"] .hero-washi-tape-topleft,
+body[data-paper-wind="high"] .deck-washi-tape-torn,
 body[data-wind-gust="high"] .hero-washi-tape-topleft,
 body[data-wind-gust="high"] .deck-washi-tape-torn {
-  animation: tape-wind-flutter 0.28s ease-in-out infinite alternate !important;
+  animation: tape-wind-flutter 0.7s ease-out 1 !important;
 }
 @keyframes tape-wind-flutter {
-  0% { transform: rotate(-6deg) skewX(0deg); }
-  100% { transform: rotate(-11deg) skewX(3deg) translateY(-3px); }
+  0% { transform: rotate(-8deg); }
+  25% { transform: rotate(-12deg) translateY(-2px); }
+  50% { transform: rotate(-6deg); }
+  75% { transform: rotate(-9deg) translateY(-1px); }
+  100% { transform: rotate(-8deg); }
 }
 
+body[data-paper-wind="high"] .hero-brass-clip,
+body[data-paper-wind="high"] .deck-brass-clip,
 body[data-wind-gust="high"] .hero-brass-clip,
 body[data-wind-gust="high"] .deck-brass-clip {
-  animation: clip-tuning-fork 0.07s linear infinite alternate !important;
+  animation: clip-tuning-fork 0.6s ease-out 1 !important;
 }
 @keyframes clip-tuning-fork {
-  0% { transform: rotate(3.2deg) translateX(-0.5px); }
-  100% { transform: rotate(4.8deg) translateX(0.5px); }
+  0% { transform: rotate(4deg); }
+  30% { transform: rotate(7deg) scale(1.03); }
+  60% { transform: rotate(2.5deg); }
+  100% { transform: rotate(4deg); }
 }
 
+body[data-paper-wind="high"] .hero-paper-perforations.is-wind-straining i,
+body[data-paper-wind="high"] .deck-paper-perforations.is-wind-straining i,
 body[data-wind-gust="high"] .hero-paper-perforations.is-wind-straining i,
 body[data-wind-gust="high"] .deck-paper-perforations.is-wind-straining i {
   background: #d4c0a8 !important;
   transform: scaleY(1.3);
 }
 
-/* 3. Section 01 天空线索便签条波浪式顺风抖动 (Staggered Wave Downwards) */
+/* 3. Section 01 天空线索便签条波浪式顺风抖动 (Staggered Wave Downwards - 纯 GPU 偏移) */
+body[data-paper-wind] .reason-list span,
 body[data-wind-gust] .reason-list span {
-  animation: note-wind-wave 1.6s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  animation: note-wind-wave 1.4s cubic-bezier(0.25, 1, 0.5, 1) !important;
   transform-origin: left center !important;
 }
+body[data-paper-wind] .reason-list span:nth-child(1),
 body[data-wind-gust] .reason-list span:nth-child(1) { animation-delay: 0.04s !important; }
-body[data-wind-gust] .reason-list span:nth-child(2) { animation-delay: 0.12s !important; }
-body[data-wind-gust] .reason-list span:nth-child(3) { animation-delay: 0.20s !important; }
-body[data-wind-gust] .reason-list span:nth-child(4) { animation-delay: 0.28s !important; }
-body[data-wind-gust] .reason-list span:nth-child(5) { animation-delay: 0.36s !important; }
+body[data-paper-wind] .reason-list span:nth-child(2),
+body[data-wind-gust] .reason-list span:nth-child(2) { animation-delay: 0.10s !important; }
+body[data-paper-wind] .reason-list span:nth-child(3),
+body[data-wind-gust] .reason-list span:nth-child(3) { animation-delay: 0.16s !important; }
+body[data-paper-wind] .reason-list span:nth-child(4),
+body[data-wind-gust] .reason-list span:nth-child(4) { animation-delay: 0.22s !important; }
+body[data-paper-wind] .reason-list span:nth-child(5),
+body[data-wind-gust] .reason-list span:nth-child(5) { animation-delay: 0.28s !important; }
 
 @keyframes note-wind-wave {
   0%, 100% {
-    transform: translateX(0) translateY(0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
-  24% {
-    transform: translateX(5px) translateY(-3px) rotate(0.8deg);
-    box-shadow: 0 6px 16px rgba(60, 45, 30, 0.10);
+  25% {
+    transform: translate3d(4px, -2px, 0) rotate(0.6deg);
   }
-  50% {
-    transform: translateX(-1px) translateY(0) rotate(-0.3deg);
-  }
-  75% {
-    transform: translateX(2px) translateY(-1px) rotate(0.2deg);
+  55% {
+    transform: translate3d(-1px, 0, 0) rotate(-0.3deg);
   }
 }
 
-/* 4. Section 02 观测数据小方格微颤 (Ledger Tiles Breeze Jiggle) */
+/* 4. Section 02 观测数据小方格微颤 (Ledger Tiles Breeze Jiggle - 纯 GPU 抬升) */
+body[data-paper-wind] .metrics article,
 body[data-wind-gust] .metrics article {
-  animation: tile-wind-jiggle 1.4s ease-in-out !important;
+  animation: tile-wind-jiggle 1.2s ease-out !important;
 }
-body[data-wind-gust] .metrics article:nth-child(odd) { animation-delay: 0.06s !important; }
-body[data-wind-gust] .metrics article:nth-child(even) { animation-delay: 0.16s !important; }
+body[data-paper-wind] .metrics article:nth-child(odd),
+body[data-wind-gust] .metrics article:nth-child(odd) { animation-delay: 0.05s !important; }
+body[data-paper-wind] .metrics article:nth-child(even),
+body[data-wind-gust] .metrics article:nth-child(even) { animation-delay: 0.12s !important; }
 
 @keyframes tile-wind-jiggle {
-  0%, 100% { transform: translateY(0) scale(1); }
-  28% { transform: translateY(-3px) scale(1.02); box-shadow: 0 4px 12px rgba(60, 45, 30, 0.08); }
-  60% { transform: translateY(-0.8px) scale(1.005); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  30% { transform: translate3d(0, -3px, 0); }
+  65% { transform: translate3d(0, -0.8px, 0); }
 }
 
-/* 5. Section 03 未来 7 日标本卡琴键式顺风涟漪掀起 (Wind Ripple Across 7 Days) */
+/* 5. Section 03 未来 7 日标本卡琴键式顺风涟漪掀起 (Wind Ripple Across 7 Days - 纯 GPU 偏移) */
+body[data-paper-wind] .day-journal-card,
 body[data-wind-gust] .day-journal-card {
-  animation: day-card-wind-ripple 1.6s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  animation-delay: calc(var(--day-idx, 0) * 0.08s + 0.1s) !important;
+  animation: day-card-wind-ripple 1.4s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  animation-delay: calc(var(--day-idx, 0) * 0.06s + 0.08s) !important;
   transform-origin: top center !important;
 }
 
 @keyframes day-card-wind-ripple {
   0%, 100% {
-    transform: translateY(0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
-  26% {
-    transform: translateY(-8px) rotate(-2deg) scale(1.025);
-    box-shadow: 0 10px 24px rgba(60, 45, 30, 0.14), 0 2px 6px rgba(60, 45, 30, 0.08);
+  28% {
+    transform: translate3d(0, -6px, 0) rotate(-1.2deg);
   }
-  58% {
-    transform: translateY(-2px) rotate(0.8deg);
-  }
-  78% {
-    transform: translateY(-3.5px) rotate(-0.5deg);
+  60% {
+    transform: translate3d(0, -1.5px, 0) rotate(0.5deg);
   }
 }
 

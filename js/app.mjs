@@ -19,7 +19,7 @@ import {
   weatherTheme
 } from "./forecast.mjs?v=8";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
-import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=2";
+import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=6";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
