@@ -60,7 +60,16 @@ body[data-light="night"] {
     radial-gradient(circle at 50% 12%, rgba(25, 52, 90, 0.45) 0%, transparent 70%),
     linear-gradient(180deg, #030814 0%, #0a1626 50%, #122235 100%) !important;
   background-attachment: fixed !important;
+  color: #e5edf7;
+}
+
+body[data-light="night"] .brand-copy strong,
+body[data-light="night"] .ready-toolbar > p,
+body[data-light="night"] .ready-footer {
   color: #e5edf7 !important;
+}
+body[data-light="night"] .brand-copy small {
+  color: rgba(229, 237, 247, 0.82) !important;
 }
 
 /* ==========================================================================
@@ -90,6 +99,7 @@ body[data-light="night"] {
       0 12px 36px rgba(60, 45, 30, 0.14), 
       0 3px 10px rgba(60, 45, 30, 0.08),
       inset 0 0 50px rgba(240, 230, 215, 0.45);
+  }
 }
 
 /* 水膜轻薄漫反射层 (Moisture & Wet Sheen Layer) */
@@ -144,6 +154,7 @@ body[data-light="night"] {
   transform: rotate(-8deg);
   box-shadow: 0 1.5px 5px rgba(60, 45, 30, 0.16);
   z-index: 20;
+  -webkit-clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
   clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
   transition: transform 300ms ease, opacity 300ms ease, filter 300ms ease;
   pointer-events: none;
@@ -326,6 +337,12 @@ body[data-light="night"] .hero-lunar-badge {
   align-items: flex-end;
   text-align: right;
   position: relative;
+}
+
+.hero-score-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .score-label-row {
@@ -1287,19 +1304,77 @@ body[data-wind-gust="high"] .deck-kraft-sticky {
     flex-shrink: 0;
   }
   .hero-master-card {
-    padding: 24px 18px 20px;
+    padding: 26px 18px 20px !important;
+    margin: 14px 0 22px !important;
+    overflow: visible !important;
   }
   .hero-journal-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .hero-meta-col {
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .hero-event-time {
+    font-size: clamp(28px, 8vw, 36px) !important;
+    gap: 8px !important;
+  }
+  .hero-event-time small {
+    font-size: 13px !important;
+  }
+  .hero-verdict-quote {
+    font-size: 15px !important;
+    line-height: 1.55 !important;
+    margin-top: 4px !important;
   }
   .hero-score-col {
-    align-items: flex-start;
-    text-align: left;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    text-align: left !important;
+    border-top: 1px dashed rgba(195, 175, 145, 0.45) !important;
+    padding-top: 14px !important;
+    margin-top: 2px !important;
+    position: relative !important;
+  }
+  .hero-score-main {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+  .score-label-row {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+  }
+  .score-number-display {
+    font-size: clamp(66px, 17vw, 86px) !important;
+    line-height: 0.9 !important;
+    margin: 2px 0 0 !important;
   }
   .cinnabar-seal-stamp {
-    right: 18px;
-    bottom: 12px;
+    position: static !important;
+    flex-shrink: 0 !important;
+    width: 72px !important;
+    height: 72px !important;
+    margin-left: 12px !important;
+    margin-bottom: 4px !important;
+    transform: rotate(-3deg) !important;
+  }
+}
+
+/* 移动端天幕月相防碰撞避让走廊 */
+@media (max-width: 640px) {
+  .sky-moon {
+    left: min(var(--moon-x, 42%), 45%) !important;
+    top: clamp(66px, 10.5vh, 88px) !important;
+    width: 50px !important;
+    height: 50px !important;
+    transform: translate(-50%, -50%) !important;
   }
 }
 
@@ -1316,35 +1391,73 @@ body[data-state="ready"] {
   --surface: rgba(253, 250, 243, 0.88);
 }
 
-/* 顶栏品牌与时段栏（浮于深蓝天幕背景上，使用清晰亮色排版） */
-body[data-state="ready"] .brand-copy strong {
-  color: #ffffff !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-}
-body[data-state="ready"] .brand-copy small {
-  color: rgba(247, 241, 231, 0.92) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-body[data-state="ready"] .ready-toolbar p {
-  color: rgba(247, 241, 231, 0.88) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+/* 宣纸手帐实体卡片系统：坚守手帐墨迹本色，全面锁定光色方案并杜绝浏览器强制深色重着色污染 */
+.hero-master-card,
+.hero-master-card *,
+.day-journal-card,
+.day-journal-card *,
+.section-block,
+.section-block *,
+.lunar-dialog,
+.lunar-dialog * {
+  color-scheme: light !important;
+  forced-color-adjust: none !important;
 }
 
-/* 消除时间大字多余外框，保持典雅手帐标题 */
+.hero-master-card {
+  --ink: #28221c;
+  --muted: #625242;
+  --faint: #786756;
+  color: #28221c !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+.hero-master-card .journal-entry-tag {
+  color: #8c7660 !important;
+  -webkit-text-fill-color: #8c7660 !important;
+}
+
+.hero-master-card .hero-event-time,
 .hero-event-time,
-h1#event-time {
+h1#event-time,
+.hero-event-time:focus,
+h1#event-time:focus,
+.hero-event-time:focus-visible,
+h1#event-time:focus-visible {
+  color: #221c17 !important;
+  -webkit-text-fill-color: #221c17 !important;
   border: none !important;
   outline: none !important;
-  background: transparent !important;
   box-shadow: none !important;
+  background: transparent !important;
 }
 
-/* Hero 主卡片元数据对比度保障 */
-.hero-master-card .data-meta {
-  color: #6a5a4a !important;
+.hero-master-card .hero-event-time small {
+  color: #6e5e4e !important;
+  -webkit-text-fill-color: #6e5e4e !important;
 }
+
+.hero-master-card .hero-countdown-tape {
+  color: #8c5218 !important;
+  -webkit-text-fill-color: #8c5218 !important;
+  background: rgba(237, 181, 111, 0.24) !important;
+  border: 1px dashed #c89650 !important;
+}
+
+.hero-master-card .hero-verdict-quote {
+  color: #2d241c !important;
+  -webkit-text-fill-color: #2d241c !important;
+  border-left-color: #d8c8b4 !important;
+}
+
+.hero-master-card .data-meta {
+  color: #6e5e4e !important;
+  -webkit-text-fill-color: #6e5e4e !important;
+}
+
 .hero-master-card .data-meta #data-source {
   color: #206d26 !important;
+  -webkit-text-fill-color: #206d26 !important;
   font-weight: 600;
 }
 .hero-master-card .data-meta #data-source::before {
@@ -1353,12 +1466,56 @@ h1#event-time {
 }
 .hero-master-card .data-meta #data-source[data-status="stale"] {
   color: #a05a00 !important;
+  -webkit-text-fill-color: #a05a00 !important;
 }
 .hero-master-card .data-meta #data-source[data-status="error"] {
   color: #c62828 !important;
+  -webkit-text-fill-color: #c62828 !important;
 }
+
 .hero-master-card .data-meta #updated-at {
-  color: #6a5a4a !important;
+  color: #6e5e4e !important;
+  -webkit-text-fill-color: #6e5e4e !important;
+}
+
+.hero-master-card .score-label-row,
+.hero-master-card .score-label-row span,
+.hero-master-card .score-label-row small {
+  color: #5c4e40 !important;
+  -webkit-text-fill-color: #5c4e40 !important;
+}
+
+.hero-master-card .score-number-display,
+.hero-master-card .score-number-display strong,
+.hero-master-card #score {
+  color: var(--score-color, #c86829) !important;
+  -webkit-text-fill-color: var(--score-color, #c86829) !important;
+}
+
+.hero-master-card .score-number-display small {
+  color: #635343 !important;
+  -webkit-text-fill-color: #635343 !important;
+}
+
+.hero-master-card .cinnabar-seal-stamp {
+  color: var(--seal-cinnabar, #b53826) !important;
+  -webkit-text-fill-color: var(--seal-cinnabar, #b53826) !important;
+  border-color: var(--seal-cinnabar, #b53826) !important;
+  outline-color: var(--seal-cinnabar, #b53826) !important;
+  background: rgba(189, 70, 50, 0.06) !important;
+}
+
+.hero-master-card .cinnabar-seal-stamp .seal-grade,
+.hero-master-card .cinnabar-seal-stamp .seal-sub {
+  color: var(--seal-cinnabar, #b53826) !important;
+  -webkit-text-fill-color: var(--seal-cinnabar, #b53826) !important;
+}
+
+.hero-master-card .hero-lunar-badge {
+  color: #1e3e60 !important;
+  -webkit-text-fill-color: #1e3e60 !important;
+  background: rgba(220, 235, 252, 0.72) !important;
+  border-color: rgba(120, 165, 210, 0.6) !important;
 }
 
 /* 7日手帐卡片温润宣纸底色与高对比度排版 */
