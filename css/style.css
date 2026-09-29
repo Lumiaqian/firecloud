@@ -1090,37 +1090,30 @@ body[data-light="night"][data-weather="snow"] .sky-moon {
   height: 42px;
   position: relative;
   flex: 0 0 auto;
-  border: 1px solid var(--line-strong);
   border-radius: 50%;
-  transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.brand-mark::before {
-  content: "";
-  position: absolute;
-  top: 9px;
-  left: 17px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 14px var(--accent);
-}
-
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  bottom: 12px;
-  left: 8px;
-  border-top: 1px solid var(--line-strong);
+.brand-mark-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  transition: transform 220ms var(--ease-spring), filter 220ms ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .brand:hover .brand-mark {
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(237, 181, 111, 0.25);
+  .brand:hover .brand-mark-svg {
+    transform: scale(1.06) rotate(3deg);
+    filter: drop-shadow(0 4px 14px rgba(245, 166, 35, 0.45));
   }
+}
+
+.brand:active .brand-mark-svg {
+  transform: scale(0.96) rotate(-2deg);
+  transition-duration: 80ms;
 }
 
 .brand-copy {

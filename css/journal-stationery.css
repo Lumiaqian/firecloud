@@ -48,9 +48,13 @@ body[data-state="ready"] .brand {
   gap: 10px;
 }
 body[data-state="ready"] .brand-mark {
-  border-color: rgba(220, 190, 150, 0.55) !important;
-  background: radial-gradient(circle at 35% 35%, rgba(255, 253, 248, 0.92) 0%, rgba(245, 235, 218, 0.82) 75%) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+body[data-state="ready"] .brand-mark::before,
+body[data-state="ready"] .brand-mark::after {
+  display: none !important;
 }
 body[data-state="ready"] .brand-copy strong {
   font-family: var(--font-serif) !important;
@@ -145,8 +149,8 @@ body[data-state="ready"] .event-tabs.liquid-glass button[aria-pressed="true"] {
 
 /* 夜间模式适配：手札墨染与古风青黛质感 */
 body[data-light="night"][data-state="ready"] .brand-mark {
-  background: radial-gradient(circle at 35% 35%, #2a3848 0%, #152230 75%) !important;
-  border-color: rgba(220, 190, 150, 0.5) !important;
+  background: none !important;
+  border: none !important;
 }
 body[data-light="night"][data-state="ready"] .brand-copy strong {
   color: #f7ede1 !important;
