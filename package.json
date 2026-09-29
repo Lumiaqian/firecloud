@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "纯静态霞光指数预报 PWA",
+  "description": "结合高空云层、远端光路与空气质量的自然霞光指数预报与晨昏观测手记 PWA",
+  "homepage": "https://lumiaqian.github.io/firecloud/",
   "scripts": {
     "dev": "python3 -m http.server 8765 --bind 127.0.0.1",
     "check": "node --check js/api.mjs && node --check js/app.mjs && node --check js/forecast.mjs && node --check js/weather-fx.mjs && node --check js/journal-weather-engine.mjs && node --check sw.js",
