@@ -555,6 +555,8 @@ body[data-light="night"] .hero-lunar-badge {
 
 .day-journal-card {
   background: #fdfaf3;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   border: 1px solid rgba(195, 175, 145, 0.45);
   border-radius: 9px;
   padding: 16px 11px 13px;
@@ -620,16 +622,18 @@ body[data-light="night"] .hero-lunar-badge {
 .day-journal-card::before {
   content: "";
   position: absolute;
-  top: -7px;
+  top: -6px;
   left: 28%;
   width: 44px;
-  height: 12px;
-  background: rgba(220, 195, 150, 0.72);
+  height: 11px;
+  background: rgba(224, 198, 155, 0.82);
   background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(160, 130, 95, 0.15) 3px, rgba(160, 130, 95, 0.15) 6px);
+  border-left: 1px dashed rgba(160, 130, 95, 0.45);
+  border-right: 1px dashed rgba(160, 130, 95, 0.45);
+  border-radius: 1px;
   transform: rotate(-1.5deg);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(60, 45, 30, 0.08);
   z-index: 2;
-  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
 }
 
 /* 顶部活页打孔 */
@@ -637,16 +641,17 @@ body[data-light="night"] .hero-lunar-badge {
   display: flex;
   justify-content: center;
   gap: 14px;
-  margin-top: -6px;
+  margin-top: -4px;
   margin-bottom: 8px;
 }
 .day-card-perfs i {
   width: 5px;
   height: 5px;
-  background: #252e38;
+  background: #ede3d2;
+  border: 1px solid rgba(185, 165, 135, 0.4);
   border-radius: 50%;
   display: inline-block;
-  box-shadow: inset 0 1px 1px rgba(0,0,0,0.6);
+  box-shadow: inset 0 1px 2px rgba(60, 45, 30, 0.22);
 }
 
 .day-date-row {
@@ -1630,9 +1635,13 @@ h1#event-time:focus-visible {
 }
 
 /* 7日手帐卡片温润宣纸底色与高对比度排版 */
-body[data-state="ready"] .day-card.day-journal-card,
-.day-card.day-journal-card {
-  background: #fdfaf3 !important;
+body[data-state="ready"] .day-card,
+body[data-state="ready"] .day-journal-card,
+body[data-state="ready"] .day-card[data-tier],
+body[data-state="ready"] .day-journal-card[data-grade] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: #fdfaf3 !important;
   color: #28221c !important;
   border: 1px solid rgba(195, 175, 145, 0.55) !important;
   box-shadow: 0 4px 14px rgba(60, 45, 30, 0.08), 0 1px 3px rgba(60, 45, 30, 0.05) !important;
@@ -1640,6 +1649,10 @@ body[data-state="ready"] .day-card.day-journal-card,
     radial-gradient(rgba(180, 160, 135, 0.14) 1px, transparent 0),
     linear-gradient(180deg, #fff 0%, #faf5ec 100%) !important;
   background-size: 14px 14px, 100% 100% !important;
+}
+
+body[data-state="ready"] .day-card[data-tier]::before {
+  display: none !important;
 }
 
 body[data-state="ready"] .day-card.day-journal-card:focus-visible {
@@ -1775,6 +1788,16 @@ body[data-state="ready"] .metrics-block .horizontal-scroll-region {
   overflow: visible !important;
 }
 
+/* 彻底清除横向滚动容器上的 mask-image，避免 iOS WebKit GPU 遮罩合成崩溃产生纯黑方块 */
+body[data-state="ready"] .horizontal-scroll-region,
+body[data-state="ready"] .horizontal-scroll-region.can-scroll,
+body[data-state="ready"] .horizontal-scroll-region.can-scroll.is-at-start,
+body[data-state="ready"] .horizontal-scroll-region.can-scroll.is-at-end,
+body[data-state="ready"] .horizontal-scroll-region.can-scroll.is-at-start.is-at-end {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
 body[data-state="ready"] .horizontal-scroll-region.can-scroll::before {
   display: none !important;
 }
@@ -1853,6 +1876,15 @@ body[data-state="ready"] .section-head p {
   visibility: visible !important;
 }
 
+/* 彻底禁用日卡片的 backdrop-filter，实体手帐纸质卡片无需玻璃模糊滤镜，防止 WebKit 渲染崩溃 */
+body[data-state="ready"] .day-card,
+body[data-state="ready"] .day-journal-card,
+body[data-state="ready"] .day-card[data-tier],
+body[data-state="ready"] .day-journal-card[data-grade] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 /* 03 未来 7 日：桌面端 7 列均分栅格 vs 移动端平滑吸附横滑 */
 @media (min-width: 961px) {
   body[data-state="ready"] .week-strip {
@@ -1873,12 +1905,23 @@ body[data-state="ready"] .section-head p {
     gap: 12px !important;
     overflow-x: auto !important;
     scroll-snap-type: x mandatory !important;
-    padding: 8px 4px 16px !important;
+    padding: 12px 6px 20px !important;
     -webkit-overflow-scrolling: touch !important;
+    isolation: isolate !important;
+    contain: layout style !important;
   }
   body[data-state="ready"] .day-journal-card {
     flex: 0 0 clamp(145px, 40vw, 165px) !important;
     scroll-snap-align: start !important;
+    transform: none !important; /* 移动端滚动时关闭旋转，避免硬件滚动层撕裂 */
+  }
+  body[data-state="ready"] .day-journal-card:nth-child(n) {
+    transform: none !important;
+  }
+  body[data-state="ready"] .day-journal-card.is-active-day {
+    transform: translateY(-2px) !important;
+    border-color: #c86829 !important;
+    box-shadow: 0 4px 14px rgba(200, 104, 41, 0.18), 0 0 0 1.5px #c86829 !important;
   }
 }
 

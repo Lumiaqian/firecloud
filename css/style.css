@@ -2711,27 +2711,9 @@ body[data-state="ready"] .top-actions {
   display: none;
 }
 
-.horizontal-scroll-region.can-scroll {
-  -webkit-mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
-  mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
-  transition: -webkit-mask-image 180ms ease, mask-image 180ms ease;
-}
-
-.horizontal-scroll-region.can-scroll.is-at-start:not(.is-at-end) {
-  -webkit-mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
-  mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
-}
-
-.horizontal-scroll-region.can-scroll:not(.is-at-start):not(.is-at-end) {
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 36px, black calc(100% - 36px), transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 36px, black calc(100% - 36px), transparent 100%);
-}
-
-.horizontal-scroll-region.can-scroll.is-at-end {
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 36px, black 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 36px, black 100%);
-}
-
+.horizontal-scroll-region.can-scroll,
+.horizontal-scroll-region.can-scroll.is-at-start,
+.horizontal-scroll-region.can-scroll.is-at-end,
 .horizontal-scroll-region.can-scroll.is-at-start.is-at-end {
   -webkit-mask-image: none;
   mask-image: none;
