@@ -7,6 +7,7 @@ import {
   metricsAt,
   nextEvent,
   scoreSky,
+  sealFor,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -48,6 +49,14 @@ test("等待建议覆盖全部指数分档", () => {
   assert.equal(waitAdvice(50), "可以顺路看看");
   assert.equal(waitAdvice(35), "有空可以留意");
   assert.equal(waitAdvice(34), "不建议专程等待");
+});
+
+test("朱砂印章研判与副标覆盖全部五档指数分档", () => {
+  assert.deepEqual(sealFor(90), { text: "紫金", sub: "绝艳霞天" });
+  assert.deepEqual(sealFor(75), { text: "晴金", sub: "绚彩可期" });
+  assert.deepEqual(sealFor(55), { text: "柔光", sub: "浮云堪赏" });
+  assert.deepEqual(sealFor(35), { text: "敛光", sub: "云厚光微" });
+  assert.deepEqual(sealFor(20), { text: "微茫", sub: "且待新晴" });
 });
 
 test("低云和中云同时厚重时封顶 10", () => {

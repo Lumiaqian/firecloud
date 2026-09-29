@@ -6,6 +6,7 @@ import {
   nextEvent,
   reasonsFor,
   scoreSky,
+  sealFor,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -152,7 +153,8 @@ const elements = {
   heroLunarBadge: $("hero-lunar-badge"), lunarBadgeIcon: $("lunar-badge-icon"), lunarBadgeText: $("lunar-badge-text"),
   lunarDialog: $("lunar-dialog"), lunarDialogMoon: $("lunar-dialog-moon"), lunarDialogName: $("lunar-dialog-name"),
   lunarDialogDate: $("lunar-dialog-date"), lunarCellFraction: $("lunar-cell-fraction"), lunarCellAge: $("lunar-cell-age"),
-  lunarCellAlt: $("lunar-cell-alt"), lunarCellAz: $("lunar-cell-az"), lunarDialogAdvice: $("lunar-dialog-advice"),
+  lunarCellAlt: $("lunar-cell-alt"), lunarCellAz: $("lunar-cell-az"),
+  lunarDialogAdvice: $("lunar-dialog-advice"), lunarDialogStamp: $("lunar-dialog-stamp"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
@@ -581,6 +583,9 @@ function updateMoonDisplay(moon) {
       elements.lunarDialogAdvice.textContent = "新月朔日，月隐星繁，天幕背景无月光干扰，极宜观测深空天体与拍摄银河暗夜。";
     }
   }
+  if (elements.lunarDialogStamp) {
+    elements.lunarDialogStamp.textContent = moon.phaseFraction >= 0.7 ? "宜赏月" : moon.phaseFraction <= 0.05 ? "宜深空" : "观象札记";
+  }
 }
 
 function updateHorizontalScrollRegions() {
@@ -613,12 +618,12 @@ function weatherSymbolFor(metrics) {
 }
 
 function photographicAdviceFor(metrics, score, eventType) {
-  if (metrics.precip != null && metrics.precip > 0.2) return "降水与低层云层遮蔽光路，观测受限";
-  if (score >= 80) return "高云透光且地平线光路良好，建议提前选好机位守候";
-  if (score >= 65) return "中高云分层丰富，地平线光路良好，适宜摄影取景";
-  if (score >= 45) return eventType === "sunrise" ? "有柔和晨光漫射，可记录层次渐变天色" : "有柔和暮光漫射，可记录层次渐变天色";
-  if ((metrics.low ?? 0) > 50) return `本地低层云偏厚压制，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现几率偏低`;
-  return "云层染色条件不足，整体天色趋于平淡";
+  if (metrics.precip != null && metrics.precip > 0.2) return "低云堆叠且伴随降水，光路受阻，天幕暗淡";
+  if (score >= 80) return "高云透光、地平光路通达，适宜寻开阔处驻足守候";
+  if (score >= 65) return "中高云舒展层叠，地平光路顺畅，极利于取景记录";
+  if (score >= 45) return eventType === "sunrise" ? "晨光柔和漫射，天际泛起温润渐变，适宜静心观赏" : "暮光柔和漫射，天际泛起温润渐变，适宜静心观赏";
+  if ((metrics.low ?? 0) > 50) return `低云密集沉降，光线穿透困难，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现机会渺茫`;
+  return "空中云量稀疏，难有余晖衬托，天色归于平淡";
 }
 
 function renderWeek(bundle) {
@@ -666,16 +671,16 @@ function renderWeek(bundle) {
         <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
         <div class="day-date-row">
           <span class="day-card-date">${formatter.format(probe)}</span>
-          <span class="day-mini-seal">无事件</span>
+          <span class="day-mini-seal">地平未沉</span>
         </div>
         <div class="day-card-watercolor"></div>
         <div class="day-score-block">
           <span class="day-score-num">—</span>
           <div class="day-score-tag">
-            <span>极昼或无事件</span>
+            <span>极昼无晨昏</span>
           </div>
         </div>
-        <p class="day-tip-line">当前纬度此日期无对应晨昏事件</p>
+        <p class="day-tip-line">当前纬度该日处于极昼/极夜，无对应晨昏视窗</p>
       `;
     } else {
       const metrics = metricsAt(bundle, eventTime);
@@ -686,16 +691,16 @@ function renderWeek(bundle) {
           <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
           <div class="day-date-row">
             <span class="day-card-date">${formatter.format(eventTime)}</span>
-            <span class="day-mini-seal">暂无</span>
+            <span class="day-mini-seal">待测</span>
           </div>
           <div class="day-card-watercolor"></div>
           <div class="day-score-block">
             <span class="day-score-num">—</span>
             <div class="day-score-tag">
-              <span>暂无预报</span>
+              <span>云况待测</span>
             </div>
           </div>
-          <p class="day-tip-line">当地云层预报暂无数据</p>
+          <p class="day-tip-line">暂缺高空云层预报数据</p>
         `;
         appendCard(card);
         continue;
@@ -704,12 +709,8 @@ function renderWeek(bundle) {
       const tier = tierFor(score);
       const advice = photographicAdviceFor(metrics, score, state.event);
       const formattedDate = formatter.format(eventTime);
-
-      let miniSeal = "微茫";
-      if (score >= 85) miniSeal = "紫金";
-      else if (score >= 70) miniSeal = "晴金";
-      else if (score >= 50) miniSeal = "柔光";
-      else if (score >= 30) miniSeal = "休整";
+      const seal = sealFor(score);
+      const miniSeal = seal.text;
 
       card.dataset.tier = tier;
       card.dataset.grade = tier;
@@ -752,8 +753,8 @@ function renderWeek(bundle) {
         }
         if (elements.score) elements.score.textContent = String(score);
         if (elements.verdict) elements.verdict.textContent = `“${advice}”`;
-        if (elements.sealGrade) elements.sealGrade.textContent = miniSeal;
-        if (elements.sealSub) elements.sealSub.textContent = score >= 70 ? "极力推荐" : "宜静候";
+        if (elements.sealGrade) elements.sealGrade.textContent = seal.text;
+        if (elements.sealSub) elements.sealSub.textContent = seal.sub;
         document.body.dataset.tier = tier;
 
         // 若所选预测日有降雨，主卡片也呈现湿润浸染状态
@@ -804,7 +805,7 @@ function renderReady(cacheAge = 0) {
   }
   const metrics = metricsAt(state.bundle, eventTime);
   if (!hasLocalCloudForecast(metrics)) {
-    showError("当前时刻缺少当地低、中、高云层预报，无法计算霞光指数。请稍后重试或选择其他地点");
+    showError("当前时段暂缺当地高空分层云量数据，无法完成指数测算，请稍后重试或选择临近地点");
     return false;
   }
   const wasReady = document.body.dataset.state === "ready";
@@ -835,15 +836,9 @@ function renderReady(cacheAge = 0) {
   elements.band.textContent = indexBand(score);
 
   // 朱砂印章研判与手记建议
-  let sealText = "微茫";
-  let sealSub = "宜煮茶";
-  if (score >= 85) { sealText = "紫金"; sealSub = "旷世绝景"; }
-  else if (score >= 70) { sealText = "晴金"; sealSub = "极力推荐"; }
-  else if (score >= 50) { sealText = "柔光"; sealSub = "值得驻足"; }
-  else if (score >= 30) { sealText = "休整"; sealSub = "不宜蹲守"; }
-
-  if (elements.sealGrade) elements.sealGrade.textContent = sealText;
-  if (elements.sealSub) elements.sealSub.textContent = sealSub;
+  const seal = sealFor(score);
+  if (elements.sealGrade) elements.sealGrade.textContent = seal.text;
+  if (elements.sealSub) elements.sealSub.textContent = seal.sub;
 
   const adviceText = photographicAdviceFor(metrics, score, state.event);
   elements.verdict.textContent = `“${adviceText}”`;
@@ -1797,7 +1792,7 @@ const SPECIMEN_JOURNALS = {
     stamp: "晚霞极佳 · 值得专程等待",
     window: "21:25 – 22:15",
     m1Title: "云幕受光",
-    m1Desc: "博罗科努高层卷云迎阳，预计触发 30 分钟火烧云",
+    m1Desc: "博罗科努高层卷云迎阳，将映衬出近半小时壮阔火烧云",
     m2Title: "地平光路",
     m2Desc: "西海低云仅 8%，太阳落入地平前无遮挡",
     m3Title: "高山空气",
@@ -1811,7 +1806,7 @@ const SPECIMEN_JOURNALS = {
     photoAlt: "新疆赛里木湖松树头晨曦霞光S弯实景观测",
     place: "新疆 · 赛里木湖 (2,073 m)",
     target: "晨曦破晓映S弯与金顶实录 · 标杆观测",
-    stamp: "朝霞极佳 · 建议定闹钟早起",
+    stamp: "朝霞极佳 · 值得拂晓守候",
     window: "06:40 – 07:25",
     m1Title: "东方初阳",
     m1Desc: "卷云受光仰角 14.8°，率先捕获第一缕晨曦金光",

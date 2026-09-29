@@ -537,6 +537,14 @@ export function scoreSky(metrics) {
   return Math.max(2, Math.min(overcast ? 10 : 99, Math.round(score)));
 }
 
+export function sealFor(score) {
+  if (score >= 85) return { text: "紫金", sub: "绝艳霞天" };
+  if (score >= 70) return { text: "晴金", sub: "绚彩可期" };
+  if (score >= 50) return { text: "柔光", sub: "浮云堪赏" };
+  if (score >= 30) return { text: "敛光", sub: "云厚光微" };
+  return { text: "微茫", sub: "且待新晴" };
+}
+
 export function reasonsFor(metrics) {
   const reasons = [];
   const pct = (value) => `${Math.round(value)}%`;
@@ -544,20 +552,20 @@ export function reasonsFor(metrics) {
   const mid = metrics.mid ?? 0;
   const high = metrics.high ?? 0;
 
-  if (high >= 20 && high <= 70) reasons.push(`高云 ${pct(high)}，具备染色画布`);
-  else if (high > 70) reasons.push(`高云 ${pct(high)}，云幕可能偏厚`);
-  else if (mid >= 20 && mid <= 60) reasons.push(`中云 ${pct(mid)}，可增加纹理`);
-  else reasons.push("中高云偏少，色彩层次有限");
-  if (low > 40) reasons.push(`本地低云 ${pct(low)}，可能遮挡地平线`);
-  else reasons.push(`本地低云 ${pct(low)}，近处光路较通畅`);
+  if (high >= 20 && high <= 70) reasons.push(`高云 ${pct(high)}，具备霞光映照条件`);
+  else if (high > 70) reasons.push(`高云 ${pct(high)}，云幕层叠透光受阻`);
+  else if (mid >= 20 && mid <= 60) reasons.push(`中云 ${pct(mid)}，丰富霞光层叠肌理`);
+  else reasons.push("中高云偏少，天际层次较单薄");
+  if (low > 40) reasons.push(`本地低云 ${pct(low)}，地平线视线受阻`);
+  else reasons.push(`本地低云 ${pct(low)}，近处光路通透`);
   if (metrics.pathLow != null) {
-    reasons.push(metrics.pathLow > 40 ? `太阳方向低云 ${pct(metrics.pathLow)}，远端遮挡明显` : `太阳方向低云 ${pct(metrics.pathLow)}，远端光路尚可`);
+    reasons.push(metrics.pathLow > 40 ? `太阳方向低云 ${pct(metrics.pathLow)}，远端光线难穿透` : `太阳方向低云 ${pct(metrics.pathLow)}，远端光路通畅`);
   }
-  if (metrics.rh != null && metrics.rh > 75) reasons.push(`湿度 ${pct(metrics.rh)}，色彩可能发灰`);
-  else if (metrics.vis != null && metrics.vis >= 30_000) reasons.push(`能见度 ${Math.round(metrics.vis / 1000)} km，空气通透`);
-  if (metrics.precip != null && metrics.precip > 0) reasons.push(`有 ${metrics.precip.toFixed(1)} mm 降水，霞光受抑制`);
-  if ((metrics.aod != null && metrics.aod > 0.3) || (metrics.pm25 != null && metrics.pm25 > 35)) reasons.push("气溶胶或 PM2.5 偏高，色彩可能减弱");
-  if (metrics.aod == null || metrics.pm25 == null || metrics.missingRemote?.length) reasons.push("部分辅助数据缺失，指数仅供参考");
+  if (metrics.rh != null && metrics.rh > 75) reasons.push(`湿度 ${pct(metrics.rh)}，水汽丰沛天色略朦胧`);
+  else if (metrics.vis != null && metrics.vis >= 30_000) reasons.push(`能见度 ${Math.round(metrics.vis / 1000)} km，大气清朗通透`);
+  if (metrics.precip != null && metrics.precip > 0) reasons.push(`有 ${metrics.precip.toFixed(1)} mm 降水，天色暗淡阴沉`);
+  if ((metrics.aod != null && metrics.aod > 0.3) || (metrics.pm25 != null && metrics.pm25 > 35)) reasons.push("空气微浊，落日余晖稍泛暗沉");
+  if (metrics.aod == null || metrics.pm25 == null || metrics.missingRemote?.length) reasons.push("部分高空要素缺测，指数仅供参考");
   return reasons.slice(0, 5);
 }
 
