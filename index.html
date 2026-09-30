@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
   <link rel="stylesheet" href="css/style.css?v=55">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=22">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=23">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -421,10 +421,10 @@
 
       <div class="lens-liquid-capsule" role="tablist" aria-label="选择动效风格">
         <div class="lens-liquid-slider" id="dev-lens-slider"></div>
-        <button class="lens-tab" type="button" role="tab" data-active="true" data-style="horizon" data-idx="0" id="tab-horizon">地平线 2.0</button>
-        <button class="lens-tab" type="button" role="tab" data-active="false" data-style="horizon-classic" data-idx="1" id="tab-horizon-classic">地平线 1.0</button>
-        <button class="lens-tab" type="button" role="tab" data-active="false" data-style="kepler" data-idx="2" id="tab-kepler">开普勒</button>
-        <button class="lens-tab" type="button" role="tab" data-active="false" data-style="prismatic" data-idx="3" id="tab-prismatic">色差环</button>
+        <button class="lens-tab" type="button" role="tab" data-active="true" aria-selected="true" data-style="horizon" data-idx="0" id="tab-horizon">地平线 2.0</button>
+        <button class="lens-tab" type="button" role="tab" data-active="false" aria-selected="false" data-style="horizon-classic" data-idx="1" id="tab-horizon-classic">地平线 1.0</button>
+        <button class="lens-tab" type="button" role="tab" data-active="false" aria-selected="false" data-style="kepler" data-idx="2" id="tab-kepler">开普勒</button>
+        <button class="lens-tab" type="button" role="tab" data-active="false" aria-selected="false" data-style="prismatic" data-idx="3" id="tab-prismatic">色差环</button>
       </div>
 
       <div class="lens-liquid-toolbar">
@@ -442,7 +442,7 @@
       </div>
       <div class="lunar-dev-slider-row" style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;opacity:0.88;">
         <span>朔 0%</span>
-        <input type="range" id="dev-moon-slider" min="0" max="100" value="96" style="flex:1;accent-color:#c89c56;cursor:pointer;">
+        <input type="range" id="dev-moon-slider" min="0" max="100" value="96" aria-label="天体月相模拟照亮比例" style="flex:1;accent-color:#c89c56;cursor:pointer;">
         <span>望 100%</span>
       </div>
 
@@ -461,7 +461,7 @@
 
   <!-- 🌟 夜间月相天文观测详情抽屉 (Lunar Observation Modal) -->
   <!-- 🌟 夜间月相天文观测手帐抽屉 (Stationery Lunar Observation Modal) -->
-  <dialog class="journal-stationery-dialog lunar-dialog" id="lunar-dialog" aria-labelledby="lunar-dialog-title">
+  <dialog class="liquid-glass glass-sheet journal-stationery-dialog lunar-dialog" id="lunar-dialog" aria-labelledby="lunar-dialog-title">
     <div class="drawer-handle" aria-hidden="true"></div>
     <form method="dialog" class="dialog-head">
       <div>
@@ -503,6 +503,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v12"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v13"></script>
 </body>
 </html>

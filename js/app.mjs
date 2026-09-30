@@ -1283,6 +1283,7 @@ function initFluidDrawer(dialog) {
   let history = [];
   let motionTimer = null;
   let motionEnd = null;
+  let didDrag = false;
 
   function cancelMotion() {
     clearTimeout(motionTimer);
@@ -1329,6 +1330,7 @@ function initFluidDrawer(dialog) {
     currentTranslateY = 0;
     isDragging = false;
     activePointerId = null;
+    didDrag = false;
   }
 
   function dismissDrawer() {
@@ -1363,6 +1365,10 @@ function initFluidDrawer(dialog) {
   function canStartDrag(e) {
     if (!dialog.open) return false;
     if (window.matchMedia("(min-width: 761px)").matches) return false;
+    const rect = dialog.getBoundingClientRect();
+    if (e.clientY < rect.top || e.clientY > rect.bottom || e.clientX < rect.left || e.clientX > rect.right) {
+      return false;
+    }
     if (handle && (e.target === handle || handle.contains(e.target))) return true;
     if (head && (e.target === head || head.contains(e.target))) {
       if (e.target.closest("button, a, input")) return false;
@@ -1379,6 +1385,8 @@ function initFluidDrawer(dialog) {
     if (activePointerId !== null) return;
     if (e.button !== 0 && e.pointerType === "mouse") return;
     if (!canStartDrag(e)) return;
+
+    didDrag = false;
 
     if (dialog.classList.contains("is-settling") || dialog.classList.contains("is-dismissing")) {
       const presentationY = new DOMMatrix(getComputedStyle(dialog).transform).m42;
@@ -1406,6 +1414,9 @@ function initFluidDrawer(dialog) {
     if (!isDragging || e.pointerId !== activePointerId) return;
 
     currentY = e.clientY;
+    if (Math.abs(currentY - startY) > 5) {
+      didDrag = true;
+    }
     const now = performance.now();
     history.push({ y: currentY, t: now });
     while (history.length > 2 && now - history[0].t > 100) {
@@ -1456,6 +1467,21 @@ function initFluidDrawer(dialog) {
     event.preventDefault();
     dismissDrawer();
   });
+  dialog.addEventListener("click", (e) => {
+    if (didDrag) {
+      didDrag = false;
+      return;
+    }
+    if (e.target !== dialog) return;
+    const rect = dialog.getBoundingClientRect();
+    const isInside = (
+      rect.top <= e.clientY && e.clientY <= rect.bottom &&
+      rect.left <= e.clientX && e.clientX <= rect.right
+    );
+    if (!isInside) {
+      dismissDrawer();
+    }
+  });
   dialog.addEventListener("close", () => {
     if (!dialog.open) resetDialogStyles();
   });
@@ -1464,6 +1490,7 @@ function initFluidDrawer(dialog) {
 
 const resetPlacesDrawer = initFluidDrawer(elements.dialog);
 initFluidDrawer(elements.devDialog);
+initFluidDrawer(elements.lunarDialog);
 
 const LOADER_STORAGE_KEY = "firecloud:loader_style:v1";
 let currentLoaderStyle = storage.get(LOADER_STORAGE_KEY, "horizon");
@@ -1628,6 +1655,7 @@ function applyLoaderStyle(style) {
   tabs.forEach((tab) => {
     const active = tab.dataset.style === style;
     tab.setAttribute("data-active", String(active));
+    tab.setAttribute("aria-selected", String(active));
     if (active && elements.devLensSlider) {
       const idx = parseInt(tab.dataset.idx, 10);
       elements.devLensSlider.style.transform = `translateX(calc(${idx} * (100% + 2px)))`;
@@ -1669,10 +1697,24 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-document.querySelectorAll(".lens-tab").forEach((tab) => {
+const devLensTabs = Array.from(document.querySelectorAll(".lens-tab"));
+devLensTabs.forEach((tab, idx) => {
   tab.addEventListener("click", () => {
     applyLoaderStyle(tab.dataset.style);
     if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+  });
+  tab.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = devLensTabs[(idx + 1) % devLensTabs.length];
+      next.focus();
+      applyLoaderStyle(next.dataset.style);
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = devLensTabs[(idx - 1 + devLensTabs.length) % devLensTabs.length];
+      prev.focus();
+      applyLoaderStyle(prev.dataset.style);
+    }
   });
 });
 

@@ -83,7 +83,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
 
 body[data-state="ready"] .top-actions.liquid-glass .icon-button {
   color: #5c4838 !important;
-  transition: all 180ms ease !important;
+  transition: background-color 180ms var(--ease-out), color 180ms var(--ease-out) !important;
 }
 body[data-state="ready"] .top-actions.liquid-glass .icon-button:hover {
   background: rgba(235, 185, 130, 0.22) !important;
@@ -139,7 +139,7 @@ body[data-state="ready"] .event-tabs.liquid-glass button {
   letter-spacing: 0.06em !important;
   color: #786552 !important;
   font-weight: 500 !important;
-  transition: all 180ms ease !important;
+  transition: color 180ms var(--ease-out) !important;
 }
 
 body[data-state="ready"] .event-tabs.liquid-glass button[aria-pressed="true"] {
@@ -2852,6 +2852,19 @@ dialog#dev-lab-dialog::before {
   margin: 0 !important;
 }
 
+@media (max-width: 760px) {
+  .lunar-dialog {
+    width: calc(100% - 24px) !important;
+    max-width: none !important;
+    margin: auto 12px max(12px, env(safe-area-inset-bottom)) !important;
+    border-bottom-left-radius: max(16px, env(safe-area-inset-bottom)) !important;
+    border-bottom-right-radius: max(16px, env(safe-area-inset-bottom)) !important;
+  }
+  .lunar-dialog::before {
+    display: none !important;
+  }
+}
+
 /* ==========================================================================
    📖 欢迎页手帐扉页与标杆手记双联跨页系统 (Welcome Journal Folio & Dual-Spread)
    ========================================================================== */
@@ -3067,7 +3080,7 @@ dialog#dev-lab-dialog::before {
   justify-content: space-between !important;
   gap: 20px !important;
   cursor: pointer !important;
-  transition: all 180ms ease !important;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out), background 180ms var(--ease-out) !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3078,6 +3091,14 @@ dialog#dev-lab-dialog::before {
       0 6px 18px rgba(180, 95, 25, 0.38),
       inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
   }
+}
+
+.folio-btn-locate:active {
+  transform: translateY(0.5px) scale(0.98) !important;
+  box-shadow: 
+    0 2px 8px rgba(180, 95, 25, 0.22),
+    inset 0 1px 2px rgba(60, 30, 10, 0.15) !important;
+  transition-duration: 70ms !important;
 }
 
 .folio-btn-search {
@@ -3095,7 +3116,7 @@ dialog#dev-lab-dialog::before {
     0 2px 6px rgba(60, 45, 30, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   cursor: pointer !important;
-  transition: all 180ms ease !important;
+  transition: transform 180ms var(--ease-out), background-color 180ms var(--ease-out), border-color 180ms var(--ease-out), color 180ms var(--ease-out), box-shadow 180ms var(--ease-out) !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3106,6 +3127,14 @@ dialog#dev-lab-dialog::before {
     transform: translateY(-1.5px) !important;
     box-shadow: 0 4px 12px rgba(60, 45, 30, 0.12) !important;
   }
+}
+
+.folio-btn-search:active {
+  transform: translateY(0.5px) scale(0.985) !important;
+  box-shadow: 
+    0 1px 4px rgba(60, 45, 30, 0.06),
+    inset 0 1px 2px rgba(60, 45, 30, 0.08) !important;
+  transition-duration: 70ms !important;
 }
 
 .welcome-journal-folio #privacy-note {
