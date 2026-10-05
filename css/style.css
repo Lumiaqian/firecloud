@@ -2377,7 +2377,7 @@ body[data-state="ready"] .top-actions {
   border-bottom: 1px solid var(--line);
 }
 
-.ready-toolbar > p {
+.event-status > p {
   margin: 0;
   color: var(--faint);
   font-size: 11px;
@@ -3456,6 +3456,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
 
 .event-tabs.liquid-glass {
   padding: 3px;
+  flex-shrink: 0;
   align-self: center;
   align-items: center;
   gap: 2px;
@@ -3901,7 +3902,7 @@ body[data-state="ready"] .ready {
     align-items: center;
   }
 
-  .ready-toolbar > p {
+  .event-status > p {
     margin: 0;
     line-height: 1.5;
     white-space: nowrap;
@@ -4005,7 +4006,7 @@ body[data-state="ready"] .ready {
 
   .hero-overline,
   .index-label,
-  .ready-toolbar > p,
+  .event-status > p,
   .method-title,
   .method-note span,
   .metrics span,
@@ -4534,20 +4535,54 @@ body[data-state="ready"] .ready {
 }
 
 /* State transitions leave controls and reading positions anchored. */
-.ready-toolbar {
-  position: relative;
+.event-status {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
 
-.ready-toolbar > .event-pending {
-  position: absolute;
-  inset: auto 0 -22px;
+.event-pending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-pending-copy {
+  display: grid;
+  gap: 2px;
+  line-height: 1.5;
+}
+
+.event-pending-copy strong {
+  font: inherit;
+}
+
+.event-pending-copy > span {
   font-size: 11px;
+  font-weight: 400;
   letter-spacing: 0;
-  color: var(--muted);
 }
 
+.event-pending-spinner {
+  width: 14px;
+  height: 14px;
+  border-color: currentColor;
+  border-top-color: transparent;
+}
+
+.event-pending[data-status="error"] .event-pending-spinner {
+  display: none;
+}
+
+.ready > section {
+  transition: opacity 160ms var(--ease-out);
+}
+
+body[data-switching="true"] .ready > article,
 body[data-switching="true"] .ready > section {
-  opacity: 0.55;
+  opacity: 0.6;
 }
 
 body[data-state="ready"] .day-card[data-updated="true"] {
@@ -4601,16 +4636,27 @@ body[data-input="keyboard"] .favorite-feedback {
   transition: none;
 }
 
+body[data-input="keyboard"] .ready > section,
+body[data-input="keyboard"] .hero-master-card {
+  transition: none;
+}
+
 body[data-input="keyboard"] dialog[open],
 body[data-input="keyboard"] .ready,
-body[data-input="keyboard"] .day-card {
+body[data-input="keyboard"] .day-card,
+body[data-input="keyboard"] .event-pending-spinner {
   animation: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .event-tabs::before,
-  .favorite-feedback {
+  .favorite-feedback,
+  .ready > section,
+  .hero-master-card {
     transition: none;
+  }
+  .event-pending-spinner {
+    animation: none;
   }
   .favorite-feedback[hidden] {
     transform: none;

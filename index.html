@@ -13,8 +13,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=4">
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
-  <link rel="stylesheet" href="css/style.css?v=55">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=23">
+  <link rel="stylesheet" href="css/style.css?v=56">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=24">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -284,12 +284,20 @@
 
     <section class="panel ready" id="panel-ready" hidden>
       <div class="ready-toolbar" data-weather-surface>
-        <p>下一次可见时段</p>
+        <div class="event-status">
+          <p id="event-context">下一次可见时段</p>
+          <p id="event-pending" class="event-pending" role="status" aria-atomic="true" hidden>
+            <span class="search-spinner event-pending-spinner" aria-hidden="true"></span>
+            <span class="event-pending-copy">
+              <strong id="event-pending-label"></strong>
+              <span id="event-pending-detail"></span>
+            </span>
+          </p>
+        </div>
         <div class="event-tabs liquid-glass" role="group" aria-label="霞光时段">
           <button id="tab-sunset" aria-pressed="true" data-event="sunset" type="button">晚霞</button>
           <button id="tab-sunrise" aria-pressed="false" data-event="sunrise" type="button">朝霞</button>
         </div>
-        <p id="event-pending" class="event-pending" role="status" hidden></p>
       </div>
 
       <!-- 🌟 大师级主体手帐实体卡片 (Hero Master Journal Card) -->
@@ -503,6 +511,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v13"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v14"></script>
 </body>
 </html>

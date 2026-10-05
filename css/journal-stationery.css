@@ -101,7 +101,7 @@ body[data-state="ready"] .ready-toolbar {
   margin-top: 14px;
   margin-bottom: 4px;
 }
-body[data-state="ready"] .ready-toolbar > p {
+body[data-state="ready"] .event-status > p {
   font-family: var(--font-serif) !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
@@ -166,7 +166,7 @@ body[data-light="night"][data-state="ready"] .top-actions.liquid-glass {
 body[data-light="night"][data-state="ready"] .top-actions.liquid-glass .icon-button {
   color: #e5ded2 !important;
 }
-body[data-light="night"][data-state="ready"] .ready-toolbar > p {
+body[data-light="night"][data-state="ready"] .event-status > p {
   color: #e2d5c2 !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
@@ -204,7 +204,7 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
   --card-rot: -0.35deg;
   transform: rotate(var(--card-rot));
   transform-origin: top center;
-  transition: transform 220ms var(--ease-out), box-shadow 260ms ease, filter 260ms ease;
+  transition: transform 220ms var(--ease-out), box-shadow 260ms ease, filter 260ms ease, opacity 160ms var(--ease-out);
   z-index: 15;
 }
 

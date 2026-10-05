@@ -50,7 +50,29 @@ function fadeUpdate(element) {
   });
 }
 function syncEventTabs() {
-  for (const tab of elements.tabs) tab.setAttribute("aria-pressed", String(tab.dataset.event === state.event));
+  const selectedEvent = state.pendingEvent ?? state.event;
+  for (const tab of elements.tabs) {
+    tab.setAttribute("aria-pressed", String(tab.dataset.event === selectedEvent));
+    tab.setAttribute("aria-busy", String(tab.dataset.event === state.pendingEvent));
+  }
+}
+
+function setEventPending(eventType = null, failedEvent = null) {
+  state.pendingEvent = eventType;
+  const switching = eventType !== null;
+  if (switching) document.body.dataset.switching = "true";
+  else delete document.body.dataset.switching;
+  elements.eventContext.hidden = switching || Boolean(failedEvent);
+  elements.eventPending.hidden = !switching && !failedEvent;
+  elements.eventPending.dataset.status = failedEvent ? "error" : "loading";
+  const targetLabel = (eventType ?? failedEvent) === "sunset" ? "晚霞" : "朝霞";
+  elements.eventPendingLabel.textContent = switching ? `正在读取${targetLabel}` : failedEvent ? `${targetLabel}读取未果` : "";
+  elements.eventPendingDetail.textContent = switching || failedEvent ? `暂留${state.event === "sunset" ? "晚霞" : "朝霞"}手记` : "";
+  for (const content of elements.forecastContent) {
+    content.inert = switching;
+    content.setAttribute("aria-busy", String(switching));
+  }
+  syncEventTabs();
 }
 const panels = ["welcome", "loading", "ready", "error"];
 createWeatherFx($("weather-canvas"), {
@@ -163,6 +185,9 @@ const elements = {
   lunarCellAlt: $("lunar-cell-alt"), lunarCellAz: $("lunar-cell-az"),
   lunarDialogAdvice: $("lunar-dialog-advice"), lunarDialogStamp: $("lunar-dialog-stamp"),
   tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
+  eventContext: $("event-context"), eventPending: $("event-pending"),
+  eventPendingLabel: $("event-pending-label"), eventPendingDetail: $("event-pending-detail"),
+  forecastContent: Array.from($("panel-ready").children).filter((element) => element.matches("article, section")),
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
@@ -198,6 +223,7 @@ const state = {
   place: null,
   bundle: null,
   event: "sunset",
+  pendingEvent: null,
   stale: false,
   refreshing: false,
   refreshFailed: false,
@@ -267,6 +293,7 @@ function setPanel(name) {
 }
 
 function setBusy(busy) {
+  elements.refresh.disabled = busy;
   elements.refresh.classList.toggle("spin", busy);
   elements.refresh.setAttribute("aria-busy", String(busy));
 }
@@ -786,8 +813,8 @@ function renderWeek(bundle) {
 }
 
 function updateSourceStatus() {
-  elements.source.textContent = state.refreshing ? "更新中" : state.refreshFailed ? "更新未果 · 沿用先前记录" : state.stale ? "先前记录" : "实时数据";
-  elements.source.dataset.status = state.refreshing ? "loading" : state.refreshFailed ? "error" : state.stale ? "stale" : "live";
+  elements.source.textContent = state.pendingEvent ? `读取${state.pendingEvent === "sunset" ? "晚霞" : "朝霞"}中` : state.refreshing ? "更新中" : state.refreshFailed ? "更新未果 · 沿用先前记录" : state.stale ? "先前记录" : "实时数据";
+  elements.source.dataset.status = state.pendingEvent || state.refreshing ? "loading" : state.refreshFailed ? "error" : state.stale ? "stale" : "live";
 }
 
 function announceReady() {
@@ -836,8 +863,7 @@ function renderReady(cacheAge = 0) {
   if (elements.entryTag) {
     elements.entryTag.textContent = `${formatEventDate(eventTime, timeZone)} · ${eventLabel}观测手记`;
   }
-  delete document.body.dataset.switching;
-  $("event-pending").hidden = true;
+  setEventPending();
   elements.score.textContent = String(score);
   if (!wasReady) elements.week.replaceChildren();
   elements.band.textContent = indexBand(score);
@@ -876,8 +902,7 @@ function renderReady(cacheAge = 0) {
 
 function showError(message) {
   setBusy(false);
-  delete document.body.dataset.switching;
-  $("event-pending").hidden = true;
+  setEventPending();
   elements.status.textContent = "";
   elements.source.dataset.status = "error";
   elements.errorText.textContent = message;
@@ -889,25 +914,34 @@ function showError(message) {
   });
 }
 
-async function loadPlace(place, { preferCache = false, force = false } = {}) {
+async function loadPlace(place, { eventType = state.pendingEvent ?? state.event, preferCache = false, force = false } = {}) {
   const requestId = ++state.loadRequestId;
   const normalized = normalizePlace(place);
   if (!normalized) return showError("未获取到有效地点信息，请重新搜索");
-  const eventType = state.event;
   const keepReady = document.body.dataset.state === "ready"
     && state.bundle && placeIdentity(state.bundle.place) === placeIdentity(normalized);
   const sameReady = keepReady && state.bundle.eventType === eventType;
-  delete document.body.dataset.switching;
-  $("event-pending").hidden = true;
+  const cancelledSwitch = sameReady && state.pendingEvent !== null && !force;
+  setEventPending();
   state.place = normalized;
   storage.set(PLACE_KEY, normalized);
-  if (!sameReady) {
+  if (!keepReady) {
+    state.event = eventType;
     elements.placeName.textContent = normalized.name;
     elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${normalized.name}`);
+  }
+  if (cancelledSwitch) {
+    state.refreshing = false;
+    setBusy(false);
+    updateSourceStatus();
+    updateTicker(currentEventTime());
+    announceReady();
+    return;
   }
   const cached = readValidCache(normalized, eventType);
   if (!force && preferCache && cached) {
     state.bundle = cached.bundle;
+    state.event = eventType;
     state.stale = true;
     state.refreshing = false;
     state.refreshFailed = false;
@@ -925,13 +959,10 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
   if (!eventTime) return showError("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
   if (keepReady && !sameReady) {
     stopTicker();
-    document.body.dataset.switching = "true";
-    $("event-pending").textContent = `正在测算最新${eventType === "sunset" ? "晚霞" : "朝霞"}天象，手札稍后翻页…`;
-    $("event-pending").hidden = false;
-    syncEventTabs();
+    setEventPending(eventType);
+    updateSourceStatus();
   }
   state.refreshing = sameReady;
-  state.refreshFailed = false;
   if (sameReady) {
     updateSourceStatus();
     elements.status.textContent = `正在更新${normalized.name}${eventType === "sunset" ? "晚霞" : "朝霞"}预报`;
@@ -944,8 +975,10 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
     const bundle = await fetchForecastBundle(normalized, eventType, eventTime);
     if (requestId !== state.loadRequestId) return;
     state.bundle = bundle;
+    state.event = eventType;
     state.stale = false;
     state.refreshing = false;
+    state.refreshFailed = false;
     writeCache(bundle);
     if (renderReady()) {
       announceReady();
@@ -954,21 +987,22 @@ async function loadPlace(place, { preferCache = false, force = false } = {}) {
   } catch (error) {
     if (requestId !== state.loadRequestId) return;
     state.refreshing = false;
-    state.refreshFailed = true;
     if (keepReady) {
-      state.event = state.bundle.eventType;
-      delete document.body.dataset.switching;
-      $("event-pending").hidden = true;
-      syncEventTabs();
+      if (sameReady) {
+        state.stale = true;
+        state.refreshFailed = true;
+      }
+      setEventPending(null, sameReady ? null : eventType);
       updateTicker(currentEventTime());
-      state.stale = true;
       updateSourceStatus();
       announceReady();
     } else {
       const fallback = readValidCache(normalized, eventType);
+      state.refreshFailed = true;
       if (fallback) {
         state.stale = true;
         state.bundle = fallback.bundle;
+        state.event = eventType;
         if (renderReady(fallback.age)) {
           announceReady();
           focusNewResult();
@@ -1817,10 +1851,9 @@ elements.refresh.addEventListener("click", () => state.place && loadPlace(state.
 elements.retry.addEventListener("click", () => state.place ? loadPlace(state.place, { force: true }) : openPlaces());
 for (const tab of elements.tabs) {
   tab.addEventListener("click", () => {
-    if (tab.dataset.event === state.event || !state.place) return;
+    if (tab.dataset.event === (state.pendingEvent ?? state.event) || !state.place) return;
     triggerHaptic(10);
-    state.event = tab.dataset.event;
-    loadPlace(state.place, { preferCache: true });
+    loadPlace(state.place, { eventType: tab.dataset.event, preferCache: true });
   });
 }
 
