@@ -8,6 +8,11 @@ import {
   nextEvent,
   scoreSky,
   sealFor,
+  scoreSunDisc,
+  sunDiscPhenomenon,
+  sealForSunDisc,
+  reasonsForSunDisc,
+  photographicAdviceForSunDisc,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -257,4 +262,90 @@ test("月球屏幕映射与月相矢量 SVG 路径生成", () => {
   assert.ok(halfWanSvg.startsWith("M 50 10"));
   assert.ok(halfWanSvg.includes("A 40 40 0 0 0 50 90"));
 });
+
+test("晴空万里时日轮评分达到 90 分以上且霞光处于较低分", () => {
+  const clearSky0 = {
+    low: 0, mid: 0, high: 0, pathLow: 0,
+    vis: 35_000, rh: 40, precip: 0, aod: 0.08, pm25: 10
+  };
+  const sunScore = scoreSunDisc(clearSky0);
+  const glowScore = scoreSky(clearSky0);
+
+  assert.ok(sunScore >= 90, `晴空日轮评分应 >= 90，实测 ${sunScore}`);
+  assert.ok(glowScore <= 55, `晴空无云霞光评分应处于中低分段，实测 ${glowScore}`);
+  assert.ok(sunScore - glowScore >= 35, `日轮评分应显著高于无云霞光评分，差值实测 ${sunScore - glowScore}`);
+});
+
+test("厚重低云或降水严重压制日轮观赏得分并触发地平吞日", () => {
+  const overcastHorizon = {
+    low: 55, mid: 20, high: 10, pathLow: 60,
+    vis: 12_000, rh: 70, precip: 0, aod: 0.2
+  };
+  const rainHorizon = {
+    low: 10, mid: 10, high: 10, pathLow: 10,
+    vis: 15_000, rh: 85, precip: 1.5, aod: 0.2
+  };
+
+  const overcastScore = scoreSunDisc(overcastHorizon);
+  assert.ok(overcastScore <= 18, `地平厚低云应压制在 18 分以下，实测 ${overcastScore}`);
+  const phenOvercast = sunDiscPhenomenon(overcastHorizon, overcastScore);
+  assert.equal(phenOvercast.key, "swallowed");
+  assert.equal(sealForSunDisc(overcastScore, phenOvercast).text, "吞日");
+
+  const rainScore = scoreSunDisc(rainHorizon);
+  assert.ok(rainScore <= 10, `降水应压制在 10 分以下，实测 ${rainScore}`);
+  const phenRain = sunDiscPhenomenon(rainHorizon, rainScore);
+  assert.equal(phenRain.key, "swallowed");
+});
+
+test("适度气溶胶与通透地平准确判定为红润咸蛋黄", () => {
+  const eggYolkSky = {
+    low: 4, mid: 5, high: 10, pathLow: 6,
+    vis: 18_000, rh: 55, precip: 0, aod: 0.26, pm25: 45
+  };
+  const score = scoreSunDisc(eggYolkSky);
+  assert.ok(score >= 80, `咸蛋黄天气日轮评分应较高，实测 ${score}`);
+
+  const phen = sunDiscPhenomenon(eggYolkSky, score);
+  assert.equal(phen.key, "egg_yolk");
+  assert.equal(phen.name, "红润咸蛋黄");
+  assert.equal(phen.icon, "🍳");
+
+  const seal = sealForSunDisc(score, phen);
+  assert.deepEqual(seal, { text: "丹曦", sub: "融融红日" });
+
+  const reasons = reasonsForSunDisc(eggYolkSky, phen);
+  assert.ok(reasons.some(r => r.includes("消光") || r.includes("红润")));
+
+  const advice = photographicAdviceForSunDisc(eggYolkSky, score, phen, "sunset");
+  assert.ok(advice.includes("咸蛋黄") || advice.includes("红艳"));
+});
+
+test("极度清朗无污染触发澄金贯日", () => {
+  const crispSky = {
+    low: 0, mid: 0, high: 5, pathLow: 0,
+    vis: 45_000, rh: 30, precip: 0, aod: 0.06, pm25: 8
+  };
+  const score = scoreSunDisc(crispSky);
+  assert.ok(score >= 90);
+
+  const phen = sunDiscPhenomenon(crispSky, score);
+  assert.equal(phen.key, "crisp_gold");
+  assert.equal(phen.name, "澄金贯日");
+  assert.equal(sealForSunDisc(score, phen).text, "澄金");
+});
+
+test("中高云开合触发云隙漏金", () => {
+  const breakSky = {
+    low: 15, mid: 45, high: 40, pathLow: 18,
+    vis: 25_000, rh: 50, precip: 0, aod: 0.12, pm25: 15
+  };
+  const score = scoreSunDisc(breakSky);
+  assert.ok(score >= 50);
+
+  const phen = sunDiscPhenomenon(breakSky, score);
+  assert.equal(phen.key, "crepuscular");
+  assert.equal(sealForSunDisc(score, phen).text, "云隙");
+});
+
 

@@ -585,6 +585,253 @@ export function waitAdvice(score) {
   return "不建议专程等待";
 }
 
+/**
+ * 日出 / 落日 太阳圆盘观赏指数 (Sun Disc Visibility & Aesthetics Score)
+ * 核心气象逻辑：
+ * 1. 0% 云量（晴空万里）是观日出/落日的顶级条件，基础分为 92 分；
+ * 2. 低云（Low Cloud）与远端光路低云（pathLow）是太阳圆盘在地平线（0°~5°）能否露头的致命杀手，惩罚权重极高；
+ * 3. 中云较多时遮挡太阳，高云薄卷云少量无碍；
+ * 4. 降水、重度霾、大雾等强行封顶。
+ */
+export function scoreSunDisc(metrics) {
+  const low = metrics?.low ?? 0;
+  const mid = metrics?.mid ?? 0;
+  const high = metrics?.high ?? 0;
+  const pathLow = metrics?.pathLow ?? low;
+  const precip = metrics?.precip ?? 0;
+
+  // 基础分：晴空即享高分
+  let score = 92;
+
+  // 低云惩罚：太阳在地平线附近的直线视线通透度
+  if (low > 8) {
+    score -= Math.min(50, (low - 8) * 1.1);
+  }
+  if (pathLow > 10) {
+    score -= Math.min(40, (pathLow - 10) * 0.9);
+  }
+
+  // 中云遮挡
+  if (mid > 20) {
+    score -= Math.min(25, (mid - 20) * 0.45);
+  }
+
+  // 高云微调：少量薄高云带来层次，过厚则雾化太阳
+  if (high <= 20) {
+    score += 2;
+  } else if (high > 60) {
+    score -= Math.min(12, (high - 60) * 0.3);
+  }
+
+  // 能见度与水汽
+  if (metrics?.vis != null) {
+    if (metrics.vis >= 30_000) score += 4;
+    else if (metrics.vis < 10_000) score -= Math.min(18, (10_000 - metrics.vis) / 600);
+  }
+  if (metrics?.rh != null && metrics.rh > 80) {
+    score -= Math.min(10, (metrics.rh - 80) * 0.5);
+  }
+
+  // 严重气溶胶 / 灰霾阻日
+  if (metrics?.aod != null && metrics.aod > 0.55) {
+    score -= Math.min(22, (metrics.aod - 0.55) * 45);
+  }
+  if (metrics?.pm25 != null && metrics.pm25 > 80) {
+    score -= Math.min(16, (metrics.pm25 - 80) / 4);
+  }
+
+  // 强阻断判定：厚重低云或阴天封顶
+  const overcastLow = low > 40 || pathLow > 45;
+  if (overcastLow) {
+    score = Math.min(score, 18);
+  }
+  if (low > 70 && mid > 50) {
+    score = Math.min(score, 8);
+  }
+
+  // 降水直接封顶
+  if (precip > 0.1) {
+    score = Math.min(score, 10);
+  }
+
+  return Math.max(2, Math.min(99, Math.round(score)));
+}
+
+/**
+ * 日轮视觉形态智能研判 (Sun Disc Phenomenon)
+ * 返回形态分类及属性：
+ * - egg_yolk: 🍳 红润咸蛋黄 (Soft Crimson Disc)
+ * - crisp_gold: ☀️ 澄金贯日 (Crisp Golden Disc)
+ * - crepuscular: ⛅ 云隙漏金 / 丁达尔 (Dramatic Sunbreak)
+ * - swallowed: 🌫️ 地平吞日 (Swallowed by Horizon Clouds)
+ * - clear_disc: 🌤️ 晴晖丽日 (Clear Disc)
+ */
+export function sunDiscPhenomenon(metrics, score) {
+  const low = metrics?.low ?? 0;
+  const pathLow = metrics?.pathLow ?? low;
+  const mid = metrics?.mid ?? 0;
+  const high = metrics?.high ?? 0;
+  const precip = metrics?.precip ?? 0;
+  const aod = metrics?.aod;
+  const pm25 = metrics?.pm25;
+  const vis = metrics?.vis;
+  const rh = metrics?.rh;
+
+  // 1. 地平吞日 (Swallowed)
+  if (score < 40 || precip > 0.2 || low >= 45 || pathLow >= 50 || (aod != null && aod >= 0.7) || (pm25 != null && pm25 >= 115)) {
+    return {
+      key: "swallowed",
+      name: "地平吞日",
+      sub: "隐入云墙",
+      icon: "🌫️",
+      title: "地平低云遮蔽 · 难见日轮入地",
+      desc: precip > 0.2
+        ? "降水伴随低空阴云，地平视线完全受阻"
+        : low >= 45 || pathLow >= 50
+        ? "地平线方向低云堆叠，太阳落山前恐提前没入云墙"
+        : "低层尘霾较重，太阳未及地平便已消散失色"
+    };
+  }
+
+  // 2. 红润咸蛋黄 (Egg Yolk)
+  // 条件：低云少（能看到地平），且底层有适量消光气溶胶或适度水汽过滤强光
+  const hasExtinction = (aod != null && aod >= 0.16 && aod <= 0.45)
+    || (pm25 != null && pm25 >= 30 && pm25 <= 80)
+    || (rh != null && rh >= 55 && vis != null && vis >= 10_000 && vis <= 25_000);
+  if (score >= 65 && low <= 20 && pathLow <= 25 && hasExtinction) {
+    return {
+      key: "egg_yolk",
+      name: "红润咸蛋黄",
+      sub: "融融红日",
+      icon: "🍳",
+      title: "适度消光滤去眩光 · 柔润可直视",
+      desc: "近地气溶胶与水汽自然散射刺目白光，太阳退去强芒，呈现肉眼可直视的温润红盘"
+    };
+  }
+
+  // 3. 澄金贯日 (Crisp Gold)
+  // 条件：低云极低，能见度极高，空气纯净低AOD，光芒万道
+  const isSuperClear = (aod == null || aod < 0.16) && (pm25 == null || pm25 < 25) && (vis == null || vis >= 25_000);
+  if (score >= 75 && low <= 12 && pathLow <= 15 && isSuperClear) {
+    return {
+      key: "crisp_gold",
+      name: "澄金贯日",
+      sub: "极目无遮",
+      icon: "☀️",
+      title: "极净大气澄澈无瑕 · 金乌朗曜",
+      desc: "地平线空旷无障，大气极其通透，金盘光芒万丈，地平呈现纯净绚丽金橙梯度"
+    };
+  }
+
+  // 4. 云隙漏金 (Crepuscular Rays)
+  // 条件：中高云 25%~60%，低云不过分厚，有云缝投射光柱
+  if (score >= 50 && low <= 30 && (mid >= 25 || high >= 35)) {
+    return {
+      key: "crepuscular",
+      name: "云隙漏金",
+      sub: "破云漏光",
+      icon: "⛅",
+      title: "云际层叠光影交错 · 丁达尔神光",
+      desc: "中高云隙间洒落束束流光金柱，光影明暗交织，具强烈油画质感"
+    };
+  }
+
+  // 5. 常规晴好日轮 (Clear Disc)
+  return {
+    key: "clear_disc",
+    name: "晴晖丽日",
+    sub: "日轮分明",
+    icon: "🌅",
+    title: "地平通透平稳 · 完整目送晨昏",
+    desc: "地平视线通畅，太阳轮廓明晰，可安然静赏日出日落全过程"
+  };
+}
+
+/**
+ * 日轮朱砂印章研判
+ */
+export function sealForSunDisc(score, phenomenon) {
+  if (phenomenon) {
+    if (phenomenon.key === "egg_yolk") return { text: "丹曦", sub: "融融红日" };
+    if (phenomenon.key === "crisp_gold") return { text: "澄金", sub: "极目无遮" };
+    if (phenomenon.key === "crepuscular") return { text: "云隙", sub: "破云漏光" };
+    if (phenomenon.key === "swallowed") return { text: "吞日", sub: "隐入云墙" };
+  }
+  if (score >= 85) return { text: "圆明", sub: "金乌朗曜" };
+  if (score >= 70) return { text: "清晖", sub: "日轮分明" };
+  if (score >= 50) return { text: "薄霭", sub: "微光映影" };
+  if (score >= 30) return { text: "敛曜", sub: "地平云重" };
+  return { text: "微茫", sub: "日隐重云" };
+}
+
+/**
+ * 日轮天空线索 (Reasons for Sun Disc)
+ */
+export function reasonsForSunDisc(metrics, phenomenon) {
+  const reasons = [];
+  const pct = (value) => `${Math.round(value)}%`;
+  const low = metrics?.low ?? 0;
+  const pathLow = metrics?.pathLow ?? low;
+  const mid = metrics?.mid ?? 0;
+  const high = metrics?.high ?? 0;
+
+  if (low <= 15 && pathLow <= 15) {
+    reasons.push(`地平低云仅 ${pct(Math.max(low, pathLow))}，视线直达天际无遮挡`);
+  } else if (low > 40 || pathLow > 45) {
+    reasons.push(`太阳方向低云 ${pct(Math.max(low, pathLow))}，太阳易提前沉入云层`);
+  } else {
+    reasons.push(`低云 ${pct(low)}，地平附近稍有零散云气扰动`);
+  }
+
+  if (phenomenon?.key === "egg_yolk") {
+    reasons.push("底层气溶胶适度消光，太阳柔和不刺目，呈红润圆盘");
+  } else if (phenomenon?.key === "crisp_gold") {
+    reasons.push(`能见度 ${metrics?.vis ? Math.round(metrics.vis / 1000) + " km" : "极佳"}，空气纤尘不染，金光夺目`);
+  } else if (phenomenon?.key === "crepuscular") {
+    reasons.push(`中云 ${pct(mid)}，云块开合易形成破空云隙光柱`);
+  } else if (high > 50) {
+    reasons.push(`高云 ${pct(high)}，太阳轮廓略带薄纱晕染`);
+  }
+
+  if (metrics?.vis != null) {
+    if (metrics.vis >= 30_000) reasons.push("大气极其通透，地平线轮廓如剪纸般清晰");
+    else if (metrics.vis < 10_000) reasons.push(`能见度仅 ${Math.round(metrics.vis / 1000)} km，远方天空泛白略浑浊`);
+  }
+
+  if (metrics?.rh != null && metrics.rh > 75) {
+    reasons.push(`湿度 ${pct(metrics.rh)}，水汽较盛可能加深地平薄霭`);
+  }
+
+  if (metrics?.precip != null && metrics.precip > 0) {
+    reasons.push(`降水 ${metrics.precip.toFixed(1)} mm，云遮雾障无缘观日`);
+  }
+
+  return reasons.slice(0, 5);
+}
+
+/**
+ * 日轮摄影与观赏建议
+ */
+export function photographicAdviceForSunDisc(metrics, score, phenomenon, eventType) {
+  const eventLabel = eventType === "sunrise" ? "日出" : "日落";
+  if (phenomenon?.key === "egg_yolk") {
+    return `${eventLabel}圆润红艳如咸蛋黄，光线柔和，长焦与地景特写绝佳`;
+  }
+  if (phenomenon?.key === "crisp_gold") {
+    return "万里无云、地平通透至极，宜用小光圈拍摄金阳星芒与大地剪影";
+  }
+  if (phenomenon?.key === "crepuscular") {
+    return "云层开合有致，极易偶遇丁达尔云隙光，适宜广角捕捉神圣光柱";
+  }
+  if (phenomenon?.key === "swallowed") {
+    return `地平低云厚重，太阳恐怕提前隐入云墙，难见完整${eventLabel}`;
+  }
+  if (score >= 75) {
+    return `地平视线通畅，${eventLabel}过程完整清晰，适宜驻足静静守候`;
+  }
+  return "低空云气略显杂乱，可留意太阳穿出云隙的短暂瞬间";
+}
+
 export function nextEvent(type, lat, lng, from = new Date()) {
   if (type !== "sunset" && type !== "sunrise") throw new TypeError('事件类型必须是 "sunset" 或 "sunrise"');
   const graceStart = from.getTime() - 30 * 60 * 1000;

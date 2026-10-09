@@ -7,6 +7,11 @@ import {
   reasonsFor,
   scoreSky,
   sealFor,
+  scoreSunDisc,
+  sunDiscPhenomenon,
+  sealForSunDisc,
+  reasonsForSunDisc,
+  photographicAdviceForSunDisc,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -24,6 +29,7 @@ import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=7";
 
 const PLACE_KEY = "firecloud:place:v1";
 const FAVORITES_KEY = "firecloud:favorites:v1";
+const VIEW_MODE_KEY = "firecloud:view_mode:v1";
 const DATA_KEY = "firecloud:data:v1";
 const CACHE_MAX_AGE = 12 * 60 * 60 * 1000;
 const CACHE_LIMIT = 16;
@@ -188,6 +194,26 @@ const elements = {
   eventContext: $("event-context"), eventPending: $("event-pending"),
   eventPendingLabel: $("event-pending-label"), eventPendingDetail: $("event-pending-detail"),
   forecastContent: Array.from($("panel-ready").children).filter((element) => element.matches("article, section")),
+  modeTabs: Array.from(document.querySelectorAll(".mode-tab")),
+  modeTabGlow: $("mode-tab-glow"),
+  modeTabSunDisc: $("mode-tab-sundisc"),
+  indexLabel: $("index-label"),
+  indexScale: $("index-scale"),
+  companionPill: $("hero-companion-pill"),
+  companionIcon: $("companion-icon"),
+  companionText: $("companion-text"),
+  sunDiscBlock: $("sun-disc-block"),
+  sunDiscCard: $("sun-disc-card"),
+  sunDiscIcon: $("sun-disc-stamp-icon"),
+  sunDiscName: $("sun-disc-stamp-name"),
+  sunDiscScoreVal: $("sun-disc-score-val"),
+  sunDiscVerdict: $("sun-disc-verdict"),
+  factorHorizon: $("factor-horizon"),
+  factorHorizonHint: $("factor-horizon-hint"),
+  factorExtinction: $("factor-extinction"),
+  factorExtinctionHint: $("factor-extinction-hint"),
+  factorProcess: $("factor-process"),
+  factorProcessHint: $("factor-process-hint"),
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
@@ -224,6 +250,7 @@ const state = {
   bundle: null,
   event: "sunset",
   pendingEvent: null,
+  viewMode: storage.get(VIEW_MODE_KEY, "glow"),
   stale: false,
   refreshing: false,
   refreshFailed: false,
@@ -739,11 +766,17 @@ function renderWeek(bundle) {
         appendCard(card);
         continue;
       }
-      const score = scoreSky(metrics);
+      const glowScore = scoreSky(metrics);
+      const sunScore = scoreSunDisc(metrics);
+      const sunPhen = sunDiscPhenomenon(metrics, sunScore);
+      const isSunDiscView = state.viewMode === "sundisc";
+      const score = isSunDiscView ? sunScore : glowScore;
       const tier = tierFor(score);
-      const advice = photographicAdviceFor(metrics, score, state.event);
+      const advice = isSunDiscView
+        ? photographicAdviceForSunDisc(metrics, sunScore, sunPhen, state.event)
+        : photographicAdviceFor(metrics, glowScore, state.event);
       const formattedDate = formatter.format(eventTime);
-      const seal = sealFor(score);
+      const seal = isSunDiscView ? sealForSunDisc(sunScore, sunPhen) : sealFor(glowScore);
       const miniSeal = seal.text;
 
       card.dataset.tier = tier;
@@ -755,7 +788,10 @@ function renderWeek(bundle) {
         <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
         <div class="day-date-row">
           <span class="day-card-date">${formattedDate}</span>
-          <span class="day-mini-seal">${miniSeal}</span>
+          <div class="day-seals-wrap">
+            <span class="day-mini-seal">${miniSeal}</span>
+            <span class="day-sundisc-seal" title="日轮视相：${sunPhen.name}">${sunPhen.icon}</span>
+          </div>
         </div>
         <div class="day-card-watercolor"></div>
         <div class="day-score-block">
@@ -770,7 +806,7 @@ function renderWeek(bundle) {
 
       card.setAttribute("tabindex", "0");
       card.setAttribute("role", "button");
-      card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，霞光指数 ${score}分，${miniSeal}，${advice}`);
+      card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，${isSunDiscView ? "日轮" : "霞光"}指数 ${score}分，${miniSeal}，${advice}`);
       const selectCard = () => {
         triggerHaptic(12);
         elements.week.querySelectorAll(".day-journal-card").forEach(c => c.classList.remove("is-active-day"));
@@ -818,9 +854,11 @@ function updateSourceStatus() {
 }
 
 function announceReady() {
-  const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
+  const isSunDiscView = state.viewMode === "sundisc";
+  const eventLabel = state.event === "sunset" ? (isSunDiscView ? "落日" : "晚霞") : (isSunDiscView ? "日出" : "朝霞");
+  const modelLabel = isSunDiscView ? "日轮指数" : "霞光指数";
   const freshness = state.refreshFailed ? "更新未果，沿用先前观测记录" : state.stale ? "先前观测记录" : "实时数据";
-  elements.status.textContent = `${state.place.name}，${eventLabel}，霞光指数 ${elements.score.textContent}，${freshness}`;
+  elements.status.textContent = `${state.place.name}，${eventLabel}，${modelLabel} ${elements.score.textContent}，${freshness}`;
 }
 
 function focusNewResult() {
@@ -846,10 +884,59 @@ function renderReady(cacheAge = 0) {
   const changing = [elements.eventTime, elements.eventDate, elements.score, elements.band,
     elements.verdict, elements.reasons, ...Object.values(elements.metrics)];
   const previousText = changing.map((element) => element.textContent);
-  const score = scoreSky(metrics);
-  document.body.dataset.tier = tierFor(score);
+
+  const glowScore = scoreSky(metrics);
+  const sunScore = scoreSunDisc(metrics);
+  const sunPhen = sunDiscPhenomenon(metrics, sunScore);
+  const glowSeal = sealFor(glowScore);
+  const sunSeal = sealForSunDisc(sunScore, sunPhen);
+  const glowAdvice = photographicAdviceFor(metrics, glowScore, state.event);
+  const sunAdvice = photographicAdviceForSunDisc(metrics, sunScore, sunPhen, state.event);
+
+  // 更新 02 日轮视相手札区块
+  if (elements.sunDiscIcon) elements.sunDiscIcon.textContent = sunPhen.icon;
+  if (elements.sunDiscName) elements.sunDiscName.textContent = sunPhen.name;
+  if (elements.sunDiscScoreVal) elements.sunDiscScoreVal.innerHTML = `${sunScore}<small>分</small>`;
+  if (elements.sunDiscVerdict) elements.sunDiscVerdict.textContent = sunPhen.desc;
+
+  const horizonLow = Math.max(metrics.low ?? 0, metrics.pathLow ?? 0);
+  if (elements.factorHorizon) {
+    elements.factorHorizon.textContent = horizonLow <= 10 ? "极清朗" : horizonLow <= 25 ? "微云轻扰" : "低云重叠";
+  }
+  if (elements.factorHorizonHint) {
+    elements.factorHorizonHint.textContent = `地平低云 ${Math.round(horizonLow)}%`;
+  }
+  if (elements.factorExtinction) {
+    elements.factorExtinction.textContent = sunPhen.key === "egg_yolk"
+      ? "柔润消光"
+      : sunPhen.key === "crisp_gold"
+      ? "澄澈金芒"
+      : sunPhen.key === "swallowed"
+      ? "云霾吞蔽"
+      : "明朗清晖";
+  }
+  if (elements.factorExtinctionHint) {
+    elements.factorExtinctionHint.textContent = metrics.aod != null
+      ? `AOD ${metrics.aod.toFixed(2)}`
+      : (metrics.vis ? `能见度 ${Math.round(metrics.vis / 1000)}km` : "适度散射");
+  }
+  if (elements.factorProcess) {
+    elements.factorProcess.textContent = sunScore >= 75 ? "完整目送" : sunScore >= 50 ? "大致可见" : "提前隐没";
+  }
+  if (elements.factorProcessHint) {
+    elements.factorProcessHint.textContent = state.event === "sunrise" ? "破晓跃地视线" : "沉入地平视线";
+  }
+
+  // 研判视角分流 (glow vs sundisc)
+  const isSunDiscView = state.viewMode === "sundisc";
+  const activeScore = isSunDiscView ? sunScore : glowScore;
+  const activeSeal = isSunDiscView ? sunSeal : glowSeal;
+  const activeAdvice = isSunDiscView ? sunAdvice : glowAdvice;
+  const activeReasons = isSunDiscView ? reasonsForSunDisc(metrics, sunPhen) : reasonsFor(metrics);
+
+  document.body.dataset.tier = tierFor(activeScore);
   const { condition } = applyWeatherBackground(state.bundle) ?? {};
-  const eventLabel = state.event === "sunset" ? "晚霞" : "朝霞";
+  const eventLabel = state.event === "sunset" ? (isSunDiscView ? "落日" : "晚霞") : (isSunDiscView ? "日出" : "朝霞");
   const timeZone = localTimeZone(state.bundle);
   const conditionSuffix = condition?.summary ? ` · ${condition.summary}` : "";
   elements.placeName.textContent = `${state.place.name}${conditionSuffix}`;
@@ -864,20 +951,47 @@ function renderReady(cacheAge = 0) {
     elements.entryTag.textContent = `${formatEventDate(eventTime, timeZone)} · ${eventLabel}观测手记`;
   }
   setEventPending();
-  elements.score.textContent = String(score);
+  elements.score.textContent = String(activeScore);
   if (!wasReady) elements.week.replaceChildren();
-  elements.band.textContent = indexBand(score);
+  elements.band.textContent = indexBand(activeScore);
+
+  if (elements.indexLabel) {
+    elements.indexLabel.textContent = isSunDiscView
+      ? (state.event === "sunrise" ? "破晓日轮综合研判" : "日落圆盘综合研判")
+      : "霞光指数综合研判";
+  }
+  if (elements.indexScale) {
+    elements.indexScale.textContent = isSunDiscView ? "地平露头与日轮模型" : "0–99 经验模型";
+  }
 
   // 朱砂印章研判与手记建议
-  const seal = sealFor(score);
-  if (elements.sealGrade) elements.sealGrade.textContent = seal.text;
-  if (elements.sealSub) elements.sealSub.textContent = seal.sub;
+  if (elements.sealGrade) elements.sealGrade.textContent = activeSeal.text;
+  if (elements.sealSub) elements.sealSub.textContent = activeSeal.sub;
+  elements.verdict.textContent = `“${activeAdvice}”`;
 
-  const adviceText = photographicAdviceFor(metrics, score, state.event);
-  elements.verdict.textContent = `“${adviceText}”`;
+  // 伴随微章
+  if (elements.companionPill) {
+    if (isSunDiscView) {
+      elements.companionIcon.textContent = "🌅";
+      elements.companionText.textContent = `霞光指数：${glowSeal.text} ${glowScore}分 · ${glowSeal.sub}`;
+      elements.companionPill.title = "点击切换至霞光余晖研判";
+    } else {
+      elements.companionIcon.textContent = sunPhen.icon;
+      elements.companionText.textContent = `日轮视相：${sunPhen.name} ${sunScore}分 · ${sunPhen.sub}`;
+      elements.companionPill.title = "点击切换至日轮视相研判";
+    }
+  }
+
+  if (elements.modeTabGlow && elements.modeTabSunDisc) {
+    elements.modeTabGlow.classList.toggle("is-active", !isSunDiscView);
+    elements.modeTabGlow.setAttribute("aria-selected", String(!isSunDiscView));
+    elements.modeTabSunDisc.classList.toggle("is-active", isSunDiscView);
+    elements.modeTabSunDisc.setAttribute("aria-selected", String(isSunDiscView));
+  }
+
   updateSourceStatus();
   elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
-  elements.reasons.replaceChildren(...reasonsFor(metrics).map((reason) => {
+  elements.reasons.replaceChildren(...activeReasons.map((reason) => {
     const chip = document.createElement("span");
     chip.textContent = reason;
     return chip;
@@ -1856,6 +1970,28 @@ for (const tab of elements.tabs) {
     loadPlace(state.place, { eventType: tab.dataset.event, preferCache: true });
   });
 }
+
+function setViewMode(mode) {
+  if (state.viewMode === mode) return;
+  triggerHaptic(12);
+  state.viewMode = mode;
+  storage.set(VIEW_MODE_KEY, mode);
+  if (state.bundle) {
+    renderReady();
+  }
+}
+
+elements.modeTabGlow?.addEventListener("click", () => setViewMode("glow"));
+elements.modeTabSunDisc?.addEventListener("click", () => setViewMode("sundisc"));
+elements.companionPill?.addEventListener("click", () => {
+  setViewMode(state.viewMode === "glow" ? "sundisc" : "glow");
+});
+elements.companionPill?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    setViewMode(state.viewMode === "glow" ? "sundisc" : "glow");
+  }
+});
 
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
 

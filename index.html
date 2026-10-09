@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
   <link rel="stylesheet" href="css/style.css?v=56">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=24">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=25">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -337,6 +337,18 @@
 
           <!-- 右侧：分值大字与朱砂印章 -->
           <div class="hero-score-col">
+            <!-- 观测视角研判切换 (霞光卷 / 日轮卷) -->
+            <div class="journal-mode-switch" role="tablist" aria-label="观测手记研判视角">
+              <button type="button" class="mode-tab is-active" id="mode-tab-glow" role="tab" aria-selected="true" data-mode="glow">
+                <span class="mode-tab-icon">🌅</span>
+                <span>霞光卷</span>
+              </button>
+              <button type="button" class="mode-tab" id="mode-tab-sundisc" role="tab" aria-selected="false" data-mode="sundisc">
+                <span class="mode-tab-icon">☀️</span>
+                <span>日轮卷</span>
+              </button>
+            </div>
+
             <div class="hero-score-main">
               <div class="score-label-row">
                 <span id="index-label">霞光指数综合研判</span>
@@ -348,6 +360,13 @@
               </div>
             </div>
             <p class="band" id="band" style="display:none;">—</p>
+
+            <!-- 伴随观测手札标贴 (点击快速切换研判视角) -->
+            <div class="hero-companion-pill" id="hero-companion-pill" role="button" tabindex="0" title="点击切换至对应研判视角">
+              <span class="companion-icon" id="companion-icon">🍳</span>
+              <span class="companion-text" id="companion-text">日轮视相：计算中…</span>
+              <span class="companion-arrow" aria-hidden="true">⇄</span>
+            </div>
 
             <!-- 实体朱砂印章 -->
             <div class="cinnabar-seal-stamp" id="seal-stamp" title="朱砂印泥 (点击触发暖阳透射)" role="button" tabindex="0" aria-label="朱砂印章，点击触发暖阳透射">
@@ -363,8 +382,48 @@
         <div class="reason-list" id="reasons"></div>
       </section>
 
+      <!-- 🌟 02 日轮视相 · 晨昏直视札记 (Sun Disc Folio Note) -->
+      <section class="section-block sun-disc-block" id="sun-disc-block" aria-labelledby="sun-disc-title">
+        <div class="section-head" data-weather-surface><div><span>02</span><h2 id="sun-disc-title">日轮视相</h2></div><p>太阳圆盘 · 咸蛋黄与地平视线研判</p></div>
+        <div class="sun-disc-specimen-card" id="sun-disc-card" data-weather-surface>
+          <div class="sun-disc-card-body">
+            <div class="sun-disc-header-row">
+              <div class="sun-disc-stamp-seal" id="sun-disc-stamp-seal">
+                <span class="sun-disc-stamp-icon" id="sun-disc-stamp-icon">🍳</span>
+                <div class="sun-disc-stamp-meta">
+                  <span class="sun-disc-stamp-tag">晨昏日轮定格</span>
+                  <strong class="sun-disc-stamp-name" id="sun-disc-stamp-name">红润咸蛋黄</strong>
+                </div>
+              </div>
+              <div class="sun-disc-score-badge">
+                <span class="score-badge-label">地平露头指数</span>
+                <strong class="score-badge-val" id="sun-disc-score-val">92<small>分</small></strong>
+              </div>
+            </div>
+            <p class="sun-disc-verdict" id="sun-disc-verdict">近地气溶胶与水汽自然散射刺目白光，太阳退去强芒，呈现肉眼可直视的温润红盘。</p>
+            <div class="sun-disc-factors-grid">
+              <div class="factor-item">
+                <span class="factor-label">地平线遮挡</span>
+                <strong class="factor-val" id="factor-horizon">—</strong>
+                <small class="factor-hint" id="factor-horizon-hint">近处远端无低云</small>
+              </div>
+              <div class="factor-item">
+                <span class="factor-label">大气消光光质</span>
+                <strong class="factor-val" id="factor-extinction">—</strong>
+                <small class="factor-hint" id="factor-extinction-hint">温润柔和可直视</small>
+              </div>
+              <div class="factor-item">
+                <span class="factor-label">日落/破晓完整度</span>
+                <strong class="factor-val" id="factor-process">—</strong>
+                <small class="factor-hint" id="factor-process-hint">沉落地平全过程</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section-block metrics-block" aria-labelledby="metrics-title">
-        <div class="section-head" data-weather-surface><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>关键气象与光路观测要素</p></div>
+        <div class="section-head" data-weather-surface><div><span>03</span><h2 id="metrics-title">观测数据</h2></div><p>关键气象与光路观测要素</p></div>
         <div class="horizontal-scroll-region" data-scroll-region>
           <div class="metrics" aria-label="天气指标">
             <article><span>低云</span><strong id="metric-low">—</strong></article>
@@ -379,7 +438,7 @@
       </section>
 
       <section class="section-block week-block" aria-labelledby="week-title">
-        <div class="section-head" data-weather-surface><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>未来一周晨昏色谱与摄影建议</p></div>
+        <div class="section-head" data-weather-surface><div><span>04</span><h2 id="week-title">未来 7 日</h2></div><p>未来一周晨昏色谱与摄影建议</p></div>
         <div class="horizontal-scroll-region" data-scroll-region>
           <div class="week-strip" id="week"></div>
         </div>
@@ -511,6 +570,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v14"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v15"></script>
 </body>
 </html>
