@@ -678,12 +678,29 @@ function weatherSymbolFor(metrics) {
   return "☀️";
 }
 
-function photographicAdviceFor(metrics, score, eventType) {
+function photographicAdviceFor(metrics, score, eventType, sunScore, sunPhen) {
   if (metrics.precip != null && metrics.precip > 0.2) return "低云堆叠且伴随降水，光路受阻，天幕暗淡";
   if (score >= 80) return "高云透光、地平光路通达，适宜寻开阔处驻足守候";
   if (score >= 65) return "中高云舒展层叠，地平光路顺畅，极利于取景记录";
   if (score >= 45) return eventType === "sunrise" ? "晨光柔和漫射，天际泛起温润渐变，适宜静心观赏" : "暮光柔和漫射，天际泛起温润渐变，适宜静心观赏";
   if ((metrics.low ?? 0) > 50) return `低云密集沉降，光线穿透困难，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现机会渺茫`;
+
+  // 智能协同：霞光虽少云，但地平通透、落日/破晓极佳时给出积极导览
+  const effectiveSunScore = Number.isFinite(sunScore) ? sunScore : scoreSunDisc(metrics);
+  const effectiveSunPhen = sunPhen ?? sunDiscPhenomenon(metrics, effectiveSunScore);
+  if (effectiveSunScore >= 75) {
+    if (effectiveSunPhen.key === "egg_yolk") {
+      return eventType === "sunrise"
+        ? "天幕云少难起彩霞，但地平通透，极适宜静候一轮红润旭日"
+        : "天幕云少难起彩霞，但地平通透，极适宜静赏一轮红润咸蛋黄";
+    }
+    if (effectiveSunPhen.key === "crisp_gold") {
+      return eventType === "sunrise"
+        ? "空中无云霞漫染，但长空如洗，极适宜静赏金盘破晓初芒"
+        : "空中无云霞漫染，但长空如洗，极适宜静赏金盘落日沉入地平";
+    }
+  }
+
   return "空中云量稀疏，难有余晖衬托，天色归于平淡";
 }
 

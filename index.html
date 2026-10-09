@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
   <link rel="stylesheet" href="css/style.css?v=56">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=25">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=26">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -327,6 +327,14 @@
               — <small id="hero-time-sub">—</small>
             </h1>
             <div class="hero-countdown-tape" id="countdown">—</div>
+
+            <!-- 伴随观测手札标贴 (点击快速切换研判视角) -->
+            <div class="hero-companion-pill" id="hero-companion-pill" role="button" tabindex="0" title="点击切换至对应研判视角">
+              <span class="companion-icon" id="companion-icon">🍳</span>
+              <span class="companion-text" id="companion-text">日轮视相：计算中…</span>
+              <span class="companion-arrow" aria-hidden="true">⇄ 切换</span>
+            </div>
+
             <p class="hero-verdict-quote" id="verdict">—</p>
             <div class="data-meta">
               <span id="data-source">实时数据</span>
@@ -360,13 +368,6 @@
               </div>
             </div>
             <p class="band" id="band" style="display:none;">—</p>
-
-            <!-- 伴随观测手札标贴 (点击快速切换研判视角) -->
-            <div class="hero-companion-pill" id="hero-companion-pill" role="button" tabindex="0" title="点击切换至对应研判视角">
-              <span class="companion-icon" id="companion-icon">🍳</span>
-              <span class="companion-text" id="companion-text">日轮视相：计算中…</span>
-              <span class="companion-arrow" aria-hidden="true">⇄</span>
-            </div>
 
             <!-- 实体朱砂印章 -->
             <div class="cinnabar-seal-stamp" id="seal-stamp" title="朱砂印泥 (点击触发暖阳透射)" role="button" tabindex="0" aria-label="朱砂印章，点击触发暖阳透射">
@@ -570,6 +571,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v15"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v16"></script>
 </body>
 </html>

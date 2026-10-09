@@ -522,13 +522,15 @@ body[data-light="night"] .hero-lunar-badge {
 .journal-mode-switch {
   display: inline-flex;
   align-items: center;
-  background: rgba(236, 227, 213, 0.75);
-  border: 1px solid rgba(195, 175, 145, 0.55);
+  background: rgba(238, 230, 218, 0.88);
+  border: 1.5px solid rgba(195, 175, 145, 0.65);
   border-radius: 20px;
-  padding: 2px;
-  gap: 2px;
-  margin-bottom: 8px;
-  box-shadow: inset 0 1px 2px rgba(60, 45, 30, 0.06);
+  padding: 3px;
+  gap: 3px;
+  margin-bottom: 12px;
+  box-shadow: 
+    0 2px 6px rgba(60, 45, 30, 0.06),
+    inset 0 1px 2px rgba(60, 45, 30, 0.05);
 }
 
 .mode-tab {
@@ -549,7 +551,11 @@ body[data-light="night"] .hero-lunar-badge {
 
 .mode-tab:hover {
   color: #b53826;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.mode-tab:active {
+  transform: scale(0.96);
 }
 
 .mode-tab.is-active {
@@ -564,46 +570,64 @@ body[data-light="night"] .hero-lunar-badge {
   font-size: 13px;
 }
 
-/* 伴随观测手札标贴 (Companion Pill) */
+/* 伴随观测手札标贴 (Companion Pill - 置于左侧倒计时与评语之间，绝不与印章重叠) */
 .hero-companion-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 4px 10px;
-  background: rgba(245, 238, 226, 0.85);
-  border: 1px dashed rgba(195, 175, 145, 0.75);
+  gap: 7px;
+  margin: 10px 0 8px;
+  padding: 5px 12px;
+  background: rgba(248, 242, 232, 0.95);
+  border: 1px dashed rgba(195, 175, 145, 0.85);
   border-radius: 6px;
   font-family: var(--font-serif);
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #5c4a3b;
   cursor: pointer;
   width: fit-content;
+  max-width: 100%;
   transition: all 200ms ease;
   user-select: none;
+  box-shadow: 0 1px 3px rgba(60, 45, 30, 0.04);
 }
 
 .hero-companion-pill:hover {
-  background: rgba(253, 248, 238, 0.98);
+  background: #ffffff;
   border-color: #b53826;
+  border-style: solid;
   color: #b53826;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(60, 45, 30, 0.08);
+  box-shadow: 0 3px 10px rgba(189, 70, 50, 0.12);
+}
+
+.hero-companion-pill:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .companion-icon {
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.companion-text {
+  letter-spacing: 0.02em;
 }
 
 .companion-arrow {
-  font-size: 11px;
-  opacity: 0.6;
-  transition: transform 180ms ease;
+  font-size: 10.5px;
+  font-family: var(--font-serif);
+  background: rgba(189, 70, 50, 0.1);
+  color: #b53826;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  margin-left: 2px;
+  letter-spacing: 0.04em;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 .hero-companion-pill:hover .companion-arrow {
-  transform: translateX(2px);
-  opacity: 1;
+  background: #b53826;
+  color: #ffffff;
 }
 
 /* 🌟 02 日轮视相 · 晨昏直视札记手札卡片 (Sun Disc Folio Card) */
@@ -1938,7 +1962,7 @@ body[data-wind-gust="gentle"] .day-journal-card {
   .hero-score-col {
     width: 100% !important;
     display: flex !important;
-    flex-direction: row !important;
+    flex-wrap: wrap !important;
     justify-content: space-between !important;
     align-items: flex-end !important;
     text-align: left !important;
@@ -1946,6 +1970,11 @@ body[data-wind-gust="gentle"] .day-journal-card {
     padding-top: 14px !important;
     margin-top: 2px !important;
     position: relative !important;
+  }
+  .journal-mode-switch {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    margin-bottom: 10px !important;
   }
   .hero-score-main {
     display: flex !important;
