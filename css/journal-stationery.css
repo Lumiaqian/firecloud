@@ -334,6 +334,16 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
 }
 
 /* Hero 内部排版网格 */
+.hero-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 10;
+}
+
 .hero-journal-grid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -527,7 +537,6 @@ body[data-light="night"] .hero-lunar-badge {
   border-radius: 20px;
   padding: 3px;
   gap: 3px;
-  margin-bottom: 12px;
   box-shadow: 
     0 2px 6px rgba(60, 45, 30, 0.06),
     inset 0 1px 2px rgba(60, 45, 30, 0.05);
@@ -628,6 +637,35 @@ body[data-light="night"] .hero-lunar-badge {
 .hero-companion-pill:hover .companion-arrow {
   background: #b53826;
   color: #ffffff;
+}
+
+/* 🌟 手札底栏评注与伴随参考层 */
+.hero-journal-foot {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(195, 175, 145, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 10;
+}
+
+.hero-journal-foot .hero-verdict-quote {
+  margin-top: 0;
+}
+
+.hero-journal-foot .hero-companion-pill {
+  margin: 2px 0;
+}
+
+.hero-journal-foot .data-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  font-size: 11px;
+  margin-top: 2px;
 }
 
 /* 🌟 02 日轮视相 · 晨昏直视札记手札卡片 (Sun Disc Folio Card) */
@@ -750,7 +788,7 @@ body[data-light="night"] .hero-lunar-badge {
 
 .sun-disc-factors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1934,75 +1972,152 @@ body[data-wind-gust="gentle"] .day-journal-card {
     flex-shrink: 0;
   }
   .hero-master-card {
-    padding: 26px 18px 20px !important;
-    margin: 14px 0 22px !important;
+    padding: 22px 16px 18px !important;
+    margin: 12px 0 20px !important;
     overflow: visible !important;
+  }
+  .hero-card-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  .journal-entry-tag-row {
+    gap: 6px !important;
+  }
+  .journal-entry-tag {
+    font-size: 10.5px !important;
+    padding: 2.5px 7px !important;
+  }
+  .journal-mode-switch {
+    width: auto !important;
+    justify-content: flex-end !important;
+    margin-bottom: 0 !important;
+    padding: 2.5px !important;
+  }
+  .mode-tab {
+    padding: 3px 9px !important;
+    font-size: 11.5px !important;
   }
   .hero-journal-grid {
     display: flex !important;
-    flex-direction: column !important;
-    gap: 16px !important;
-  }
-  .hero-meta-col {
-    width: 100% !important;
-    gap: 10px !important;
-  }
-  .hero-event-time {
-    font-size: clamp(28px, 8vw, 36px) !important;
-    gap: 8px !important;
-  }
-  .hero-event-time small {
-    font-size: 13px !important;
-  }
-  .hero-verdict-quote {
-    font-size: 15px !important;
-    line-height: 1.55 !important;
-    margin-top: 4px !important;
-  }
-  .hero-score-col {
-    width: 100% !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
+    flex-direction: row !important;
     justify-content: space-between !important;
     align-items: flex-end !important;
-    text-align: left !important;
-    border-top: 1px dashed rgba(195, 175, 145, 0.45) !important;
-    padding-top: 14px !important;
-    margin-top: 2px !important;
-    position: relative !important;
+    gap: 8px !important;
+    padding-bottom: 4px !important;
   }
-  .journal-mode-switch {
-    width: 100% !important;
+  .hero-meta-col {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+  .hero-event-time {
+    font-size: clamp(26px, 7vw, 36px) !important;
+    gap: 6px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+  }
+  .hero-event-time small {
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+  .hero-countdown-tape {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    margin-top: 2px !important;
+    white-space: nowrap !important;
+  }
+  .hero-score-col {
+    width: auto !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
     justify-content: flex-end !important;
-    margin-bottom: 10px !important;
+    gap: 6px !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    position: relative !important;
   }
   .hero-score-main {
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-start !important;
-    text-align: left !important;
+    align-items: flex-end !important;
+    text-align: right !important;
   }
   .score-label-row {
-    font-size: 11px !important;
-    margin-bottom: 2px !important;
+    font-size: 10px !important;
+    margin-bottom: 0 !important;
+    white-space: nowrap !important;
+  }
+  .score-label-row small {
+    display: none !important;
   }
   .score-number-display {
-    font-size: clamp(66px, 17vw, 86px) !important;
-    line-height: 0.9 !important;
-    margin: 2px 0 0 !important;
+    font-size: clamp(52px, 14vw, 76px) !important;
+    line-height: 0.88 !important;
+    margin: 0 !important;
+  }
+  .score-number-display small {
+    font-size: 14px !important;
+    margin-left: 2px !important;
   }
   .cinnabar-seal-stamp {
     position: static !important;
     flex-shrink: 0 !important;
-    width: 72px !important;
-    height: 72px !important;
-    margin-left: 12px !important;
-    margin-bottom: 4px !important;
+    width: clamp(50px, 13vw, 62px) !important;
+    height: clamp(50px, 13vw, 62px) !important;
+    margin-left: 2px !important;
+    margin-bottom: 2px !important;
     transform: rotate(-3deg) !important;
+    padding: 2px !important;
+  }
+  .cinnabar-seal-stamp .seal-grade {
+    font-size: clamp(12px, 3.2vw, 14.5px) !important;
+    line-height: 1.1 !important;
+  }
+  .cinnabar-seal-stamp .seal-sub {
+    font-size: clamp(8px, 2.2vw, 9.5px) !important;
+    line-height: 1.1 !important;
+  }
+  .hero-journal-foot {
+    border-top: 1px dashed rgba(195, 175, 145, 0.45) !important;
+    padding-top: 10px !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .hero-verdict-quote {
+    font-size: 14.5px !important;
+    line-height: 1.5 !important;
+    margin: 2px 0 4px !important;
+    padding-left: 10px !important;
+  }
+  .hero-companion-pill {
+    font-size: 11.5px !important;
+    padding: 4px 10px !important;
+    margin: 2px 0 !important;
+  }
+  .hero-journal-foot .data-meta {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    font-size: 10.5px !important;
+    margin-top: 2px !important;
   }
 }
 
-/* 移动端天幕月相防碰撞避让走廊 */
+/* 移动端天幕月相防碰撞避让走廊与日轮细目网格均衡 */
 @media (max-width: 640px) {
   .sky-moon {
     left: min(var(--moon-x, 42%), 45%) !important;
@@ -2010,6 +2125,21 @@ body[data-wind-gust="gentle"] .day-journal-card {
     width: 50px !important;
     height: 50px !important;
     transform: translate(-50%, -50%) !important;
+  }
+  .sun-disc-factors-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .sun-disc-factors-grid .factor-item:last-child {
+    grid-column: 1 / -1 !important;
+  }
+  .hero-master-card::before {
+    bottom: 8px !important;
+    right: 12px !important;
+    width: 80px !important;
+    height: 80px !important;
+    opacity: 0.45 !important;
   }
 }
 

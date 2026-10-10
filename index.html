@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
   <link rel="stylesheet" href="css/style.css?v=56">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=26">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=27">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -313,50 +313,41 @@
         <!-- 右上角高光复古黄铜长尾夹 (引雷/受光/振动) -->
         <div class="hero-brass-clip" id="hero-brass-clip" title="复古黄铜长尾夹 (点击触发引雷电光)" role="button" tabindex="0" aria-label="复古黄铜长尾夹，点击触发引雷电光"></div>
 
-        <div class="hero-journal-grid">
-          <!-- 左侧：观测时段、倒计时与诗意研判 -->
-          <div class="hero-meta-col">
-            <div class="journal-entry-tag-row">
-              <div class="journal-entry-tag" id="entry-tag">甲辰年 · 晨昏观测手记</div>
-              <div class="hero-lunar-badge" id="hero-lunar-badge" role="button" tabindex="0" aria-label="查看今日月相观测数据" title="点击查看夜间月相天文观测详情">
-                <span class="lunar-badge-icon" id="lunar-badge-icon"></span>
-                <span class="lunar-badge-text" id="lunar-badge-text">—</span>
-              </div>
+        <!-- 🌟 手札抬头行：日期批注与模式切换 (霞光卷 / 日轮卷) -->
+        <div class="hero-card-header">
+          <div class="journal-entry-tag-row">
+            <div class="journal-entry-tag" id="entry-tag">甲辰年 · 晨昏观测手记</div>
+            <div class="hero-lunar-badge" id="hero-lunar-badge" role="button" tabindex="0" aria-label="查看今日月相观测数据" title="点击查看夜间月相天文观测详情">
+              <span class="lunar-badge-icon" id="lunar-badge-icon"></span>
+              <span class="lunar-badge-text" id="lunar-badge-text">—</span>
             </div>
+          </div>
+
+          <!-- 观测视角研判切换 (霞光卷 / 日轮卷) -->
+          <div class="journal-mode-switch" role="tablist" aria-label="观测手记研判视角">
+            <button type="button" class="mode-tab is-active" id="mode-tab-glow" role="tab" aria-selected="true" data-mode="glow">
+              <span class="mode-tab-icon">🌅</span>
+              <span>霞光卷</span>
+            </button>
+            <button type="button" class="mode-tab" id="mode-tab-sundisc" role="tab" aria-selected="false" data-mode="sundisc">
+              <span class="mode-tab-icon">☀️</span>
+              <span>日轮卷</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 🌟 手札核心研判看板 (双翼并列：左翼时序视窗，右翼分值印泥) -->
+        <div class="hero-journal-grid">
+          <!-- 左侧：观测时段与倒计时 -->
+          <div class="hero-meta-col">
             <h1 class="hero-event-time" id="event-time" tabindex="-1">
               — <small id="hero-time-sub">—</small>
             </h1>
             <div class="hero-countdown-tape" id="countdown">—</div>
-
-            <!-- 伴随观测手札标贴 (点击快速切换研判视角) -->
-            <div class="hero-companion-pill" id="hero-companion-pill" role="button" tabindex="0" title="点击切换至对应研判视角">
-              <span class="companion-icon" id="companion-icon">🍳</span>
-              <span class="companion-text" id="companion-text">日轮视相：计算中…</span>
-              <span class="companion-arrow" aria-hidden="true">⇄ 切换</span>
-            </div>
-
-            <p class="hero-verdict-quote" id="verdict">—</p>
-            <div class="data-meta">
-              <span id="data-source">实时数据</span>
-              <span id="updated-at">—</span>
-              <span id="event-date" style="display:none;">—</span>
-            </div>
           </div>
 
           <!-- 右侧：分值大字与朱砂印章 -->
           <div class="hero-score-col">
-            <!-- 观测视角研判切换 (霞光卷 / 日轮卷) -->
-            <div class="journal-mode-switch" role="tablist" aria-label="观测手记研判视角">
-              <button type="button" class="mode-tab is-active" id="mode-tab-glow" role="tab" aria-selected="true" data-mode="glow">
-                <span class="mode-tab-icon">🌅</span>
-                <span>霞光卷</span>
-              </button>
-              <button type="button" class="mode-tab" id="mode-tab-sundisc" role="tab" aria-selected="false" data-mode="sundisc">
-                <span class="mode-tab-icon">☀️</span>
-                <span>日轮卷</span>
-              </button>
-            </div>
-
             <div class="hero-score-main">
               <div class="score-label-row">
                 <span id="index-label">霞光指数综合研判</span>
@@ -374,6 +365,24 @@
               <span class="seal-grade" id="seal-grade">霞光</span>
               <span class="seal-sub" id="seal-sub">且待新晴</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 🌟 手札评注与伴随参考层 (底部舒展和纸行) -->
+        <div class="hero-journal-foot">
+          <p class="hero-verdict-quote" id="verdict">—</p>
+
+          <!-- 伴随观测手札标贴 (点击快速切换研判视角) -->
+          <div class="hero-companion-pill" id="hero-companion-pill" role="button" tabindex="0" title="点击切换至对应研判视角">
+            <span class="companion-icon" id="companion-icon">🍳</span>
+            <span class="companion-text" id="companion-text">日轮视相：计算中…</span>
+            <span class="companion-arrow" aria-hidden="true">⇄ 切换</span>
+          </div>
+
+          <div class="data-meta">
+            <span id="data-source">实时数据</span>
+            <span id="updated-at">—</span>
+            <span id="event-date" style="display:none;">—</span>
           </div>
         </div>
       </article>
@@ -571,6 +580,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v16"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v17"></script>
 </body>
 </html>
