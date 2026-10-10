@@ -202,18 +202,6 @@ const elements = {
   companionPill: $("hero-companion-pill"),
   companionIcon: $("companion-icon"),
   companionText: $("companion-text"),
-  sunDiscBlock: $("sun-disc-block"),
-  sunDiscCard: $("sun-disc-card"),
-  sunDiscIcon: $("sun-disc-stamp-icon"),
-  sunDiscName: $("sun-disc-stamp-name"),
-  sunDiscScoreVal: $("sun-disc-score-val"),
-  sunDiscVerdict: $("sun-disc-verdict"),
-  factorHorizon: $("factor-horizon"),
-  factorHorizonHint: $("factor-horizon-hint"),
-  factorExtinction: $("factor-extinction"),
-  factorExtinctionHint: $("factor-extinction-hint"),
-  factorProcess: $("factor-process"),
-  factorProcessHint: $("factor-process-hint"),
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
@@ -909,40 +897,6 @@ function renderReady(cacheAge = 0) {
   const sunSeal = sealForSunDisc(sunScore, sunPhen);
   const glowAdvice = photographicAdviceFor(metrics, glowScore, state.event);
   const sunAdvice = photographicAdviceForSunDisc(metrics, sunScore, sunPhen, state.event);
-
-  // 更新 02 日轮视相手札区块
-  if (elements.sunDiscIcon) elements.sunDiscIcon.textContent = sunPhen.icon;
-  if (elements.sunDiscName) elements.sunDiscName.textContent = sunPhen.name;
-  if (elements.sunDiscScoreVal) elements.sunDiscScoreVal.innerHTML = `${sunScore}<small>分</small>`;
-  if (elements.sunDiscVerdict) elements.sunDiscVerdict.textContent = sunPhen.desc;
-
-  const horizonLow = Math.max(metrics.low ?? 0, metrics.pathLow ?? 0);
-  if (elements.factorHorizon) {
-    elements.factorHorizon.textContent = horizonLow <= 10 ? "极清朗" : horizonLow <= 25 ? "微云轻扰" : "低云重叠";
-  }
-  if (elements.factorHorizonHint) {
-    elements.factorHorizonHint.textContent = `地平低云 ${Math.round(horizonLow)}%`;
-  }
-  if (elements.factorExtinction) {
-    elements.factorExtinction.textContent = sunPhen.key === "egg_yolk"
-      ? "柔润消光"
-      : sunPhen.key === "crisp_gold"
-      ? "澄澈金芒"
-      : sunPhen.key === "swallowed"
-      ? "云霾吞蔽"
-      : "明朗清晖";
-  }
-  if (elements.factorExtinctionHint) {
-    elements.factorExtinctionHint.textContent = metrics.aod != null
-      ? `AOD ${metrics.aod.toFixed(2)}`
-      : (metrics.vis ? `能见度 ${Math.round(metrics.vis / 1000)}km` : "适度散射");
-  }
-  if (elements.factorProcess) {
-    elements.factorProcess.textContent = sunScore >= 75 ? "完整目送" : sunScore >= 50 ? "大致可见" : "提前隐没";
-  }
-  if (elements.factorProcessHint) {
-    elements.factorProcessHint.textContent = state.event === "sunrise" ? "破晓跃地视线" : "沉入地平视线";
-  }
 
   // 研判视角分流 (glow vs sundisc)
   const isSunDiscView = state.viewMode === "sundisc";
