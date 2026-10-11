@@ -236,8 +236,10 @@ const storage = {
 const state = {
   place: null,
   bundle: null,
+  dataTimestamp: null,
   event: "sunset",
   pendingEvent: null,
+  selectedEventTime: null,
   viewMode: storage.get(VIEW_MODE_KEY, "glow"),
   stale: false,
   refreshing: false,
@@ -279,7 +281,7 @@ function readValidCache(place, eventType) {
   if (!entry || !entry.bundle || !Number.isFinite(entry.savedAt)) return null;
   const age = Date.now() - entry.savedAt;
   if (age < 0 || age > CACHE_MAX_AGE) return null;
-  return { bundle: entry.bundle, age };
+  return { bundle: entry.bundle, savedAt: entry.savedAt, age };
 }
 
 function writeCache(bundle) {
@@ -373,6 +375,7 @@ function formatCountdown(target) {
 
 function currentEventTime() {
   if (!state.place) return null;
+  if (state.selectedEventTime) return state.selectedEventTime;
   return nextEvent(state.event, state.place.lat, state.place.lon, new Date());
 }
 
@@ -697,15 +700,27 @@ function renderWeek(bundle) {
   let cardIndex = 0;
   const appendCard = (card) => {
     const old = previous[cardIndex++];
-    if (!old) elements.week.append(card);
-    else if (old.innerHTML !== card.innerHTML || old.dataset.tier !== card.dataset.tier) {
-      card.dataset.updated = "true";
-      old.replaceWith(card);
-      fadeUpdate(card);
+    if (!old) {
+      elements.week.append(card);
+      return;
+    }
+    const changed = old.innerHTML !== card.innerHTML || old.dataset.tier !== card.dataset.tier;
+    if (changed) old.innerHTML = card.innerHTML;
+    for (const name of ["data-tier", "data-grade", "data-event-time", "aria-label", "aria-pressed", "role", "tabindex"]) {
+      const value = card.getAttribute(name);
+      if (value === null) old.removeAttribute(name);
+      else old.setAttribute(name, value);
+    }
+    old.classList.toggle("is-active-day", card.classList.contains("is-active-day"));
+    old.classList.toggle("is-rain-damp", card.classList.contains("is-rain-damp"));
+    if (changed) {
+      old.dataset.updated = "true";
+      fadeUpdate(old);
     }
   };
-  const base = currentEventTime();
+  const base = nextEvent(state.event, state.place.lat, state.place.lon, new Date());
   if (!base) return;
+  const selectedTime = currentEventTime()?.getTime();
   const timeZone = localTimeZone(bundle);
   const formatter = new Intl.DateTimeFormat("zh-CN", {
     month: "numeric",
@@ -721,8 +736,22 @@ function renderWeek(bundle) {
     const card = document.createElement("article");
     card.className = "day-card day-journal-card";
     card.style.setProperty("--day-idx", String(day));
-    if (day === 0) card.classList.add("is-active-day");
 
+    const selectCard = (event) => {
+      const timestamp = event.currentTarget.dataset.eventTime;
+      if (!timestamp || state.pendingEvent) return;
+      triggerHaptic(12);
+      state.selectedEventTime = new Date(Number(timestamp));
+      if (renderReady()) announceReady();
+    };
+    card.addEventListener("click", selectCard);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        if (!event.currentTarget.dataset.eventTime) return;
+        event.preventDefault();
+        selectCard(event);
+      }
+    });
     // 入场动效完成后固化为就绪静止态，避免后续风吹交互结束时误触发入场回放
     const markSettled = () => card.classList.add("is-settled");
     card.addEventListener("animationend", (e) => {
@@ -812,41 +841,9 @@ function renderWeek(bundle) {
       card.setAttribute("tabindex", "0");
       card.setAttribute("role", "button");
       card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，${isSunDiscView ? "日轮" : "霞光"}指数 ${score}分，${miniSeal}，${advice}`);
-      const selectCard = () => {
-        triggerHaptic(12);
-        elements.week.querySelectorAll(".day-journal-card").forEach(c => c.classList.remove("is-active-day"));
-        card.classList.add("is-active-day");
-        const targets = [elements.eventTime, elements.entryTag, elements.score, elements.verdict, elements.sealGrade, elements.sealSub];
-        targets.forEach(el => el && fadeUpdate(el));
-        // 联动更新 Hero 主卡片展示该日预报
-        if (elements.eventTime) {
-          const clock = formatClock(eventTime, timeZone);
-          elements.eventTime.innerHTML = `${clock} <small id="hero-time-sub">${eventLabel} · 最佳摄影视窗</small>`;
-        }
-        if (elements.entryTag) {
-          elements.entryTag.textContent = `${formattedDate} · ${eventLabel}观测手记`;
-        }
-        if (elements.score) elements.score.textContent = String(score);
-        if (elements.verdict) elements.verdict.textContent = `“${advice}”`;
-        if (elements.sealGrade) elements.sealGrade.textContent = seal.text;
-        if (elements.sealSub) elements.sealSub.textContent = seal.sub;
-        document.body.dataset.tier = tier;
-
-        // 若所选预测日有降雨，主卡片也呈现湿润浸染状态
-        if (typeof metrics.precip === "number" && metrics.precip > 0.05) {
-          journalWeather?.triggerRainSoak();
-        } else if (state.theme?.weather !== "rain" && state.theme?.weather !== "thunder") {
-          journalWeather?.restoreDryCard();
-        }
-      };
-
-      card.addEventListener("click", selectCard);
-      card.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          selectCard();
-        }
-      });
+      card.dataset.eventTime = String(eventTime.getTime());
+      card.classList.toggle("is-active-day", eventTime.getTime() === selectedTime);
+      card.setAttribute("aria-pressed", String(eventTime.getTime() === selectedTime));
     }
     appendCard(card);
   }
@@ -870,7 +867,7 @@ function focusNewResult() {
   if (!elements.dialog.open && !elements.devDialog.open) elements.eventTime.focus({ preventScroll: true });
 }
 
-function renderReady(cacheAge = 0) {
+function renderReady() {
   const eventTime = currentEventTime();
   if (!eventTime) {
     showError("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
@@ -921,7 +918,6 @@ function renderReady(cacheAge = 0) {
   if (elements.entryTag) {
     elements.entryTag.textContent = `${formatEventDate(eventTime, timeZone)} · ${eventLabel}观测手记`;
   }
-  setEventPending();
   elements.score.textContent = String(activeScore);
   if (!wasReady) elements.week.replaceChildren();
   elements.band.textContent = indexBand(activeScore);
@@ -961,7 +957,7 @@ function renderReady(cacheAge = 0) {
   }
 
   updateSourceStatus();
-  elements.updated.textContent = state.stale ? `缓存于 ${formatAge(cacheAge)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
+  elements.updated.textContent = state.stale ? `缓存于 ${formatAge(Date.now() - state.dataTimestamp)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
   elements.reasons.replaceChildren(...activeReasons.map((reason) => {
     const chip = document.createElement("span");
     chip.textContent = reason;
@@ -977,8 +973,14 @@ function renderReady(cacheAge = 0) {
   syncEventTabs();
   updateFavoriteButton();
   renderWeek(state.bundle);
-  updateTicker(eventTime);
+  if (state.pendingEvent) stopTicker();
+  else updateTicker(eventTime);
   setPanel("ready");
+  if (typeof metrics.precip === "number" && metrics.precip > 0.05) {
+    journalWeather?.triggerRainSoak();
+  } else if (document.body.dataset.weather !== "rain" && document.body.dataset.weather !== "thunder") {
+    journalWeather?.restoreDryCard();
+  }
   if (wasReady) changing.forEach((element, index) => {
     if (element.textContent !== previousText[index]) fadeUpdate(element);
   });
@@ -1003,11 +1005,14 @@ async function loadPlace(place, { eventType = state.pendingEvent ?? state.event,
   const requestId = ++state.loadRequestId;
   const normalized = normalizePlace(place);
   if (!normalized) return showError("未获取到有效地点信息，请重新搜索");
+  const sameForecast = state.bundle
+    && placeIdentity(state.bundle.place) === placeIdentity(normalized) && state.bundle.eventType === eventType;
   const keepReady = document.body.dataset.state === "ready"
     && state.bundle && placeIdentity(state.bundle.place) === placeIdentity(normalized);
   const sameReady = keepReady && state.bundle.eventType === eventType;
   const cancelledSwitch = sameReady && state.pendingEvent !== null && !force;
   setEventPending();
+  if (state.place && placeIdentity(state.place) !== placeIdentity(normalized)) state.selectedEventTime = null;
   state.place = normalized;
   storage.set(PLACE_KEY, normalized);
   if (!keepReady) {
@@ -1025,13 +1030,15 @@ async function loadPlace(place, { eventType = state.pendingEvent ?? state.event,
   }
   const cached = readValidCache(normalized, eventType);
   if (!force && preferCache && cached) {
+    if (!sameForecast) state.selectedEventTime = null;
     state.bundle = cached.bundle;
+    state.dataTimestamp = cached.savedAt;
     state.event = eventType;
     state.stale = true;
     state.refreshing = false;
     state.refreshFailed = false;
     setBusy(false);
-    if (renderReady(cached.age)) {
+    if (renderReady()) {
       announceReady();
       if (!keepReady) focusNewResult();
     }
@@ -1059,11 +1066,14 @@ async function loadPlace(place, { eventType = state.pendingEvent ?? state.event,
   try {
     const bundle = await fetchForecastBundle(normalized, eventType, eventTime);
     if (requestId !== state.loadRequestId) return;
+    if (!sameForecast) state.selectedEventTime = null;
     state.bundle = bundle;
+    state.dataTimestamp = bundle.fetchedAt;
     state.event = eventType;
     state.stale = false;
     state.refreshing = false;
     state.refreshFailed = false;
+    setEventPending();
     writeCache(bundle);
     if (renderReady()) {
       announceReady();
@@ -1078,17 +1088,18 @@ async function loadPlace(place, { eventType = state.pendingEvent ?? state.event,
         state.refreshFailed = true;
       }
       setEventPending(null, sameReady ? null : eventType);
-      updateTicker(currentEventTime());
-      updateSourceStatus();
+      renderReady();
       announceReady();
     } else {
       const fallback = readValidCache(normalized, eventType);
       state.refreshFailed = true;
       if (fallback) {
+        if (!sameForecast) state.selectedEventTime = null;
         state.stale = true;
         state.bundle = fallback.bundle;
+        state.dataTimestamp = fallback.savedAt;
         state.event = eventType;
-        if (renderReady(fallback.age)) {
+        if (renderReady()) {
           announceReady();
           focusNewResult();
         }
@@ -1810,6 +1821,9 @@ elements.openPlaces.addEventListener("click", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
+  const target = e.target;
+  if (e.isComposing || target instanceof HTMLElement
+    && (target.isContentEditable || target.closest("input, textarea, select"))) return;
   if (e.key === "D" && e.shiftKey && !e.metaKey && !e.ctrlKey) {
     e.preventDefault();
     openDevLab();

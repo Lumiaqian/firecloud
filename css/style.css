@@ -357,6 +357,12 @@ html {
   background: var(--sky-top, #1c5b94);
 }
 
+/* Lock only the root scrollport while a native modal is open; retain its offset. */
+html:has(dialog:modal) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -3325,6 +3331,12 @@ dialog::backdrop {
 }
 
 .favorite-feedback {
+  --feedback-bg: #fdf2df;
+  --feedback-ink: #5a3917;
+  --feedback-border: #b18a51;
+  --feedback-action: #993222;
+  --feedback-action-bg: #fff9ef;
+  --feedback-focus: #993222;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3332,18 +3344,21 @@ dialog::backdrop {
   max-width: 100%;
   margin: 12px 0;
   padding: 8px 10px 8px 14px;
-  border: 1px solid var(--surface-border);
+  border: 1px solid var(--feedback-border);
   border-radius: var(--radius-control);
-  background: rgba(18, 36, 52, 0.48);
-  color: var(--muted);
+  background: var(--feedback-bg);
+  color: var(--feedback-ink);
   opacity: 1;
   transform: translateY(0);
   transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out), display 180ms allow-discrete;
 }
 
 .favorite-feedback[data-status="error"] {
-  border-color: var(--status-error);
-  color: var(--status-error);
+  --feedback-bg: #fff0ec;
+  --feedback-ink: #842d24;
+  --feedback-border: #ad5142;
+  --feedback-action: #842d24;
+  --feedback-focus: #842d24;
 }
 
 .favorite-feedback p {
@@ -3360,6 +3375,29 @@ dialog::backdrop {
   width: auto;
   min-height: 44px;
   padding: 0 12px;
+  border-color: var(--feedback-border);
+  background: var(--feedback-action-bg);
+  color: var(--feedback-action);
+  font-weight: 700;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .favorite-feedback .text-button:hover {
+    border-color: var(--feedback-action);
+    background: var(--feedback-action-bg);
+    color: var(--feedback-action);
+  }
+}
+
+.favorite-feedback .text-button:active {
+  border-color: var(--feedback-action);
+  background: var(--feedback-action-bg);
+  color: var(--feedback-action);
+}
+
+.favorite-feedback .text-button:focus-visible {
+  outline: 2px solid var(--feedback-focus);
+  outline-offset: 2px;
 }
 
 .favorites-section h3 {
@@ -4596,7 +4634,7 @@ body[data-state="ready"] .day-card[data-updated="true"] {
   width: min(440px, calc(100vw - 32px));
   margin: 0 auto;
   max-width: min(440px, calc(100vw - 32px));
-  background: var(--panel-solid);
+  background: var(--feedback-bg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
 }
 
@@ -4604,7 +4642,7 @@ body[data-state="ready"] .day-card[data-updated="true"] {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  background: var(--panel-solid);
+  background: var(--feedback-bg);
 }
 
 #favorites-list {

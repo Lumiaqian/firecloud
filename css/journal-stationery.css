@@ -346,11 +346,12 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
 
 .hero-journal-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 36px;
   align-items: center;
   position: relative;
-  z-index: 10;
+  /* Keep paper ink above the damp sheen so foreground contrast stays stable. */
+  z-index: 13;
 }
 
 .hero-meta-col {
@@ -393,11 +394,14 @@ body[data-light="night"][data-state="ready"] .event-tabs.liquid-glass button[ari
   display: none;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
   background: rgba(220, 235, 252, 0.65);
   border: 1px solid rgba(135, 175, 215, 0.45);
   border-radius: 12px;
   padding: 3px 9px 3px 6px;
   font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
   font-family: var(--font-serif);
   color: #1e3e60;
   cursor: pointer;
@@ -441,6 +445,8 @@ body[data-light="night"] .hero-lunar-badge {
   line-height: 1;
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
+  max-width: 100%;
   gap: 10px;
   font-variant-numeric: tabular-nums;
 }
@@ -450,12 +456,17 @@ body[data-light="night"] .hero-lunar-badge {
   font-family: var(--font-sans);
   color: #7b6d5e;
   font-weight: 500;
+  min-width: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .hero-countdown-tape {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
   padding: 5px 12px;
   background: rgba(237, 181, 111, 0.22);
   border: 1px dashed #d5a566;
@@ -463,6 +474,8 @@ body[data-light="night"] .hero-lunar-badge {
   font-size: 12px;
   color: #8c5218;
   font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
   transform: rotate(-0.5deg);
   font-variant-numeric: tabular-nums;
   transition: transform 300ms ease, background-color 300ms ease, border-color 300ms ease;
@@ -470,6 +483,7 @@ body[data-light="night"] .hero-lunar-badge {
 .hero-countdown-tape::before {
   content: "⏱";
   font-size: 11px;
+  flex: 0 0 auto;
 }
 
 .hero-verdict-quote {
@@ -1870,19 +1884,20 @@ body[data-wind-gust="gentle"] .day-journal-card {
   }
   .hero-event-time {
     font-size: clamp(26px, 7vw, 36px) !important;
-    gap: 6px !important;
+    gap: 4px 6px !important;
     line-height: 1 !important;
     margin: 0 !important;
   }
   .hero-event-time small {
     font-size: 12px !important;
-    white-space: nowrap !important;
+    flex-basis: 100%;
+    white-space: normal !important;
   }
   .hero-countdown-tape {
     font-size: 11px !important;
     padding: 3px 8px !important;
     margin-top: 2px !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
   }
   .hero-score-col {
     width: auto !important;
@@ -1967,6 +1982,27 @@ body[data-wind-gust="gentle"] .day-journal-card {
   }
 }
 
+/* Only the narrowest paper needs a second row for the score and seal. */
+@media (max-width: 360px) {
+  .hero-journal-grid {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .hero-meta-col {
+    width: 100% !important;
+  }
+  .hero-event-time {
+    font-size: 32px !important;
+  }
+  .hero-score-col {
+    width: 100% !important;
+  }
+  .score-number-display {
+    font-size: 64px !important;
+  }
+}
+
 /* 移动端天幕月相防碰撞避让走廊与航空邮戳水印 */
 @media (max-width: 640px) {
   .sky-moon {
@@ -2015,8 +2051,26 @@ body[data-state="ready"] {
   --ink: #28221c;
   --muted: #625242;
   --faint: #786756;
+  --paper-score-color: #803b16;
   color: #28221c !important;
   -webkit-text-fill-color: initial !important;
+}
+
+/* Resolve the tier on the paper itself: inherited sky tokens stay untouched. */
+body[data-tier="epic"] .hero-master-card {
+  --paper-score-color: #70430c;
+}
+body[data-tier="great"] .hero-master-card {
+  --paper-score-color: #803b16;
+}
+body[data-tier="fair"] .hero-master-card {
+  --paper-score-color: #65472b;
+}
+body[data-tier="dull"] .hero-master-card {
+  --paper-score-color: #435454;
+}
+body[data-tier="unavailable"] .hero-master-card {
+  --paper-score-color: #4c5656;
 }
 
 .hero-master-card .journal-entry-tag {
@@ -2095,8 +2149,8 @@ h1#event-time:focus-visible {
 .hero-master-card .score-number-display,
 .hero-master-card .score-number-display strong,
 .hero-master-card #score {
-  color: var(--score-color, #c86829) !important;
-  -webkit-text-fill-color: var(--score-color, #c86829) !important;
+  color: var(--paper-score-color) !important;
+  -webkit-text-fill-color: var(--paper-score-color) !important;
 }
 
 .hero-master-card .score-number-display small {
@@ -2596,8 +2650,12 @@ dialog#dev-lab-dialog {
     0 28px 72px rgba(45, 30, 15, 0.22),
     0 6px 20px rgba(45, 30, 15, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-  position: relative;
-  overflow: visible !important;
+  position: fixed;
+  max-height: min(86dvh, 680px);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scroll-padding-top: 96px;
 }
 
 /* 弹窗顶部仿和纸胶带装饰 */
@@ -2605,7 +2663,7 @@ dialog#places-dialog::before,
 dialog#dev-lab-dialog::before {
   content: "";
   position: absolute;
-  top: -10px;
+  top: 6px;
   left: 36px;
   width: 76px;
   height: 22px;
@@ -2621,6 +2679,12 @@ dialog#dev-lab-dialog::before {
 /* 3. 弹窗头部排版 */
 #places-dialog .dialog-head,
 #dev-lab-dialog .dialog-head {
+  position: sticky;
+  top: 0;
+  z-index: 21;
+  background: #fdfaf3;
+  box-shadow: 0 -24px 0 #fdfaf3;
+  padding-top: 6px;
   border-bottom: 1px dashed rgba(185, 160, 130, 0.45) !important;
   padding-bottom: 14px !important;
   margin-top: 4px;
@@ -2723,7 +2787,7 @@ dialog#dev-lab-dialog::before {
 #places-dialog .search-field input {
   color: #28221c !important;
   font-family: var(--font-serif) !important;
-  font-size: 15px !important;
+  font-size: 16px !important;
 }
 #places-dialog .search-field input::placeholder {
   color: #9c8a77 !important;
@@ -2830,14 +2894,10 @@ dialog#dev-lab-dialog::before {
 
 /* 收藏反馈吐司 */
 #places-dialog .favorite-feedback {
-  background: #fdf2df !important;
-  border: 1px solid #e8c792 !important;
   border-radius: 8px !important;
-  color: #6a4418 !important;
   font-family: var(--font-serif) !important;
 }
 #places-dialog .favorite-feedback .text-button {
-  color: var(--seal-cinnabar, #c23b22) !important;
   font-weight: 700 !important;
 }
 

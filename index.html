@@ -13,8 +13,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=4">
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
-  <link rel="stylesheet" href="css/style.css?v=56">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=28">
+  <link rel="stylesheet" href="css/style.css?v=57">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=30">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -189,7 +189,7 @@
                 </button>
                 <button class="text-button folio-btn-search" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市</button>
               </div>
-              <p class="privacy-note" id="privacy-note">纯本地即时测算 · 不收集或留存任何位置信息</p>
+              <p class="privacy-note" id="privacy-note">最近地点、收藏和预报仅保存在本机；查询时需向第三方发送坐标。</p>
               <p class="notice" id="geo-notice" role="status"></p>
             </div>
           </div>
@@ -431,7 +431,7 @@
     <form method="dialog" class="dialog-head"><div><p>地点与收藏</p><h2 id="places-title">选择天空</h2></div><button class="icon-button dialog-close" value="cancel" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
     <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span></button>
     <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="搜索城市" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" aria-hidden="true" hidden></span></label>
-    <p class="dialog-privacy" id="dialog-privacy">数据仅在本地即时处理，不记录或留存任何搜索历史与位置信息。</p>
+    <p class="dialog-privacy" id="dialog-privacy">最近地点、收藏和预报保存在本机；天气与地名查询向第三方发送坐标，城市搜索发送关键词。不保存搜索历史。</p>
     <p class="dialog-status" id="search-status" role="status"></p>
     <ul class="search-results" id="search-results"></ul>
     <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">暂无收藏地点，点击卡片右上角星标即可珍藏</p></section>
@@ -540,6 +540,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v18"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v19"></script>
 </body>
 </html>
