@@ -27,6 +27,7 @@ const SHELL = [
   "./js/weather-fx.mjs?v=22",
   "./manifest.webmanifest?v=5",
   "./icons/icon.svg?v=4",
+  "./icons/brand-mark.svg?v=1",
   "./icons/icon-192.png?v=4",
   "./icons/icon-512.png?v=4",
   "./icons/apple-touch-icon.png?v=4"
