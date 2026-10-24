@@ -3453,9 +3453,9 @@ dialog::backdrop {
 }
 
 /* Liquid Glass stays in the functional layer: controls and navigation only. */
-body[data-state="ready"] .top-actions.liquid-glass,
-.event-tabs.liquid-glass,
-dialog.liquid-glass {
+body[data-state="ready"] .top-actions.paper-surface,
+.event-tabs.paper-surface,
+dialog.paper-surface {
   --glass-base: rgba(16, 27, 40, 0.34);
   --glass-blur: 10px;
   --glass-border: rgba(247, 250, 251, 0.22);
@@ -3472,13 +3472,13 @@ dialog.liquid-glass {
   backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
 }
 
-body[data-state="ready"] .top-actions.liquid-glass {
+body[data-state="ready"] .top-actions.paper-surface {
   padding: 3px;
   gap: 2px;
   border-radius: var(--radius-pill);
 }
 
-.top-actions.liquid-glass .icon-button {
+.top-actions.paper-surface .icon-button {
   width: 44px;
   height: 44px;
   border: 0;
@@ -3487,12 +3487,12 @@ body[data-state="ready"] .top-actions.liquid-glass {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .top-actions.liquid-glass .icon-button:hover {
+  .top-actions.paper-surface .icon-button:hover {
     background: rgba(255, 255, 255, 0.1);
   }
 }
 
-.event-tabs.liquid-glass {
+.event-tabs.paper-surface {
   padding: 3px;
   flex-shrink: 0;
   align-self: center;
@@ -3501,7 +3501,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   border-radius: var(--radius-pill);
 }
 
-.event-tabs.liquid-glass button {
+.event-tabs.paper-surface button {
   min-width: 58px;
   min-height: 44px;
   padding: 0 12px;
@@ -3509,17 +3509,17 @@ body[data-state="ready"] .top-actions.liquid-glass {
   transition: color 160ms var(--ease-out), background 160ms var(--ease-out), box-shadow 160ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
-.event-tabs.liquid-glass button::after {
+.event-tabs.paper-surface button::after {
   display: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .event-tabs.liquid-glass button:hover {
+  .event-tabs.paper-surface button:hover {
     background: rgba(255, 255, 255, 0.07);
   }
 }
 
-.event-tabs.liquid-glass::before {
+.event-tabs.paper-surface::before {
   background:
     linear-gradient(155deg, rgba(255, 255, 255, 0.2), rgba(237, 181, 111, 0.1)),
     rgba(255, 255, 255, 0.08);
@@ -3535,12 +3535,12 @@ body[data-state="ready"] .top-actions.liquid-glass {
   transition: transform 180ms var(--ease-out);
 }
 
-.event-tabs.liquid-glass {
+.event-tabs.paper-surface {
   position: relative;
   isolation: isolate;
 }
 
-.event-tabs.liquid-glass button {
+.event-tabs.paper-surface button {
   flex: 1;
   z-index: 1;
 }
@@ -3549,7 +3549,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   transform: translateX(calc(100% + 2px));
 }
 
-.event-tabs.liquid-glass button:active {
+.event-tabs.paper-surface button:active {
   transform: scale(0.97);
   transition-duration: 80ms;
 }
@@ -3558,7 +3558,7 @@ body[data-state="ready"] .top-actions.liquid-glass {
   display: none;
 }
 
-dialog.liquid-glass {
+dialog.paper-surface {
   --glass-base: rgba(16, 26, 38, 0.88);
   --glass-blur: 24px;
   --glass-border: rgba(255, 255, 255, 0.16);
@@ -3572,7 +3572,7 @@ dialog.liquid-glass {
   will-change: transform;
 }
 
-dialog.liquid-glass[open] {
+dialog.paper-surface[open] {
   animation: dialog-modal-enter 220ms var(--ease-out) both;
 }
 
@@ -3606,7 +3606,7 @@ dialog.is-dismissing {
   opacity: 0 !important;
 }
 
-dialog.liquid-glass::backdrop {
+dialog.paper-surface::backdrop {
   background: rgba(4, 10, 16, 0.58);
   -webkit-backdrop-filter: blur(8px) brightness(0.68);
   backdrop-filter: blur(8px) brightness(0.68);
@@ -3614,22 +3614,22 @@ dialog.liquid-glass::backdrop {
   transition: opacity 200ms var(--ease-out);
 }
 
-.glass-sheet .location-row,
-.glass-sheet .search-field {
+.paper-sheet .location-row,
+.paper-sheet .search-field {
   background: rgba(10, 19, 28, 0.42);
 }
 
-.glass-sheet .icon-button {
+.paper-sheet .icon-button {
   background: rgba(255, 255, 255, 0.04);
 }
 
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  body[data-state="ready"] .top-actions.liquid-glass,
-  .event-tabs.liquid-glass {
+  body[data-state="ready"] .top-actions.paper-surface,
+  .event-tabs.paper-surface {
     background: rgba(16, 27, 40, 0.94);
   }
 
-  dialog.liquid-glass {
+  dialog.paper-surface {
     background: var(--panel-solid);
   }
 
@@ -3649,7 +3649,7 @@ dialog.liquid-glass::backdrop {
 }
 
 
-@keyframes glass-sheet-in {
+@keyframes paper-sheet-in {
   from {
     opacity: 0;
     transform: translateY(42px) scale(0.98);
@@ -4136,7 +4136,7 @@ body[data-state="ready"] .ready {
     transform: scaleX(1.15);
   }
 
-  dialog.liquid-glass {
+  dialog.paper-surface {
     --glass-base: rgba(16, 27, 40, 0.88);
     --glass-blur: 18px;
     --glass-border: rgba(247, 250, 251, 0.3);
@@ -4146,69 +4146,69 @@ body[data-state="ready"] .ready {
       0 24px 64px rgba(2, 8, 14, 0.42);
   }
 
-  dialog.liquid-glass[open] {
-    animation: glass-sheet-in 280ms var(--ease-drawer) both;
+  dialog.paper-surface[open] {
+    animation: paper-sheet-in 280ms var(--ease-drawer) both;
   }
 
-  dialog.liquid-glass::backdrop {
+  dialog.paper-surface::backdrop {
     background: rgba(4, 10, 16, 0.38);
     -webkit-backdrop-filter: blur(2px) brightness(0.88);
     backdrop-filter: blur(2px) brightness(0.88);
   }
 
-  .glass-sheet .dialog-head {
+  .paper-sheet .dialog-head {
     padding-bottom: 18px;
   }
 
-  .glass-sheet .dialog-head p,
-  .glass-sheet .favorites-section h3 {
+  .paper-sheet .dialog-head p,
+  .paper-sheet .favorites-section h3 {
     color: rgba(247, 241, 231, 0.7);
     font-size: 11px;
   }
 
-  .glass-sheet .dialog-head h2 {
+  .paper-sheet .dialog-head h2 {
     font-size: 29px;
     line-height: 1.15;
   }
 
-  .glass-sheet .dialog-close {
+  .paper-sheet .dialog-close {
     border-color: transparent;
     background: rgba(255, 255, 255, 0.045);
   }
 
-  .glass-sheet .dialog-close:focus-visible {
+  .paper-sheet .dialog-close:focus-visible {
     outline: 1px solid rgba(247, 241, 231, 0.58);
     outline-offset: 2px;
   }
 
-  .glass-sheet .location-row {
+  .paper-sheet .location-row {
     min-height: 74px;
     margin: 18px 0 12px;
     padding: 0 16px;
     border-radius: var(--radius-control);
   }
 
-  .glass-sheet .location-row strong {
+  .paper-sheet .location-row strong {
     font-size: 15px;
   }
 
-  .glass-sheet .location-row small {
+  .paper-sheet .location-row small {
     font-size: 12px;
   }
 
-  .glass-sheet .search-field {
+  .paper-sheet .search-field {
     min-height: 56px;
     padding: 0 16px;
     border-radius: var(--radius-control);
   }
 
-  .glass-sheet .search-field input {
+  .paper-sheet .search-field input {
     height: 54px;
     font-size: 16px;
   }
 
-  .glass-sheet .dialog-privacy,
-  .glass-sheet .dialog-status {
+  .paper-sheet .dialog-privacy,
+  .paper-sheet .dialog-status {
     min-height: 0;
     margin: 10px 4px 0;
     color: rgba(247, 241, 231, 0.68);
@@ -4216,15 +4216,15 @@ body[data-state="ready"] .ready {
     line-height: 1.55;
   }
 
-  .glass-sheet .dialog-status {
+  .paper-sheet .dialog-status {
     color: var(--status-warning);
   }
 
-  .glass-sheet .favorites-section {
+  .paper-sheet .favorites-section {
     margin-top: 28px;
   }
 
-  .glass-sheet .favorites-section > p {
+  .paper-sheet .favorites-section > p {
     margin: 12px 0 2px;
     color: rgba(247, 241, 231, 0.76);
     font-size: 13px;
@@ -4558,14 +4558,14 @@ body[data-state="ready"] .ready {
     --atmosphere-light-opacity: 0.06;
   }
 
-  body[data-state="ready"] .top-actions.liquid-glass,
-  .event-tabs.liquid-glass {
+  body[data-state="ready"] .top-actions.paper-surface,
+  .event-tabs.paper-surface {
     background: rgba(16, 27, 40, 0.96);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 
-  dialog.liquid-glass {
+  dialog.paper-surface {
     background: var(--panel-solid);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
