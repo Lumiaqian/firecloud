@@ -218,22 +218,6 @@ body[data-light="night"][data-state="ready"] .event-tabs.paper-surface button[ar
   }
 }
 
-/* 航空气象邮戳水印 (Aeronautical Postmark Watermark) */
-.hero-master-card::before {
-  content: "";
-  position: absolute;
-  bottom: 18px;
-  right: 28px;
-  width: 120px;
-  height: 120px;
-  border: 1.5px dashed rgba(195, 165, 130, 0.25);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1;
-  background-image: 
-    radial-gradient(circle at center, transparent 38px, rgba(195, 165, 130, 0.15) 39px, rgba(195, 165, 130, 0.15) 40px, transparent 41px);
-}
-
 /* 水膜轻薄漫反射层 (Moisture & Wet Sheen Layer) */
 .hero-master-card::after {
   content: "";
@@ -1899,7 +1883,7 @@ body[data-wind-gust="gentle"] .day-journal-card {
   }
 }
 
-/* 移动端天幕月相防碰撞避让走廊与航空邮戳水印 */
+/* 移动端天幕月相防碰撞避让走廊 */
 @media (max-width: 640px) {
   /* 移动端月亮固定在品牌文字与右上操作区之间，避免压住地点与天气副标题 */
   .sky-moon {
@@ -1908,13 +1892,6 @@ body[data-wind-gust="gentle"] .day-journal-card {
     width: 40px !important;
     height: 40px !important;
     transform: translate(-50%, -50%) !important;
-  }
-  .hero-master-card::before {
-    bottom: 8px !important;
-    right: 12px !important;
-    width: 80px !important;
-    height: 80px !important;
-    opacity: 0.45 !important;
   }
 }
 
@@ -3572,6 +3549,341 @@ body[data-wind-gust="gentle"] .specimen-card {
   }
 }
 
+/* ==========================================================================
+   观赏窗口 · 影响因素 · 七日概览
+   ========================================================================== */
 
+/* 主卡观赏窗口：时间区第二行，文字给出起止与峰值，细条示意事件与峰值位置 */
+.hero-window {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+.hero-window-text {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: #5c4e40;
+}
 
+#window-range {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: #221c17;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-window-track {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, rgba(237, 181, 111, 0.45), rgba(200, 104, 41, 0.6) 45%, rgba(110, 80, 140, 0.4));
+}
+
+.hero-window-mark {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.hero-window-mark.is-event {
+  width: 2px;
+  height: 16px;
+  border-radius: 1px;
+  background: #221c17;
+}
+
+.hero-window-mark.is-peak {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--paper-score-color);
+  border: 2px solid #fdfaf3;
+  box-shadow: 0 0 0 1px rgba(40, 34, 28, 0.25);
+}
+
+/* 影响因素：一张纸面清单，不再给每条加胶带 */
+.factor-sheet {
+  color: #28221c;
+  background-color: #fdfaf3;
+  background-image: radial-gradient(rgba(180, 160, 135, 0.14) 1px, transparent 0);
+  background-size: 14px 14px;
+  border: 1px solid rgba(195, 175, 145, 0.55);
+  border-radius: 12px;
+  box-shadow: var(--paper-shadow);
+  padding: 4px 18px 12px;
+}
+
+.factor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 761px) {
+  .factor-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 40px;
+  }
+}
+
+.factor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head delta"
+    "gauge gauge"
+    "note note";
+  align-items: center;
+  gap: 6px 12px;
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(195, 175, 145, 0.5);
+}
+
+.factor-head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.factor-label {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: #5c4e40;
+}
+
+.factor-value {
+  font-family: var(--font-num);
+  font-size: 17px;
+  font-weight: 700;
+  color: #221c17;
+  font-variant-numeric: tabular-nums;
+}
+
+.factor-row[data-major] .factor-label {
+  color: #221c17;
+  font-weight: 700;
+}
+
+.factor-delta {
+  grid-area: delta;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.factor-row[data-effect="up"] .factor-delta {
+  color: #1f6b3a;
+  background: rgba(46, 125, 80, 0.1);
+}
+
+.factor-row[data-effect="down"] .factor-delta {
+  color: #9a2814;
+  background: rgba(181, 56, 38, 0.09);
+}
+
+.factor-row[data-effect="flat"] .factor-delta {
+  color: #6e5e4e;
+  background: rgba(110, 94, 78, 0.08);
+}
+
+.factor-gauge {
+  grid-area: gauge;
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(110, 94, 78, 0.14);
+}
+
+.factor-gauge[data-missing] {
+  background: repeating-linear-gradient(90deg, rgba(110, 94, 78, 0.2) 0 4px, transparent 4px 8px);
+}
+
+.factor-ideal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: rgba(46, 125, 80, 0.32);
+}
+
+.factor-marker {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #28221c;
+  border: 2px solid #fdfaf3;
+  box-shadow: 0 0 0 1px rgba(40, 34, 28, 0.25);
+  transform: translate(-50%, -50%);
+}
+
+.factor-note {
+  grid-area: note;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5c4e40;
+}
+
+.factor-cap {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--seal-cinnabar);
+  background: rgba(181, 56, 38, 0.06);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: #7a2414;
+}
+
+.factor-legend {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-size: 12px;
+  color: #6e5e4e;
+}
+
+/* 七日概览：手机上先一眼比较整周，再横滑看详情；桌面端卡片已并排，无需概览 */
+body[data-state="ready"] .week-block .section-head {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+body[data-state="ready"] .week-block .section-head > p {
+  max-width: none;
+}
+
+.week-best {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(195, 175, 145, 0.75);
+  background: rgba(253, 248, 238, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  color: #5c2a12;
+  font: inherit;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms var(--ease-out);
+}
+
+.week-best:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .week-best:hover {
+    background: #ffffff;
+  }
+}
+
+.week-overview {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 10px 8px 8px;
+  background: #fdfaf3;
+  border: 1px solid rgba(195, 175, 145, 0.55);
+  border-radius: 12px;
+  box-shadow: var(--paper-shadow);
+}
+
+.week-bar {
+  --bar-ink: var(--ink-unavailable);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.week-bar[data-tier="epic"] { --bar-ink: var(--ink-epic); }
+.week-bar[data-tier="great"] { --bar-ink: var(--ink-great); }
+.week-bar[data-tier="good"] { --bar-ink: var(--ink-good); }
+.week-bar[data-tier="fair"] { --bar-ink: var(--ink-fair); }
+.week-bar[data-tier="dull"] { --bar-ink: var(--ink-dull); }
+
+.week-bar-score {
+  font-family: var(--font-num);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--bar-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-bar-track {
+  width: 14px;
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(110, 94, 78, 0.1);
+}
+
+.week-bar-fill {
+  width: 100%;
+  border-radius: 7px;
+  background: var(--bar-ink);
+}
+
+.week-bar[data-far] .week-bar-fill {
+  background: repeating-linear-gradient(135deg, var(--bar-ink) 0 3px, rgba(253, 250, 243, 0.9) 3px 5px);
+}
+
+.week-bar-day {
+  font-family: var(--font-serif);
+  font-size: 12px;
+  color: #5c4e40;
+}
+
+.week-bar[data-best] .week-bar-day {
+  color: #9a2814;
+  font-weight: 700;
+}
+
+.week-bar[data-active] {
+  background: rgba(181, 56, 38, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(181, 56, 38, 0.35);
+}
+
+@media (min-width: 961px) {
+  .week-overview {
+    display: none;
+  }
+}
+
+/* 远期卡片：虚线边与淡化水彩提示可信度下降，文字保持原对比度 */
+body[data-state="ready"] .day-card.day-journal-card.is-far {
+  border-style: dashed !important;
+}
+
+.day-journal-card.is-far .day-card-watercolor {
+  opacity: 0.55;
+}

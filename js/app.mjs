@@ -4,14 +4,16 @@ import {
   lightFromSunClock,
   metricsAt,
   nextEvent,
-  reasonsFor,
   scoreSky,
+  skyBreakdown,
   sealFor,
   scoreSunDisc,
   sunDiscPhenomenon,
   sealForSunDisc,
-  reasonsForSunDisc,
+  sunDiscBreakdown,
   photographicAdviceForSunDisc,
+  viewingWindow,
+  compassLabel,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -24,7 +26,7 @@ import {
   waitAdvice,
   weatherConditionFor,
   weatherTheme
-} from "./forecast.mjs?v=13";
+} from "./forecast.mjs?v=14";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
 import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=7";
 
@@ -175,7 +177,7 @@ const elements = {
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
-  status: $("forecast-status"), source: $("data-source"), updated: $("updated-at"), reasons: $("reasons"), week: $("week"),
+  status: $("forecast-status"), source: $("data-source"), updated: $("updated-at"), week: $("week"),
   errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
   dialog: $("places-dialog"), dialogLocate: $("dialog-locate"), search: $("city-search"),
   searchStatus: $("search-status"), searchSpinner: $("search-spinner"), searchResults: $("search-results"),
@@ -183,10 +185,10 @@ const elements = {
   favoriteFeedback: $("favorite-feedback"), favoriteMessage: $("favorite-message"), undoFavorite: $("undo-favorite"),
   dialogFavoriteFeedback: $("dialog-favorite-feedback"), dialogFavoriteMessage: $("dialog-favorite-message"),
   dialogUndoFavorite: $("dialog-undo-favorite"),
-  metrics: {
-    low: $("metric-low"), mid: $("metric-mid"), high: $("metric-high"), pathLow: $("metric-path"),
-    vis: $("metric-vis"), rh: $("metric-rh"), aod: $("metric-aod")
-  }
+  factors: $("factors"), factorsBase: $("factors-base"), factorsCap: $("factors-cap"),
+  windowLabel: $("window-label"), windowRange: $("window-range"), windowPeak: $("window-peak"),
+  windowEventMark: $("window-event-mark"), windowPeakMark: $("window-peak-mark"),
+  weekOverview: $("week-overview"), weekBest: $("week-best")
 };
 
 const storage = {
@@ -326,21 +328,22 @@ function formatAge(milliseconds) {
   return minutes < 60 ? `${minutes} 分钟前` : `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分钟前`;
 }
 
-function formatCountdown(target) {
-  const remaining = target.getTime() - Date.now();
-  if (remaining <= 0 && remaining >= -30 * 60_000) return "霞光时刻正在发生";
-  if (remaining <= 0) return "等待下一次事件";
-  const totalMinutes = Math.floor(remaining / 60_000);
+// 倒计时以观赏窗口为准：开始前倒数，窗口内提示进行中
+function formatCountdown(viewing) {
+  const now = Date.now();
+  if (now > viewing.end.getTime()) return "本场已结束";
+  if (now >= viewing.start.getTime()) return "观赏窗口进行中";
+  const totalMinutes = Math.max(1, Math.floor((viewing.start.getTime() - now) / 60_000));
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
-  if (days) {
-    return hours ? `还有 ${days} 天 ${hours} 小时` : `还有 ${days} 天`;
-  }
-  if (hours) {
-    return minutes ? `还有 ${hours} 小时 ${minutes} 分钟` : `还有 ${hours} 小时`;
-  }
-  return `还有 ${minutes} 分钟`;
+  if (days) return hours ? `${days} 天 ${hours} 小时后开始` : `${days} 天后开始`;
+  if (hours) return minutes ? `${hours} 小时 ${minutes} 分钟后开始` : `${hours} 小时后开始`;
+  return `${minutes} 分钟后开始`;
+}
+
+function windowFor(eventTime) {
+  return viewingWindow(state.event, eventTime, state.place.lat, state.place.lon, state.viewMode);
 }
 
 function currentEventTime() {
@@ -363,8 +366,9 @@ function setLocationStatus(message) {
 
 function updateTicker(eventTime) {
   stopTicker();
+  const viewing = windowFor(eventTime);
   const tick = () => {
-    elements.countdown.textContent = formatCountdown(eventTime);
+    elements.countdown.textContent = formatCountdown(viewing);
     if (state.bundle && state.place) applyWeatherBackground(state.bundle);
   };
   tick();
@@ -376,8 +380,81 @@ function stopTicker() {
   state.ticker = null;
 }
 
-function displayMetric(element, value, formatter) {
-  element.textContent = value == null || !Number.isFinite(value) ? "—" : formatter(value);
+const clamp01 = (value) => Math.max(0, Math.min(1, value));
+
+function formatDelta(delta) {
+  const rounded = Math.round(delta);
+  if (rounded === 0) return "±0";
+  return rounded > 0 ? `+${rounded}` : `−${Math.abs(rounded)}`;
+}
+
+// 影响因素：每行一个要素，数值落在理想区间示意条上，右侧是对分数的增减
+function renderFactors(breakdown) {
+  const ranked = breakdown.factors.map((item) => Math.abs(item.delta)).sort((a, b) => b - a);
+  const majorThreshold = Math.max(3, ranked[1] ?? 0);
+  elements.factors.replaceChildren(...breakdown.factors.map((item) => {
+    const row = document.createElement("li");
+    row.className = "factor-row";
+    const rounded = Math.round(item.delta);
+    row.dataset.effect = rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
+    if (Math.abs(item.delta) >= majorThreshold) row.dataset.major = "true";
+
+    const head = document.createElement("div");
+    head.className = "factor-head";
+    const label = document.createElement("span");
+    label.className = "factor-label";
+    label.textContent = item.label;
+    const value = document.createElement("strong");
+    value.className = "factor-value";
+    value.textContent = item.display;
+    head.append(label, value);
+
+    const delta = document.createElement("span");
+    delta.className = "factor-delta";
+    delta.textContent = `${formatDelta(item.delta)} 分`;
+
+    const gauge = document.createElement("div");
+    gauge.className = "factor-gauge";
+    gauge.setAttribute("aria-hidden", "true");
+    if (item.gauge) {
+      const { min, max, ideal, value: raw } = item.gauge;
+      const span = max - min;
+      const ideal0 = clamp01((ideal[0] - min) / span);
+      const ideal1 = clamp01((ideal[1] - min) / span);
+      const zone = document.createElement("span");
+      zone.className = "factor-ideal";
+      zone.style.left = `${ideal0 * 100}%`;
+      zone.style.width = `${Math.max(1.5, (ideal1 - ideal0) * 100)}%`;
+      const marker = document.createElement("span");
+      marker.className = "factor-marker";
+      marker.style.left = `${clamp01((raw - min) / span) * 100}%`;
+      gauge.append(zone, marker);
+    } else {
+      gauge.dataset.missing = "true";
+    }
+
+    const note = document.createElement("p");
+    note.className = "factor-note";
+    note.textContent = item.note;
+    row.append(head, delta, gauge, note);
+    return row;
+  }));
+  elements.factorsBase.textContent = `基准 ${breakdown.base} 分 · 逐项增减`;
+  elements.factorsCap.hidden = !breakdown.capNote;
+  elements.factorsCap.textContent = breakdown.capNote ?? "";
+}
+
+function renderWindow(eventTime, timeZone, isSunDiscView) {
+  const viewing = windowFor(eventTime);
+  const span = viewing.end - viewing.start;
+  elements.windowLabel.textContent = isSunDiscView ? "日轮窗口" : "观赏窗口";
+  elements.windowRange.textContent = `${formatClock(viewing.start, timeZone)}–${formatClock(viewing.end, timeZone)}`;
+  elements.windowPeak.textContent = isSunDiscView
+    ? `${state.event === "sunset" ? "触地" : "露头"} ${formatClock(viewing.peak, timeZone)}`
+    : `余晖峰值约 ${formatClock(viewing.peak, timeZone)}`;
+  elements.windowEventMark.style.left = `${clamp01((eventTime - viewing.start) / span) * 100}%`;
+  elements.windowPeakMark.style.left = `${clamp01((viewing.peak - viewing.start) / span) * 100}%`;
+  elements.windowPeakMark.hidden = isSunDiscView;
 }
 
 function hasLocalCloudForecast(metrics) {
@@ -658,6 +735,58 @@ function photographicAdviceFor(metrics, score, eventType, sunScore, sunPhen) {
   return "空中云量稀疏，难有余晖衬托，天色归于平淡";
 }
 
+// 第 5–7 天的数值预报可信度明显下降，界面上标为远期参考
+const FAR_DAY_INDEX = 4;
+
+function selectDay(timestamp) {
+  if (!timestamp || state.pendingEvent) return;
+  triggerHaptic(12);
+  state.selectedEventTime = new Date(Number(timestamp));
+  if (renderReady()) announceReady();
+}
+
+function renderWeekOverview(days, selectedTime) {
+  const scored = days.filter((day) => day.score != null);
+  const best = scored.reduce((top, day) => (top == null || day.score > top.score ? day : top), null);
+  elements.weekBest.hidden = !best;
+  if (best) {
+    elements.weekBest.dataset.eventTime = String(best.eventTime.getTime());
+    elements.weekBest.dataset.tier = best.tier;
+    elements.weekBest.textContent = best.score >= 50
+      ? `本周最佳 · ${best.weekday} ${best.score} 分 · ${best.band}`
+      : `本周最高 ${best.score} 分 · ${best.weekday}`;
+    elements.weekBest.setAttribute("aria-label", `查看本周得分最高的一天：${best.date}，${best.score} 分，${best.band}`);
+  }
+  elements.weekOverview.replaceChildren(...days.map((day) => {
+    const bar = document.createElement("div");
+    bar.className = "week-bar";
+    bar.dataset.tier = day.tier;
+    if (day.far) bar.dataset.far = "true";
+    if (day.eventTime) bar.dataset.eventTime = String(day.eventTime.getTime());
+    if (day.eventTime?.getTime() === selectedTime) bar.dataset.active = "true";
+    if (best && day === best) bar.dataset.best = "true";
+    const score = document.createElement("span");
+    score.className = "week-bar-score";
+    score.textContent = day.score ?? "—";
+    const track = document.createElement("span");
+    track.className = "week-bar-track";
+    const fill = document.createElement("span");
+    fill.className = "week-bar-fill";
+    fill.style.height = `${Math.max(4, day.score ?? 0)}%`;
+    track.append(fill);
+    const label = document.createElement("span");
+    label.className = "week-bar-day";
+    label.textContent = day.weekday;
+    bar.append(score, track, label);
+    return bar;
+  }));
+}
+
+elements.weekBest.addEventListener("click", (event) => selectDay(event.currentTarget.dataset.eventTime));
+elements.weekOverview.addEventListener("click", (event) => {
+  selectDay(event.target.closest(".week-bar")?.dataset.eventTime);
+});
+
 function renderWeek(bundle) {
   const previous = [...elements.week.children];
   let cardIndex = 0;
@@ -676,6 +805,7 @@ function renderWeek(bundle) {
     }
     old.classList.toggle("is-active-day", card.classList.contains("is-active-day"));
     old.classList.toggle("is-rain-damp", card.classList.contains("is-rain-damp"));
+    old.classList.toggle("is-far", card.classList.contains("is-far"));
     if (changed) {
       old.dataset.updated = "true";
       fadeUpdate(old);
@@ -692,6 +822,8 @@ function renderWeek(bundle) {
     timeZone
   });
   const eventLabel = state.event === "sunset" ? "日落" : "日出";
+  const weekdayFormatter = new Intl.DateTimeFormat("zh-CN", { weekday: "short", timeZone });
+  const overview = [];
 
   for (let day = 0; day < 7; day += 1) {
     const probe = new Date(base.getTime() + day * 86_400_000);
@@ -700,13 +832,7 @@ function renderWeek(bundle) {
     card.className = "day-card day-journal-card";
     card.style.setProperty("--day-idx", String(day));
 
-    const selectCard = (event) => {
-      const timestamp = event.currentTarget.dataset.eventTime;
-      if (!timestamp || state.pendingEvent) return;
-      triggerHaptic(12);
-      state.selectedEventTime = new Date(Number(timestamp));
-      if (renderReady()) announceReady();
-    };
+    const selectCard = (event) => selectDay(event.currentTarget.dataset.eventTime);
     card.addEventListener("click", selectCard);
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -722,7 +848,10 @@ function renderWeek(bundle) {
     }, { once: true });
     setTimeout(markSettled, 600);
 
+    const far = day >= FAR_DAY_INDEX;
+    card.classList.toggle("is-far", far);
     if (!eventTime) {
+      overview.push({ weekday: weekdayFormatter.format(probe), score: null, tier: "unavailable", far });
       card.dataset.tier = "unavailable";
       card.dataset.grade = "dull";
       card.innerHTML = `
@@ -743,6 +872,7 @@ function renderWeek(bundle) {
     } else {
       const metrics = metricsAt(bundle, eventTime);
       if (!hasLocalCloudForecast(metrics)) {
+        overview.push({ weekday: weekdayFormatter.format(eventTime), eventTime: null, score: null, tier: "unavailable", far });
         card.dataset.tier = "unavailable";
         card.dataset.grade = "dull";
         card.innerHTML = `
@@ -775,6 +905,10 @@ function renderWeek(bundle) {
       const formattedDate = formatter.format(eventTime);
       const seal = isSunDiscView ? sealForSunDisc(sunScore, sunPhen) : sealFor(glowScore);
       const miniSeal = seal.text;
+      overview.push({
+        weekday: weekdayFormatter.format(eventTime), date: formattedDate, eventTime,
+        score, tier, band: indexBand(score), far
+      });
 
       card.dataset.tier = tier;
       card.dataset.grade = tier;
@@ -791,7 +925,7 @@ function renderWeek(bundle) {
         <div class="day-score-block">
           <span class="day-score-num">${score}</span>
           <div class="day-score-tag">
-            <span>${indexBand(score)}</span>
+            <span>${indexBand(score)}${far ? " · 远期" : ""}</span>
             <small class="day-score-clock">${formatClock(eventTime, timeZone)}</small>
           </div>
         </div>
@@ -800,13 +934,14 @@ function renderWeek(bundle) {
 
       card.setAttribute("tabindex", "0");
       card.setAttribute("role", "button");
-      card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，${isSunDiscView ? "日轮" : "霞光"}指数 ${score}分，${miniSeal}，${advice}`);
+      card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，${isSunDiscView ? "日轮" : "霞光"}指数 ${score}分，${indexBand(score)}，${advice}${far ? "，远期预报仅供参考" : ""}`);
       card.dataset.eventTime = String(eventTime.getTime());
       card.classList.toggle("is-active-day", eventTime.getTime() === selectedTime);
       card.setAttribute("aria-pressed", String(eventTime.getTime() === selectedTime));
     }
     appendCard(card);
   }
+  renderWeekOverview(overview, selectedTime);
   requestAnimationFrame(updateHorizontalScrollRegions);
 }
 
@@ -844,11 +979,13 @@ function renderReady() {
   }
   const wasReady = document.body.dataset.state === "ready";
   const changing = [elements.eventTime, elements.eventDate, elements.score, elements.band,
-    elements.verdict, elements.reasons, ...Object.values(elements.metrics)];
+    elements.verdict, elements.windowRange, elements.factors];
   const previousText = changing.map((element) => element.textContent);
 
-  const glowScore = scoreSky(metrics);
-  const sunScore = scoreSunDisc(metrics);
+  const glowBreakdown = skyBreakdown(metrics);
+  const sunBreakdown = sunDiscBreakdown(metrics);
+  const glowScore = glowBreakdown.score;
+  const sunScore = sunBreakdown.score;
   const sunPhen = sunDiscPhenomenon(metrics, sunScore);
   const glowSeal = sealFor(glowScore);
   const sunSeal = sealForSunDisc(sunScore, sunPhen);
@@ -860,11 +997,12 @@ function renderReady() {
   const activeScore = isSunDiscView ? sunScore : glowScore;
   const activeSeal = isSunDiscView ? sunSeal : glowSeal;
   const activeAdvice = isSunDiscView ? sunAdvice : glowAdvice;
-  const activeReasons = isSunDiscView ? reasonsForSunDisc(metrics, sunPhen) : reasonsFor(metrics);
 
   document.body.dataset.tier = tierFor(activeScore);
   const { condition } = applyWeatherBackground(state.bundle) ?? {};
   const eventLabel = state.event === "sunset" ? (isSunDiscView ? "落日" : "晚霞") : (isSunDiscView ? "日出" : "朝霞");
+  const sunLabel = state.event === "sunset" ? "日落" : "日出";
+  const azimuth = solarAzimuth(eventTime, state.place.lat, state.place.lon);
   const timeZone = localTimeZone(state.bundle);
   const conditionSuffix = condition?.summary ? ` · ${condition.summary}` : "";
   elements.placeName.textContent = `${state.place.name}${conditionSuffix}`;
@@ -873,7 +1011,8 @@ function renderReady() {
     `霞光预报 - 选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`
   );
   const clockStr = formatClock(eventTime, timeZone);
-  elements.eventTime.innerHTML = `${clockStr} <small id="hero-time-sub">${eventLabel} · 最佳视窗</small>`;
+  elements.eventTime.innerHTML = `${clockStr} <small id="hero-time-sub">${sunLabel} · ${compassLabel(azimuth)} ${Math.round(azimuth)}°</small>`;
+  renderWindow(eventTime, timeZone, isSunDiscView);
   elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
   if (elements.entryTag) {
     elements.entryTag.textContent = `${formatEventDate(eventTime, timeZone)} · ${eventLabel}观测手记`;
@@ -900,18 +1039,7 @@ function renderReady() {
 
   updateSourceStatus();
   elements.updated.textContent = state.stale ? `缓存于 ${formatAge(Date.now() - state.dataTimestamp)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
-  elements.reasons.replaceChildren(...activeReasons.map((reason) => {
-    const chip = document.createElement("span");
-    chip.textContent = reason;
-    return chip;
-  }));
-  displayMetric(elements.metrics.low, metrics.low, (value) => `${Math.round(value)}%`);
-  displayMetric(elements.metrics.mid, metrics.mid, (value) => `${Math.round(value)}%`);
-  displayMetric(elements.metrics.high, metrics.high, (value) => `${Math.round(value)}%`);
-  displayMetric(elements.metrics.pathLow, metrics.pathLow, (value) => `${Math.round(value)}%`);
-  displayMetric(elements.metrics.vis, metrics.vis, (value) => `${Math.round(value / 1000)} km`);
-  displayMetric(elements.metrics.rh, metrics.rh, (value) => `${Math.round(value)}%`);
-  displayMetric(elements.metrics.aod, metrics.aod, (value) => value.toFixed(2));
+  renderFactors(isSunDiscView ? sunBreakdown : glowBreakdown);
   syncEventTabs();
   updateFavoriteButton();
   renderWeek(state.bundle);

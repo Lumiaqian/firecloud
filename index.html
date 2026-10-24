@@ -13,8 +13,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=4">
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
-  <link rel="stylesheet" href="css/style.css?v=58">
-  <link rel="stylesheet" href="css/journal-stationery.css?v=31">
+  <link rel="stylesheet" href="css/style.css?v=59">
+  <link rel="stylesheet" href="css/journal-stationery.css?v=32">
   <title>霞光预报</title>
 </head>
 <body data-state="welcome" data-tier="great" data-light="day" data-weather="clear">
@@ -346,6 +346,17 @@
               — <small id="hero-time-sub">—</small>
             </h1>
             <div class="hero-countdown-tape" id="countdown">—</div>
+            <div class="hero-window">
+              <p class="hero-window-text">
+                <span id="window-label">观赏窗口</span>
+                <strong id="window-range">—</strong>
+                <span id="window-peak">—</span>
+              </p>
+              <div class="hero-window-track" aria-hidden="true">
+                <i class="hero-window-mark is-event" id="window-event-mark"></i>
+                <i class="hero-window-mark is-peak" id="window-peak-mark"></i>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -363,28 +374,18 @@
         </div>
       </article>
 
-      <section class="section-block" aria-labelledby="reason-title">
-        <div class="section-head" data-weather-surface><div><span>01</span><h2 id="reason-title">天空线索</h2></div><p>影响本次判断的主要条件</p></div>
-        <div class="reason-list" id="reasons"></div>
-      </section>
-
-      <section class="section-block metrics-block" aria-labelledby="metrics-title">
-        <div class="section-head" data-weather-surface><div><span>02</span><h2 id="metrics-title">观测数据</h2></div><p>关键气象与光路观测要素</p></div>
-        <div class="horizontal-scroll-region" data-scroll-region>
-          <div class="metrics" aria-label="天气指标">
-            <article><span>低云</span><strong id="metric-low">—</strong></article>
-            <article><span>中云</span><strong id="metric-mid">—</strong></article>
-            <article><span>高云</span><strong id="metric-high">—</strong></article>
-            <article><span>太阳方向低云</span><strong id="metric-path">—</strong></article>
-            <article><span>能见度</span><strong id="metric-vis">—</strong></article>
-            <article><span>湿度</span><strong id="metric-rh">—</strong></article>
-            <article><span>AOD</span><strong id="metric-aod">—</strong></article>
-          </div>
+      <section class="section-block factors-block" aria-labelledby="factors-title">
+        <div class="section-head" data-weather-surface><div><span>01</span><h2 id="factors-title">影响因素</h2></div><p id="factors-base">—</p></div>
+        <div class="factor-sheet">
+          <ul class="factor-list" id="factors"></ul>
+          <p class="factor-cap" id="factors-cap" hidden></p>
+          <p class="factor-legend">绿色区段为理想区间，圆点为本次数值；右侧为该要素对指数的增减</p>
         </div>
       </section>
 
       <section class="section-block week-block" aria-labelledby="week-title">
-        <div class="section-head" data-weather-surface><div><span>03</span><h2 id="week-title">未来 7 日</h2></div><p>未来一周晨昏色谱与摄影建议</p></div>
+        <div class="section-head" data-weather-surface><div><span>02</span><h2 id="week-title">未来 7 日</h2></div><p><button class="week-best" id="week-best" type="button" hidden></button></p></div>
+        <div class="week-overview" id="week-overview" aria-hidden="true"></div>
         <div class="horizontal-scroll-region" data-scroll-region>
           <div class="week-strip" id="week"></div>
         </div>
@@ -515,6 +516,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=stationery_v20"></script>
+  <script type="module" src="js/app.mjs?v=stationery_v21"></script>
 </body>
 </html>

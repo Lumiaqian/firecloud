@@ -645,30 +645,6 @@ export function sealFor(score) {
   return { ...gradeFor(score).seal };
 }
 
-export function reasonsFor(metrics) {
-  const reasons = [];
-  const pct = (value) => `${Math.round(value)}%`;
-  const low = metrics.low ?? 0;
-  const mid = metrics.mid ?? 0;
-  const high = metrics.high ?? 0;
-
-  if (high >= 20 && high <= 70) reasons.push(`高云 ${pct(high)}，利于霞光映照生辉`);
-  else if (high > 70) reasons.push(`高云 ${pct(high)}，云幕层叠透光受阻`);
-  else if (mid >= 20 && mid <= 60) reasons.push(`中云 ${pct(mid)}，丰富霞光层叠肌理`);
-  else reasons.push("中高云偏少，天际层次较单薄");
-  if (low > 40) reasons.push(`本地低云 ${pct(low)}，地平视线有所遮挡`);
-  else reasons.push(`本地低云 ${pct(low)}，近处光路通透`);
-  if (metrics.pathLow != null) {
-    reasons.push(metrics.pathLow > 40 ? `太阳方向低云 ${pct(metrics.pathLow)}，远端光线难穿透` : `太阳方向低云 ${pct(metrics.pathLow)}，远端光路通畅`);
-  }
-  if (metrics.rh != null && metrics.rh > 75) reasons.push(`湿度 ${pct(metrics.rh)}，水汽丰沛天色略朦胧`);
-  else if (metrics.vis != null && metrics.vis >= 30_000) reasons.push(`能见度 ${Math.round(metrics.vis / 1000)} km，大气清朗通透`);
-  if (metrics.precip != null && metrics.precip > 0) reasons.push(`有 ${metrics.precip.toFixed(1)} mm 降水，天色暗淡阴沉`);
-  if ((metrics.aod != null && metrics.aod > 0.3) || (metrics.pm25 != null && metrics.pm25 > 35)) reasons.push("空气微浊，落日余晖稍泛暗沉");
-  if (metrics.aod == null || metrics.pm25 == null || metrics.missingRemote?.length) reasons.push("部分高空要素缺测，研判仅供参考");
-  return reasons.slice(0, 5);
-}
-
 export function indexBand(score) {
   return gradeFor(score).band;
 }
@@ -853,48 +829,6 @@ export function sealForSunDisc(score, phenomenon) {
 /**
  * 日轮天空线索 (Reasons for Sun Disc)
  */
-export function reasonsForSunDisc(metrics, phenomenon) {
-  const reasons = [];
-  const pct = (value) => `${Math.round(value)}%`;
-  const low = metrics?.low ?? 0;
-  const pathLow = metrics?.pathLow ?? low;
-  const mid = metrics?.mid ?? 0;
-  const high = metrics?.high ?? 0;
-
-  if (low <= 15 && pathLow <= 15) {
-    reasons.push(`地平低云仅 ${pct(Math.max(low, pathLow))}，视线直达天际无遮挡`);
-  } else if (low > 40 || pathLow > 45) {
-    reasons.push(`太阳方向低云 ${pct(Math.max(low, pathLow))}，太阳易提前沉入云层`);
-  } else {
-    reasons.push(`低云 ${pct(low)}，地平附近稍有零散云气扰动`);
-  }
-
-  if (phenomenon?.key === "egg_yolk") {
-    reasons.push("底层气溶胶适度消光，太阳柔和不刺目，呈红润圆盘");
-  } else if (phenomenon?.key === "crisp_gold") {
-    reasons.push(`能见度 ${metrics?.vis ? Math.round(metrics.vis / 1000) + " km" : "极佳"}，空气纤尘不染，金光夺目`);
-  } else if (phenomenon?.key === "crepuscular") {
-    reasons.push(`中云 ${pct(mid)}，云块开合易形成破空云隙光柱`);
-  } else if (high > 50) {
-    reasons.push(`高云 ${pct(high)}，太阳轮廓略带薄纱晕染`);
-  }
-
-  if (metrics?.vis != null) {
-    if (metrics.vis >= 30_000) reasons.push("大气极其通透，地平线轮廓如剪纸般清晰");
-    else if (metrics.vis < 10_000) reasons.push(`能见度仅 ${Math.round(metrics.vis / 1000)} km，远方天空泛白略浑浊`);
-  }
-
-  if (metrics?.rh != null && metrics.rh > 75) {
-    reasons.push(`湿度 ${pct(metrics.rh)}，水汽较盛可能加深地平薄霭`);
-  }
-
-  if (metrics?.precip != null && metrics.precip > 0) {
-    reasons.push(`降水 ${metrics.precip.toFixed(1)} mm，云遮雾障无缘观日`);
-  }
-
-  return reasons.slice(0, 5);
-}
-
 /**
  * 日轮摄影与观赏建议
  */

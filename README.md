@@ -2,7 +2,7 @@
 
 > 结合高空云层、远端光路与空气质量的自然霞光指数预报 · 天幕微物理气象手记
 
-[![Verify Status](https://img.shields.io/badge/tests-38%20passed-success?style=flat-square)](tests/)
+[![Verify Status](https://img.shields.io/badge/tests-42%20passed-success?style=flat-square)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-Zero%20Dependencies%20%7C%20Vanilla%20ESM-blue?style=flat-square)](js/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Capable-orange?style=flat-square)](manifest.webmanifest)
 [![Online Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-green?style=flat-square)](https://lumiaqian.github.io/firecloud/)
@@ -31,6 +31,11 @@
     * **50–64 有机会**：可以顺路看看 · 柔光印
     * **35–49 一般**：有空可以留意 · 敛光印
     * **0–34 平淡**：不建议专程等待 · 微茫印
+
+* 🧭 **观赏窗口与影响因素**
+  * 主卡给出观赏窗口（起止与余晖峰值，按当天民用晨昏蒙影推算）与太阳方位，倒计时以窗口开始为准。
+  * “影响因素”逐项列出各气象要素对指数的增减与理想区间，评分即这些增减之和，展示与评分始终一致。
+  * 未来 7 日标出本周最佳一天，手机端提供七日分数概览；第 5–7 天标为远期参考。
 
 * 🌧️ **真实气象微物理系统**
   * 基于当前实况天气驱动的纯 Canvas/物理运动学粒子引擎。
