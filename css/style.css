@@ -85,7 +85,7 @@
   --radius-pill: 999px;
 
   /* Design Tokens: Unified Typography Stacks */
-  --font-serif-title: "Hiragino Mincho ProN", "Songti SC", "STSong", serif;
+  --font-serif-title: "Songti SC", "STSong", "Noto Serif SC", serif;
   --font-serif-num: "Georgia", "Newsreader", "Playfair Display", "Baskerville", "Iowan Old Style", "Times New Roman", serif;
   --font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
@@ -132,6 +132,7 @@ body[data-tier="great"] {
   --score-color: var(--score-great);
 }
 
+body[data-tier="good"],
 body[data-tier="fair"] {
   --score-color: var(--score-fair);
 }
@@ -2370,7 +2371,7 @@ body[data-state="ready"] .top-actions {
 }
 
 .ready {
-  padding: 58px 0 88px;
+  padding: 24px 0 88px;
 }
 
 .ready-toolbar {
@@ -2589,17 +2590,6 @@ body[data-state="ready"] .top-actions {
 
 
 
-.band {
-  margin: 18px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--ink);
-  font-family: var(--font-serif-title);
-  font-size: 20px;
-  letter-spacing: 0.12em;
-}
-
 .verdict {
   margin: 10px 0 0;
   color: var(--ink);
@@ -2609,12 +2599,6 @@ body[data-state="ready"] .top-actions {
   text-wrap: pretty;
 }
 
-
-.band::before {
-  content: "";
-  width: 32px;
-  border-top: 1px solid var(--score-color);
-}
 
 .section-block {
   margin-top: 64px;
@@ -2883,6 +2867,7 @@ body[data-state="ready"] .day-card:nth-child(7) { animation-delay: 240ms; }
   box-shadow: 0 8px 24px rgba(237, 181, 111, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+.day-card[data-tier="good"],
 .day-card[data-tier="fair"] {
   --score-color: var(--score-fair);
   background:
@@ -3933,7 +3918,7 @@ body[data-state="ready"] .ready {
   }
 
   .ready {
-    padding: 38px 0 68px;
+    padding: 12px 0 68px;
   }
 
   .ready-toolbar {
@@ -3977,15 +3962,6 @@ body[data-state="ready"] .ready {
 
   .score-row span {
     margin-left: 8px;
-  }
-
-  .band {
-    margin-top: 14px;
-    font-size: 17px;
-  }
-
-  .band::before {
-    width: 22px;
   }
 
   .section-block,

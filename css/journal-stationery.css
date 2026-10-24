@@ -98,7 +98,7 @@ body[data-state="ready"] .top-actions.paper-surface .icon-button.favorite-button
 
 /* 观测时段条手札化 */
 body[data-state="ready"] .ready-toolbar {
-  margin-top: 14px;
+  margin-top: 0;
   margin-bottom: 4px;
 }
 body[data-state="ready"] .event-status > p {
@@ -345,20 +345,22 @@ body[data-light="night"][data-state="ready"] .event-tabs.paper-surface button[ar
 }
 
 .hero-journal-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 36px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   position: relative;
   /* Keep paper ink above the damp sheen so foreground contrast stays stable. */
   z-index: 13;
 }
 
+/* 时间与倒计时是第二层信息：与分数分行，横向排开 */
 .hero-meta-col {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(195, 175, 145, 0.45);
 }
 
 .journal-entry-tag-row {
@@ -392,6 +394,8 @@ body[data-light="night"][data-state="ready"] .event-tabs.paper-surface button[ar
 /* 🌙 夜间月相观测便签印签 (Stationery Lunar Observation Badge) */
 .hero-lunar-badge {
   display: none;
+  min-height: 32px;
+  font-weight: inherit;
   align-items: center;
   gap: 6px;
   max-width: 100%;
@@ -412,6 +416,16 @@ body[data-light="night"][data-state="ready"] .event-tabs.paper-surface button[ar
 
 body[data-light="night"] .hero-lunar-badge {
   display: inline-flex;
+}
+
+/* 视觉保持小签条，点击热区补足到 44px 高 */
+.hero-lunar-badge {
+  position: relative;
+}
+.hero-lunar-badge::before {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
 }
 
 .hero-lunar-badge:hover {
@@ -437,8 +451,9 @@ body[data-light="night"] .hero-lunar-badge {
 }
 
 .hero-event-time {
+  margin: 0;
   font-family: var(--font-serif);
-  font-size: clamp(34px, 4.2vw, 50px);
+  font-size: clamp(28px, 3vw, 36px);
   font-weight: 500;
   color: #221c17;
   letter-spacing: 0.02em;
@@ -453,7 +468,7 @@ body[data-light="night"] .hero-lunar-badge {
 
 .hero-event-time small {
   font-size: 14px;
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   color: #7b6d5e;
   font-weight: 500;
   min-width: 0;
@@ -480,11 +495,6 @@ body[data-light="night"] .hero-lunar-badge {
   font-variant-numeric: tabular-nums;
   transition: transform 300ms ease, background-color 300ms ease, border-color 300ms ease;
 }
-.hero-countdown-tape::before {
-  content: "⏱";
-  font-size: 11px;
-  flex: 0 0 auto;
-}
 
 .hero-verdict-quote {
   font-family: var(--font-serif);
@@ -499,18 +509,25 @@ body[data-light="night"] .hero-lunar-badge {
   transition: color 300ms ease;
 }
 
+/* 分数区：分数 + 印章同行，档位与建议紧随其下，是首屏第一视觉 */
 .hero-score-col {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "main seal"
+    "grade grade";
+  justify-content: start;
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 10px;
   position: relative;
 }
 
 .hero-score-main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .score-label-row {
@@ -519,16 +536,22 @@ body[data-light="night"] .hero-lunar-badge {
   gap: 8px;
   font-family: var(--font-serif);
   color: #635445;
-  font-size: 12px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.score-label-row small {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0;
 }
 
 .score-number-display {
   font-family: var(--font-num);
-  font-size: clamp(96px, 11vw, 136px);
+  font-size: clamp(96px, 9vw, 128px);
   line-height: 0.88;
-  color: #c86829;
   letter-spacing: -0.04em;
-  margin: 10px 0 6px;
+  margin: 8px 0 0;
   font-variant-numeric: lining-nums tabular-nums;
   display: flex;
   align-items: baseline;
@@ -538,98 +561,59 @@ body[data-light="night"] .hero-lunar-badge {
 .score-number-display small {
   font-size: 20px;
   font-family: var(--font-serif);
-  color: #685848;
-  margin-left: 4px;
+  letter-spacing: 0;
+  margin-left: 6px;
 }
 
-/* 观测视角研判切换 (霞光卷 / 日轮卷) */
-.journal-mode-switch {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(238, 230, 218, 0.88);
-  border: 1.5px solid rgba(195, 175, 145, 0.65);
-  border-radius: 20px;
-  padding: 3px;
-  gap: 3px;
-  box-shadow: 
-    0 2px 6px rgba(60, 45, 30, 0.06),
-    inset 0 1px 2px rgba(60, 45, 30, 0.05);
-}
-
-.mode-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
-  border: none;
-  background: transparent;
-  border-radius: 16px;
+.hero-grade-line {
+  grid-area: grade;
+  margin: 0;
   font-family: var(--font-serif);
-  font-size: 12px;
-  color: #6c5a4b;
-  cursor: pointer;
-  transition: all 180ms ease;
-  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
 }
 
-.mode-tab:hover {
-  color: #b53826;
-  background: rgba(255, 255, 255, 0.55);
-}
-
-.mode-tab:active {
-  transform: scale(0.96);
-}
-
-.mode-tab.is-active {
-  background: #fdfaf3;
-  color: #b53826;
-  font-weight: 600;
-  box-shadow: 0 1px 4px rgba(60, 45, 30, 0.12);
-  border: 0.5px solid rgba(195, 175, 145, 0.6);
-}
-
-.mode-tab-icon {
-  font-size: 13px;
-}
-
-/* 伴随观测手札标贴 (Companion Pill - 置于左侧倒计时与评语之间，绝不与印章重叠) */
+/* 另一视角分数 + 视角切换：主卡唯一的视角切换入口 */
 .hero-companion-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  margin: 10px 0 8px;
-  padding: 5px 12px;
+  gap: 10px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 8px 6px 14px;
   background: rgba(248, 242, 232, 0.95);
   border: 1px dashed rgba(195, 175, 145, 0.85);
-  border-radius: 6px;
+  border-radius: 8px;
+  font: inherit;
   font-family: var(--font-serif);
-  font-size: 12.5px;
+  font-size: 14px;
   color: #5c4a3b;
+  text-align: left;
   cursor: pointer;
   width: fit-content;
   max-width: 100%;
-  transition: all 200ms ease;
-  user-select: none;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, transform 160ms var(--ease-out);
   box-shadow: 0 1px 3px rgba(60, 45, 30, 0.04);
 }
 
-.hero-companion-pill:hover {
-  background: #ffffff;
-  border-color: #b53826;
-  border-style: solid;
-  color: #b53826;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(189, 70, 50, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  .hero-companion-pill:hover {
+    background: #ffffff;
+    border-color: #b53826;
+    border-style: solid;
+    color: #9a2814;
+  }
 }
 
 .hero-companion-pill:active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.98);
 }
 
-.companion-icon {
-  font-size: 14px;
-  line-height: 1;
+.hero-companion-pill:focus-visible {
+  outline: 2px solid var(--seal-cinnabar);
+  outline-offset: 3px;
 }
 
 .companion-text {
@@ -637,30 +621,32 @@ body[data-light="night"] .hero-lunar-badge {
 }
 
 .companion-arrow {
-  font-size: 10.5px;
-  font-family: var(--font-serif);
+  flex: 0 0 auto;
+  font-size: 12px;
   background: rgba(189, 70, 50, 0.1);
-  color: #b53826;
-  padding: 1.5px 6px;
-  border-radius: 4px;
-  margin-left: 2px;
+  color: #9a2814;
+  padding: 4px 8px;
+  border-radius: 6px;
   letter-spacing: 0.04em;
   transition: background-color 180ms ease, color 180ms ease;
 }
 
-.hero-companion-pill:hover .companion-arrow {
-  background: #b53826;
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .hero-companion-pill:hover .companion-arrow {
+    background: #b53826;
+    color: #ffffff;
+  }
 }
 
 /* 🌟 手札底栏评注与伴随参考层 */
 .hero-journal-foot {
-  margin-top: 18px;
+  margin-top: 16px;
   padding-top: 14px;
   border-top: 1px dashed rgba(195, 175, 145, 0.45);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 12px;
   position: relative;
   z-index: 10;
 }
@@ -669,28 +655,37 @@ body[data-light="night"] .hero-lunar-badge {
   margin-top: 0;
 }
 
-.hero-journal-foot .hero-companion-pill {
-  margin: 2px 0;
-}
-
 .hero-journal-foot .data-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  font-size: 11px;
-  margin-top: 2px;
+  gap: 4px 12px;
+  font-size: 12px;
+  margin-top: 0;
 }
 
-
-
-/* 7日卡片上的日轮微印 */
-.day-sundisc-seal {
-  font-size: 13px;
-  margin-left: 4px;
-  opacity: 0.9;
-  display: inline-flex;
-  align-items: center;
+/* 桌面端：左栏分数与时间，右栏评注与切换，避免宽卡片中部大片留白 */
+@media (min-width: 861px) {
+  .hero-master-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 40px;
+    align-items: stretch;
+  }
+  .hero-card-header {
+    grid-column: 1 / -1;
+  }
+  .hero-journal-foot {
+    margin-top: 0;
+    padding: 4px 0 0 36px;
+    border-top: 0;
+    border-left: 1px dashed rgba(195, 175, 145, 0.55);
+    justify-content: center;
+    gap: 18px;
+  }
+  .hero-verdict-quote {
+    font-size: 19px;
+  }
 }
 
 /* 真实朱砂印章 (Cinnabar Seal Stamp) */
@@ -710,18 +705,12 @@ body[data-light="night"] .hero-lunar-badge {
   font-family: var(--font-serif);
   transform: rotate(-3.5deg);
   box-shadow: 0 2px 8px rgba(189, 70, 50, 0.15);
-  position: absolute;
-  bottom: -15px;
-  right: 170px;
+  grid-area: seal;
+  position: relative;
   cursor: pointer;
   pointer-events: auto;
   touch-action: manipulation;
   transition: transform 300ms ease, box-shadow 300ms ease, filter 300ms ease;
-}
-
-.cinnabar-seal-stamp:focus-visible {
-  outline: 2px solid var(--seal-cinnabar) !important;
-  outline-offset: 3px !important;
 }
 
 .cinnabar-seal-stamp:active {
@@ -746,7 +735,7 @@ body[data-light="night"] .hero-lunar-badge {
 }
 
 .seal-sub {
-  font-size: 8.5px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   margin-top: 2px;
 }
@@ -910,8 +899,11 @@ body[data-state="ready"] .day-card.day-journal-card::before {
 .day-journal-card[data-grade="great"] .day-card-watercolor {
   background: linear-gradient(90deg, #edb56f, #f7c586);
 }
-.day-journal-card[data-grade="fair"] .day-card-watercolor {
+.day-journal-card[data-grade="good"] .day-card-watercolor {
   background: linear-gradient(90deg, #a4c4e8, #c6d9f0);
+}
+.day-journal-card[data-grade="fair"] .day-card-watercolor {
+  background: linear-gradient(90deg, #b3bfca, #cfd7de);
 }
 .day-journal-card[data-grade="dull"] .day-card-watercolor {
   background: #b8c4c4;
@@ -928,7 +920,12 @@ body[data-state="ready"] .day-card.day-journal-card::before {
   font-size: 32px;
   font-weight: 500;
   line-height: 1;
-  color: #c86829;
+}
+
+.day-score-clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #6e5e4e;
 }
 
 .day-score-tag {
@@ -944,11 +941,11 @@ body[data-state="ready"] .day-card.day-journal-card::before {
 /* 微型朱砂小印泥 */
 .day-mini-seal {
   font-family: var(--font-serif);
-  font-size: 8px;
+  font-size: 11px;
   color: var(--seal-cinnabar);
   border: 1px solid var(--seal-cinnabar);
   border-radius: 3px;
-  padding: 0 3px;
+  padding: 1px 4px;
   display: inline-block;
   transform: rotate(-2.5deg);
   line-height: 1.2;
@@ -1836,170 +1833,69 @@ body[data-wind-gust="gentle"] .day-journal-card {
     flex-shrink: 0;
   }
   .hero-master-card {
-    padding: 22px 16px 18px !important;
-    margin: 12px 0 20px !important;
-    overflow: visible !important;
+    padding: 22px 16px 18px;
+    margin: 12px 0 20px;
   }
   .hero-card-header {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-    margin-bottom: 12px !important;
-  }
-  .journal-entry-tag-row {
-    gap: 6px !important;
+    margin-bottom: 12px;
   }
   .journal-entry-tag {
-    font-size: 10.5px !important;
-    padding: 2.5px 7px !important;
-  }
-  .journal-mode-switch {
-    width: auto !important;
-    justify-content: flex-end !important;
-    margin-bottom: 0 !important;
-    padding: 2.5px !important;
-  }
-  .mode-tab {
-    padding: 3px 9px !important;
-    font-size: 11.5px !important;
+    font-size: 11px;
+    padding: 3px 7px;
   }
   .hero-journal-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: flex-end !important;
-    gap: 8px !important;
-    padding-bottom: 4px !important;
-  }
-  .hero-meta-col {
-    width: auto !important;
-    min-width: 0 !important;
-    flex: 1 1 auto !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 6px !important;
-  }
-  .hero-event-time {
-    font-size: clamp(26px, 7vw, 36px) !important;
-    gap: 4px 6px !important;
-    line-height: 1 !important;
-    margin: 0 !important;
-  }
-  .hero-event-time small {
-    font-size: 12px !important;
-    flex-basis: 100%;
-    white-space: normal !important;
-  }
-  .hero-countdown-tape {
-    font-size: 11px !important;
-    padding: 3px 8px !important;
-    margin-top: 2px !important;
-    white-space: normal !important;
+    gap: 12px;
   }
   .hero-score-col {
-    width: auto !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-end !important;
-    justify-content: flex-end !important;
-    gap: 6px !important;
-    border-top: none !important;
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    position: relative !important;
-  }
-  .hero-score-main {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
-    text-align: right !important;
-  }
-  .score-label-row {
-    font-size: 10px !important;
-    margin-bottom: 0 !important;
-    white-space: nowrap !important;
-  }
-  .score-label-row small {
-    display: none !important;
+    justify-content: space-between;
+    column-gap: 12px;
+    row-gap: 8px;
   }
   .score-number-display {
-    font-size: clamp(52px, 14vw, 76px) !important;
-    line-height: 0.88 !important;
-    margin: 0 !important;
+    font-size: clamp(72px, 22vw, 96px);
+    margin-top: 4px;
   }
   .score-number-display small {
-    font-size: 14px !important;
-    margin-left: 2px !important;
+    font-size: 16px;
   }
   .cinnabar-seal-stamp {
-    position: static !important;
-    flex-shrink: 0 !important;
-    width: clamp(50px, 13vw, 62px) !important;
-    height: clamp(50px, 13vw, 62px) !important;
-    margin-left: 2px !important;
-    margin-bottom: 2px !important;
-    transform: rotate(-3deg) !important;
-    padding: 2px !important;
+    width: 64px;
+    height: 64px;
+    margin-right: 4px;
   }
   .cinnabar-seal-stamp .seal-grade {
-    font-size: clamp(12px, 3.2vw, 14.5px) !important;
-    line-height: 1.1 !important;
+    font-size: 15px;
   }
-  .cinnabar-seal-stamp .seal-sub {
-    font-size: clamp(8px, 2.2vw, 9.5px) !important;
-    line-height: 1.1 !important;
-  }
-  .hero-journal-foot {
-    border-top: 1px dashed rgba(195, 175, 145, 0.45) !important;
-    padding-top: 10px !important;
-    margin-top: 6px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 6px !important;
-  }
-  .hero-verdict-quote {
-    font-size: 14.5px !important;
-    line-height: 1.5 !important;
-    margin: 2px 0 4px !important;
-    padding-left: 10px !important;
-  }
-  .hero-companion-pill {
-    font-size: 11.5px !important;
-    padding: 4px 10px !important;
-    margin: 2px 0 !important;
-  }
-  .hero-journal-foot .data-meta {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 8px !important;
-    font-size: 10.5px !important;
-    margin-top: 2px !important;
-  }
-}
-
-/* Only the narrowest paper needs a second row for the score and seal. */
-@media (max-width: 360px) {
-  .hero-journal-grid {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 12px !important;
+  .hero-grade-line {
+    font-size: 16px;
   }
   .hero-meta-col {
-    width: 100% !important;
+    padding-top: 12px;
+    gap: 6px 10px;
   }
   .hero-event-time {
-    font-size: 32px !important;
+    font-size: 28px;
+    gap: 4px 8px;
   }
-  .hero-score-col {
-    width: 100% !important;
+  .hero-event-time small {
+    font-size: 13px;
   }
-  .score-number-display {
-    font-size: 64px !important;
+  .hero-countdown-tape {
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+  .hero-journal-foot {
+    margin-top: 12px;
+    padding-top: 12px;
+    gap: 10px;
+  }
+  .hero-verdict-quote {
+    font-size: 15px;
+    line-height: 1.55;
+    padding-left: 10px;
+  }
+  .hero-companion-pill {
+    font-size: 13px;
   }
 }
 
@@ -2056,22 +1952,22 @@ body[data-state="ready"] {
   -webkit-text-fill-color: initial !important;
 }
 
-/* Resolve the tier on the paper itself: inherited sky tokens stay untouched. */
-body[data-tier="epic"] .hero-master-card {
-  --paper-score-color: #70430c;
+/* 纸面档位墨色：五档色相可区分，且在干燥与雨湿纸面都 ≥ 4.5:1。
+   天幕主题色不参与，主卡与 7 日卡片共用同一组墨色。 */
+:root {
+  --ink-epic: #9a2814;
+  --ink-great: #8f4006;
+  --ink-good: #2d5f8a;
+  --ink-fair: #4f6070;
+  --ink-dull: #5c554d;
+  --ink-unavailable: #5a5650;
 }
-body[data-tier="great"] .hero-master-card {
-  --paper-score-color: #803b16;
-}
-body[data-tier="fair"] .hero-master-card {
-  --paper-score-color: #65472b;
-}
-body[data-tier="dull"] .hero-master-card {
-  --paper-score-color: #435454;
-}
-body[data-tier="unavailable"] .hero-master-card {
-  --paper-score-color: #4c5656;
-}
+body[data-tier="epic"] .hero-master-card { --paper-score-color: var(--ink-epic); }
+body[data-tier="great"] .hero-master-card { --paper-score-color: var(--ink-great); }
+body[data-tier="good"] .hero-master-card { --paper-score-color: var(--ink-good); }
+body[data-tier="fair"] .hero-master-card { --paper-score-color: var(--ink-fair); }
+body[data-tier="dull"] .hero-master-card { --paper-score-color: var(--ink-dull); }
+body[data-tier="unavailable"] .hero-master-card { --paper-score-color: var(--ink-unavailable); }
 
 .hero-master-card .journal-entry-tag {
   color: #8c7660 !important;
@@ -2148,7 +2044,8 @@ h1#event-time:focus-visible {
 
 .hero-master-card .score-number-display,
 .hero-master-card .score-number-display strong,
-.hero-master-card #score {
+.hero-master-card #score,
+.hero-master-card .hero-grade-line {
   color: var(--paper-score-color) !important;
   -webkit-text-fill-color: var(--paper-score-color) !important;
 }
@@ -2228,8 +2125,13 @@ body[data-state="ready"] .day-card.day-journal-card .day-date-row {
   color: #4a3e32 !important;
 }
 body[data-state="ready"] .day-card.day-journal-card .day-score-num {
-  color: #c86829 !important;
+  color: var(--day-ink, var(--ink-unavailable)) !important;
 }
+.day-journal-card[data-grade="epic"] { --day-ink: var(--ink-epic); }
+.day-journal-card[data-grade="great"] { --day-ink: var(--ink-great); }
+.day-journal-card[data-grade="good"] { --day-ink: var(--ink-good); }
+.day-journal-card[data-grade="fair"] { --day-ink: var(--ink-fair); }
+.day-journal-card[data-grade="dull"] { --day-ink: var(--ink-dull); }
 body[data-state="ready"] .day-card.day-journal-card .day-score-tag {
   color: #7b6a58 !important;
 }

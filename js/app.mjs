@@ -15,6 +15,7 @@ import {
   solarAzimuth,
   solarElevation,
   stormLevelFor,
+  tierFor,
   sunDiskPosition,
   moonDiskPosition,
   lunarPhase,
@@ -23,7 +24,7 @@ import {
   waitAdvice,
   weatherConditionFor,
   weatherTheme
-} from "./forecast.mjs?v=8";
+} from "./forecast.mjs?v=13";
 import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
 import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=7";
 
@@ -49,8 +50,8 @@ function fadeUpdate(element) {
   if (!motionAllowed() || !element) return;
   element.getAnimations().forEach((animation) => animation.cancel());
   element.animate([
-    { opacity: 0.45, filter: "blur(1.5px)", transform: "translateY(3px)" },
-    { opacity: 1, filter: "blur(0)", transform: "translateY(0)" }
+    { opacity: 0.45, transform: "translateY(3px)" },
+    { opacity: 1, transform: "translateY(0)" }
   ], {
     duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)"
   });
@@ -89,28 +90,14 @@ const journalWeather = createJournalWeatherEngine(
   $("weather-foreground-canvas")
 );
 
-// 绑定黄铜夹与朱砂印章自然微物理触控
+// 纸面装饰只作指针彩蛋：不进入 Tab 顺序与读屏，避免挡在正文前面
 $("hero-brass-clip")?.addEventListener("click", () => {
   triggerHaptic([15, 30, 20]);
   journalWeather?.triggerLightningStrike("clip");
 });
-$("hero-brass-clip")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    triggerHaptic([15, 30, 20]);
-    journalWeather?.triggerLightningStrike("clip");
-  }
-});
 $("seal-stamp")?.addEventListener("click", () => {
   triggerHaptic(25);
   journalWeather?.triggerSunWarm();
-});
-$("seal-stamp")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    triggerHaptic(25);
-    journalWeather?.triggerSunWarm();
-  }
 });
 
 // 绑定手撕条纹和纸胶带吹风交互 (Tap Washi Tape to blow wind)
@@ -119,19 +106,7 @@ const triggerWindFromTape = () => {
   journalWeather?.triggerWindGust("high");
 };
 $("hero-washi-tape")?.addEventListener("click", triggerWindFromTape);
-$("hero-washi-tape")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    triggerWindFromTape();
-  }
-});
 $("folio-washi-tape")?.addEventListener("click", triggerWindFromTape);
-$("folio-washi-tape")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    triggerWindFromTape();
-  }
-});
 
 // 手机端向右滑扫清风微手势 (Swipe Right to summon ambient breeze)
 let touchWindStartX = 0;
@@ -194,13 +169,8 @@ const elements = {
   eventContext: $("event-context"), eventPending: $("event-pending"),
   eventPendingLabel: $("event-pending-label"), eventPendingDetail: $("event-pending-detail"),
   forecastContent: Array.from($("panel-ready").children).filter((element) => element.matches("article, section")),
-  modeTabs: Array.from(document.querySelectorAll(".mode-tab")),
-  modeTabGlow: $("mode-tab-glow"),
-  modeTabSunDisc: $("mode-tab-sundisc"),
   indexLabel: $("index-label"),
-  indexScale: $("index-scale"),
   companionPill: $("hero-companion-pill"),
-  companionIcon: $("companion-icon"),
   companionText: $("companion-text"),
   heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
   sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
@@ -408,13 +378,6 @@ function stopTicker() {
 
 function displayMetric(element, value, formatter) {
   element.textContent = value == null || !Number.isFinite(value) ? "—" : formatter(value);
-}
-
-function tierFor(score) {
-  if (score >= 80) return "epic";
-  if (score >= 65) return "great";
-  if (score >= 35) return "fair";
-  return "dull";
 }
 
 function hasLocalCloudForecast(metrics) {
@@ -822,17 +785,14 @@ function renderWeek(bundle) {
         <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
         <div class="day-date-row">
           <span class="day-card-date">${formattedDate}</span>
-          <div class="day-seals-wrap">
-            <span class="day-mini-seal">${miniSeal}</span>
-            <span class="day-sundisc-seal" title="日轮视相：${sunPhen.name}">${sunPhen.icon}</span>
-          </div>
+          <span class="day-mini-seal">${miniSeal}</span>
         </div>
         <div class="day-card-watercolor"></div>
         <div class="day-score-block">
           <span class="day-score-num">${score}</span>
           <div class="day-score-tag">
             <span>${indexBand(score)}</span>
-            <small style="font-family:var(--font-mono);font-size:10px;color:#8c7b6a;">${formatClock(eventTime, timeZone)}</small>
+            <small class="day-score-clock">${formatClock(eventTime, timeZone)}</small>
           </div>
         </div>
         <p class="day-tip-line">${advice}</p>
@@ -920,41 +880,23 @@ function renderReady() {
   }
   elements.score.textContent = String(activeScore);
   if (!wasReady) elements.week.replaceChildren();
-  elements.band.textContent = indexBand(activeScore);
-
-  if (elements.indexLabel) {
-    elements.indexLabel.textContent = isSunDiscView
-      ? (state.event === "sunrise" ? "破晓日轮综合研判" : "日落圆盘综合研判")
-      : "霞光指数综合研判";
-  }
-  if (elements.indexScale) {
-    elements.indexScale.textContent = isSunDiscView ? "地平露头与日轮模型" : "0–99 经验模型";
-  }
+  elements.band.textContent = isSunDiscView
+    ? `${indexBand(activeScore)} · ${sunPhen.sub}`
+    : `${indexBand(activeScore)} · ${waitAdvice(activeScore)}`;
+  elements.indexLabel.textContent = isSunDiscView ? "日轮指数" : "霞光指数";
 
   // 朱砂印章研判与手记建议
   if (elements.sealGrade) elements.sealGrade.textContent = activeSeal.text;
   if (elements.sealSub) elements.sealSub.textContent = activeSeal.sub;
   elements.verdict.textContent = `“${activeAdvice}”`;
 
-  // 伴随微章
-  if (elements.companionPill) {
-    if (isSunDiscView) {
-      elements.companionIcon.textContent = "🌅";
-      elements.companionText.textContent = `霞光指数：${glowSeal.text} ${glowScore}分 · ${glowSeal.sub}`;
-      elements.companionPill.title = "点击切换至霞光余晖研判";
-    } else {
-      elements.companionIcon.textContent = sunPhen.icon;
-      elements.companionText.textContent = `日轮视相：${sunPhen.name} ${sunScore}分 · ${sunPhen.sub}`;
-      elements.companionPill.title = "点击切换至日轮视相研判";
-    }
-  }
-
-  if (elements.modeTabGlow && elements.modeTabSunDisc) {
-    elements.modeTabGlow.classList.toggle("is-active", !isSunDiscView);
-    elements.modeTabGlow.setAttribute("aria-selected", String(!isSunDiscView));
-    elements.modeTabSunDisc.classList.toggle("is-active", isSunDiscView);
-    elements.modeTabSunDisc.setAttribute("aria-selected", String(isSunDiscView));
-  }
+  // 另一视角的分数同时作为切换入口，主卡只保留这一个视角切换
+  elements.companionText.textContent = isSunDiscView
+    ? `霞光指数 ${glowScore} 分 · ${glowSeal.text}`
+    : `日轮指数 ${sunScore} 分 · ${sunPhen.name}`;
+  elements.companionPill.setAttribute("aria-label", isSunDiscView
+    ? `切换到霞光视角，霞光指数 ${glowScore} 分，${glowSeal.text}`
+    : `切换到日轮视角，日轮指数 ${sunScore} 分，${sunPhen.name}`);
 
   updateSourceStatus();
   elements.updated.textContent = state.stale ? `缓存于 ${formatAge(Date.now() - state.dataTimestamp)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
@@ -1891,13 +1833,6 @@ elements.heroLunarBadge?.addEventListener("click", () => {
   triggerHaptic(12);
   elements.lunarDialog?.showModal();
 });
-elements.heroLunarBadge?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    triggerHaptic(12);
-    elements.lunarDialog?.showModal();
-  }
-});
 
 // 天体观测台实验室：昼夜切换与月相动态模拟滑块
 elements.devBtnToggleNight?.addEventListener("click", () => {
@@ -1966,16 +1901,8 @@ function setViewMode(mode) {
   }
 }
 
-elements.modeTabGlow?.addEventListener("click", () => setViewMode("glow"));
-elements.modeTabSunDisc?.addEventListener("click", () => setViewMode("sundisc"));
-elements.companionPill?.addEventListener("click", () => {
+elements.companionPill.addEventListener("click", () => {
   setViewMode(state.viewMode === "glow" ? "sundisc" : "glow");
-});
-elements.companionPill?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    setViewMode(state.viewMode === "glow" ? "sundisc" : "glow");
-  }
 });
 
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
