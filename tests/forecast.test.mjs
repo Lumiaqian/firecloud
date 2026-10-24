@@ -8,11 +8,15 @@ import {
   nextEvent,
   scoreSky,
   sealFor,
+  skyBreakdown,
+  sunDiscBreakdown,
+  viewingWindow,
+  sunTimes,
+  compassLabel,
   tierFor,
   scoreSunDisc,
   sunDiscPhenomenon,
   sealForSunDisc,
-  reasonsForSunDisc,
   photographicAdviceForSunDisc,
   solarAzimuth,
   solarElevation,
@@ -328,8 +332,8 @@ test("适度气溶胶与通透地平准确判定为红润咸蛋黄", () => {
   const seal = sealForSunDisc(score, phen);
   assert.deepEqual(seal, { text: "丹曦", sub: "融融红日" });
 
-  const reasons = reasonsForSunDisc(eggYolkSky, phen);
-  assert.ok(reasons.some(r => r.includes("消光") || r.includes("红润")));
+  const notes = sunDiscBreakdown(eggYolkSky).factors.map((item) => item.note);
+  assert.ok(notes.some((note) => note.includes("消光") || note.includes("红润")));
 
   const advice = photographicAdviceForSunDisc(eggYolkSky, score, phen, "sunset");
   assert.ok(advice.includes("咸蛋黄") || advice.includes("红艳"));
@@ -363,3 +367,47 @@ test("中高云开合触发云隙漏金", () => {
 });
 
 
+
+test("逐项拆解的基准分加各项增减与评分一致（未触发封顶时）", () => {
+  for (const [breakdown, metrics] of [
+    [skyBreakdown, cleanSky],
+    [skyBreakdown, { ...cleanSky, low: 30, rh: 80, vis: 8000, aod: 0.5 }],
+    [sunDiscBreakdown, { low: 5, mid: 30, high: 70, pathLow: 8, vis: 20_000, rh: 85, aod: 0.6, pm25: 90 }]
+  ]) {
+    const result = breakdown(metrics);
+    const sum = result.base + result.factors.reduce((total, item) => total + item.delta, 0);
+    assert.equal(result.capNote, null);
+    assert.equal(result.score, Math.max(2, Math.min(99, Math.round(sum))));
+  }
+});
+
+test("厚重低云触发封顶时给出封顶说明", () => {
+  const result = skyBreakdown({ ...cleanSky, low: 90, mid: 80 });
+  assert.ok(result.score <= 10);
+  assert.match(result.capNote, /封顶 10 分/);
+});
+
+test("观赏窗口包住事件时刻，霞光峰值在日落之后、日出之前", () => {
+  const sunset = sunTimes(new Date("2026-10-24T04:00:00Z"), 30.27, 120.15).sunset;
+  const dusk = viewingWindow("sunset", sunset, 30.27, 120.15);
+  assert.ok(dusk.start < sunset && sunset < dusk.peak && dusk.peak < dusk.end);
+  const minutes = (dusk.end - dusk.start) / 60_000;
+  assert.ok(minutes > 25 && minutes < 60, `窗口时长 ${minutes} 分钟`);
+
+  const sunrise = sunTimes(new Date("2026-10-24T04:00:00Z"), 30.27, 120.15).sunrise;
+  const dawn = viewingWindow("sunrise", sunrise, 30.27, 120.15);
+  assert.ok(dawn.start < dawn.peak && dawn.peak < sunrise && sunrise < dawn.end);
+
+  const disc = viewingWindow("sunset", sunset, 30.27, 120.15, "sundisc");
+  assert.equal(disc.peak, sunset);
+  assert.ok(disc.start < sunset && sunset < disc.end);
+});
+
+test("方位角转十六方位中文名", () => {
+  assert.equal(compassLabel(0), "北");
+  assert.equal(compassLabel(359), "北");
+  assert.equal(compassLabel(90), "东");
+  assert.equal(compassLabel(225), "西南");
+  assert.equal(compassLabel(257), "西偏南");
+  assert.equal(compassLabel(-90), "西");
+});

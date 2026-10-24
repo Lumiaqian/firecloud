@@ -146,13 +146,18 @@ export function sunTimes(date, lat, lng) {
 
   const sunsetJulian = crossing(-0.833);
   const goldenJulian = crossing(6);
-  if (sunsetJulian == null) return { sunrise: null, sunset: null, goldenStart: null, goldenEnd: null };
+  const civilJulian = crossing(-6);
+  if (sunsetJulian == null) {
+    return { sunrise: null, sunset: null, goldenStart: null, goldenEnd: null, civilDawn: null, civilDusk: null };
+  }
   const sunriseJulian = noon - (sunsetJulian - noon);
   return {
     sunrise: fromJulian(sunriseJulian),
     sunset: fromJulian(sunsetJulian),
     goldenStart: goldenJulian == null ? null : fromJulian(goldenJulian),
-    goldenEnd: goldenJulian == null ? null : fromJulian(noon - (goldenJulian - noon))
+    goldenEnd: goldenJulian == null ? null : fromJulian(noon - (goldenJulian - noon)),
+    civilDawn: civilJulian == null ? null : fromJulian(noon - (civilJulian - noon)),
+    civilDusk: civilJulian == null ? null : fromJulian(civilJulian)
   };
 }
 
@@ -166,6 +171,41 @@ export function solarAzimuth(date, lat, lng) {
     Math.cos(hourAngle) * Math.sin(lat * RAD) - Math.tan(solarDeclination) * Math.cos(lat * RAD)
   );
   return (azimuthFromSouth * DEG + 180 + 360) % 360;
+}
+
+const COMPASS_POINTS = ["北", "北偏东", "东北", "东偏北", "东", "东偏南", "东南", "南偏东",
+  "南", "南偏西", "西南", "西偏南", "西", "西偏北", "西北", "北偏西"];
+
+// 方位角（正北为 0°，顺时针）转为十六方位中文名
+export function compassLabel(azimuthDeg) {
+  const normalized = ((azimuthDeg % 360) + 360) % 360;
+  return COMPASS_POINTS[Math.round(normalized / 22.5) % 16];
+}
+
+/**
+ * 观赏窗口：以事件时刻为锚点，按当天民用晨昏蒙影时长推算。
+ * - 霞光：云底受光从日落前约半段蒙影开始，余晖峰值约在日落后半段蒙影，持续到民用昏影终。
+ * - 日轮：太阳仰角 6° 至触及地平。
+ * 高纬极昼/极夜等无法求解时，以 25 分钟蒙影兜底。
+ */
+export function viewingWindow(type, eventTime, lat, lng, mode = "glow") {
+  const times = sunTimes(eventTime, lat, lng);
+  const minute = 60_000;
+  const at = (offset) => new Date(eventTime.getTime() + offset);
+  const twilight = type === "sunset"
+    ? (times.civilDusk && times.sunset ? times.civilDusk - times.sunset : 25 * minute)
+    : (times.civilDawn && times.sunrise ? times.sunrise - times.civilDawn : 25 * minute);
+  if (mode === "sundisc") {
+    const golden = type === "sunset"
+      ? (times.goldenStart && times.sunset ? times.sunset - times.goldenStart : 35 * minute)
+      : (times.goldenEnd && times.sunrise ? times.goldenEnd - times.sunrise : 35 * minute);
+    return type === "sunset"
+      ? { start: at(-golden), end: at(2 * minute), peak: eventTime }
+      : { start: at(-2 * minute), end: at(golden), peak: eventTime };
+  }
+  return type === "sunset"
+    ? { start: at(-twilight / 2), end: at(twilight), peak: at(twilight / 2) }
+    : { start: at(-twilight), end: at(twilight / 2), peak: at(-twilight / 2) };
 }
 
 export function solarElevation(date, lat, lng) {
@@ -511,30 +551,81 @@ export function metricsAt(bundle, date) {
   };
 }
 
+const pct = (value) => `${Math.round(value)}%`;
+const km = (value) => `${Math.round(value / 1000)} km`;
+
+function factor(key, label, value, display, gauge, delta, note) {
+  // 缺测时沿用评分模型的默认取值计算 delta，只把展示改为“缺测”
+  if (value == null || !Number.isFinite(value)) {
+    return { key, label, display: "缺测", gauge: null, delta, note: "该要素暂缺" };
+  }
+  return { key, label, display: display(value), gauge: { value, ...gauge }, delta, note };
+}
+
+function sumBreakdown(base, factors, { capAfter = null, cap = null, capNote = null, floor = 2, ceiling = 99 } = {}) {
+  let score = base;
+  for (const item of factors) {
+    score += item.delta;
+    if (capAfter === item.key && cap != null) score = Math.min(score, cap);
+  }
+  if (capAfter == null && cap != null) score = Math.min(score, cap);
+  return {
+    base,
+    factors,
+    capNote: cap != null ? capNote : null,
+    score: Math.max(floor, Math.min(cap ?? ceiling, Math.round(score)))
+  };
+}
+
+/**
+ * 霞光指数逐项拆解：每一项的 delta 即该要素对分数的增减，主卡下方“影响因素”直接展示。
+ * scoreSky 只是取其总分，保证展示与评分永远一致。
+ */
+export function skyBreakdown(metrics) {
+  const { low, mid, high, pathLow, rh, vis, precip, aod, pm25, dust } = metrics;
+  const overcast = (low ?? 0) > 85 && (mid ?? 0) > 70;
+  const factors = [
+    factor("high", "高云", high, pct, { min: 0, max: 100, ideal: [20, 65] },
+      48 * (gauss(high ?? 0, 42, 24) - 1),
+      high > 70 ? "高云过厚，光线难以透入" : high >= 20 ? "高云适中，受光后最易烧红" : "高云稀少，缺少受光云幕"),
+    factor("mid", "中云", mid, pct, { min: 0, max: 100, ideal: [15, 55] },
+      16 * (gauss(mid ?? 0, 35, 22) - 1),
+      mid > 60 ? "中云偏厚，容易压暗天色" : mid >= 20 ? "中云丰富霞光层次" : "中云偏少，层次单薄"),
+    factor("low", "本地低云", low, pct, { min: 0, max: 100, ideal: [0, 15] },
+      (low ?? 0) > 15 ? -0.75 * (low - 15) : 0,
+      low > 40 ? "本地低云厚，地平视线受阻" : low > 15 ? "本地低云有一定遮挡" : "本地低云少，近处通透"),
+    factor("pathLow", "太阳方向低云", pathLow, pct, { min: 0, max: 100, ideal: [0, 15] },
+      pathLow != null && pathLow > 15 ? -Math.min(24, 0.4 * (pathLow - 15)) : 0,
+      pathLow > 40 ? "远端低云厚，阳光难照到云底" : pathLow > 15 ? "远端有低云，光路部分受阻" : "远端光路通畅，阳光能照上云底"),
+    factor("rh", "湿度", rh, pct, { min: 0, max: 100, ideal: [20, 65] },
+      rh == null ? 0 : rh > 65 ? -Math.min(14, (rh - 65) * 0.4) : rh < 40 ? 5 : 0,
+      rh > 75 ? "水汽丰沛，天色偏朦胧" : rh > 65 ? "湿度略高，色彩稍淡" : rh < 40 ? "空气干爽，色彩更饱和" : "湿度适中"),
+    factor("vis", "能见度", vis, km, { min: 0, max: 50_000, ideal: [30_000, 50_000] },
+      vis == null ? 0 : vis >= 30_000 ? 6 : vis < 10_000 ? -Math.min(12, (10_000 - vis) / 800) : 0,
+      vis >= 30_000 ? "大气清朗，远处云霞清晰" : vis < 10_000 ? "能见度低，远处天色发灰" : "能见度一般"),
+    factor("aod", "气溶胶 AOD", aod, (value) => value.toFixed(2), { min: 0, max: 1, ideal: [0, 0.3] },
+      aod != null && aod > 0.3 ? -Math.min(15, (aod - 0.3) * 30) : 0,
+      aod > 0.3 ? "空气偏浊，余晖发暗" : "空气洁净，色彩纯正"),
+    factor("pm25", "PM2.5", pm25, (value) => `${Math.round(value)} μg/m³`, { min: 0, max: 150, ideal: [0, 35] },
+      pm25 != null && pm25 > 35 ? -Math.min(10, (pm25 - 35) / 5) : 0,
+      pm25 > 35 ? "颗粒物偏多，天色偏灰" : "颗粒物少")
+  ];
+  if (precip != null && precip > 0) {
+    factors.push(factor("precip", "降水", precip, (value) => `${value.toFixed(1)} mm`, { min: 0, max: 5, ideal: [0, 0] },
+      -Math.min(18, precip * 6), "有降水，天色暗淡"));
+  }
+  if (dust != null && dust > 20) {
+    factors.push(factor("dust", "沙尘", dust, (value) => `${Math.round(value)} μg/m³`, { min: 0, max: 200, ideal: [0, 20] },
+      -Math.min(8, (dust - 20) / 10), "沙尘偏多，色彩发黄发灰"));
+  }
+  // 基准取理想云况（高云 42%、中云 35%）时的 89 分，云况偏离理想即表现为扣分
+  return sumBreakdown(25 + 48 + 16, factors, overcast
+    ? { capAfter: "low", cap: 10, capNote: "低云与中云同时厚重，霞光指数封顶 10 分" }
+    : {});
+}
+
 export function scoreSky(metrics) {
-  const low = metrics.low ?? 0;
-  const mid = metrics.mid ?? 0;
-  const high = metrics.high ?? 0;
-  const overcast = low > 85 && mid > 70;
-  let score = 25;
-  score += 48 * gauss(high, 42, 24);
-  score += 16 * gauss(mid, 35, 22);
-  if (low > 15) score -= 0.75 * (low - 15);
-  if (overcast) score = Math.min(score, 10);
-  if (metrics.pathLow != null && metrics.pathLow > 15) score -= Math.min(24, 0.4 * (metrics.pathLow - 15));
-  if (metrics.rh != null) {
-    if (metrics.rh > 65) score -= Math.min(14, (metrics.rh - 65) * 0.4);
-    else if (metrics.rh < 40) score += 5;
-  }
-  if (metrics.vis != null) {
-    if (metrics.vis >= 30_000) score += 6;
-    else if (metrics.vis < 10_000) score -= Math.min(12, (10_000 - metrics.vis) / 800);
-  }
-  if (metrics.precip != null && metrics.precip > 0) score -= Math.min(18, metrics.precip * 6);
-  if (metrics.aod != null && metrics.aod > 0.3) score -= Math.min(15, (metrics.aod - 0.3) * 30);
-  if (metrics.pm25 != null && metrics.pm25 > 35) score -= Math.min(10, (metrics.pm25 - 35) / 5);
-  if (metrics.dust != null && metrics.dust > 20) score -= Math.min(8, (metrics.dust - 20) / 10);
-  return Math.max(2, Math.min(overcast ? 10 : 99, Math.round(score)));
+  return skyBreakdown(metrics).score;
 }
 
 // 唯一档位表：主卡、印章、7 日卡片与主题色都从这里取值，避免分界各自漂移。
@@ -598,68 +689,58 @@ export function tierFor(score) {
  * 3. 中云较多时遮挡太阳，高云薄卷云少量无碍；
  * 4. 降水、重度霾、大雾等强行封顶。
  */
-export function scoreSunDisc(metrics) {
-  const low = metrics?.low ?? 0;
-  const mid = metrics?.mid ?? 0;
-  const high = metrics?.high ?? 0;
+/**
+ * 日轮指数逐项拆解：地平低云是太阳圆盘能否露头的关键，惩罚最重；
+ * 厚重低云、阴天与降水按封顶规则处理。
+ */
+export function sunDiscBreakdown(metrics) {
+  const low = metrics?.low;
+  const mid = metrics?.mid;
+  const high = metrics?.high;
   const pathLow = metrics?.pathLow ?? low;
   const precip = metrics?.precip ?? 0;
+  const { vis, rh, aod, pm25 } = metrics ?? {};
+  const softened = (aod != null && aod >= 0.16 && aod <= 0.45) || (pm25 != null && pm25 >= 30 && pm25 <= 80);
+  const factors = [
+    factor("low", "本地低云", low, pct, { min: 0, max: 100, ideal: [0, 8] },
+      (low ?? 0) > 8 ? -Math.min(50, (low - 8) * 1.1) : 0,
+      low > 40 ? "低云厚，太阳易提前没入云层" : low > 8 ? "地平附近有零散低云" : "低云极少，视线直达地平"),
+    factor("pathLow", "太阳方向低云", pathLow, pct, { min: 0, max: 100, ideal: [0, 10] },
+      (pathLow ?? 0) > 10 ? -Math.min(40, (pathLow - 10) * 0.9) : 0,
+      pathLow > 45 ? "太阳方向低云堆叠，难见完整日轮" : pathLow > 10 ? "太阳方向有低云扰动" : "太阳方向地平通透"),
+    factor("mid", "中云", mid, pct, { min: 0, max: 100, ideal: [0, 20] },
+      (mid ?? 0) > 20 ? -Math.min(25, (mid - 20) * 0.45) : 0,
+      mid > 20 ? "中云可能遮挡日轮" : "中云少，不挡太阳"),
+    factor("high", "高云", high, pct, { min: 0, max: 100, ideal: [0, 20] },
+      (high ?? 0) <= 20 ? 2 : high > 60 ? -Math.min(12, (high - 60) * 0.3) : 0,
+      high > 60 ? "高云厚，日轮轮廓被雾化" : high > 20 ? "薄高云为日轮添一层纱" : "高云少，日轮轮廓清晰"),
+    factor("vis", "能见度", vis, km, { min: 0, max: 50_000, ideal: [30_000, 50_000] },
+      vis == null ? 0 : vis >= 30_000 ? 4 : vis < 10_000 ? -Math.min(18, (10_000 - vis) / 600) : 0,
+      vis >= 30_000 ? "大气通透，地平线清晰如剪影" : vis < 10_000 ? "能见度低，地平泛白" : "能见度一般"),
+    factor("rh", "湿度", rh, pct, { min: 0, max: 100, ideal: [0, 80] },
+      rh != null && rh > 80 ? -Math.min(10, (rh - 80) * 0.5) : 0,
+      rh > 80 ? "水汽重，地平易起薄霭" : "湿度不影响日轮"),
+    factor("aod", "气溶胶 AOD", aod, (value) => value.toFixed(2), { min: 0, max: 1, ideal: [0, 0.55] },
+      aod != null && aod > 0.55 ? -Math.min(22, (aod - 0.55) * 45) : 0,
+      aod > 0.55 ? "灰霾较重，太阳未落地便失色" : softened ? "适度消光滤去眩光，日轮更红润" : "空气洁净，日轮金亮"),
+    factor("pm25", "PM2.5", pm25, (value) => `${Math.round(value)} μg/m³`, { min: 0, max: 150, ideal: [0, 80] },
+      pm25 != null && pm25 > 80 ? -Math.min(16, (pm25 - 80) / 4) : 0,
+      pm25 > 80 ? "颗粒物多，太阳发暗" : "颗粒物不影响日轮")
+  ];
+  if (precip > 0) {
+    factors.push(factor("precip", "降水", precip, (value) => `${value.toFixed(1)} mm`, { min: 0, max: 5, ideal: [0, 0] },
+      0, "有降水，云遮雾障"));
+  }
+  const caps = [
+    precip > 0.1 && { cap: 10, capNote: "有降水，日轮指数封顶 10 分" },
+    (low ?? 0) > 70 && (mid ?? 0) > 50 && { cap: 8, capNote: "低云与中云同时厚重，日轮指数封顶 8 分" },
+    ((low ?? 0) > 40 || (pathLow ?? 0) > 45) && { cap: 18, capNote: "地平低云厚重，日轮指数封顶 18 分" }
+  ].filter(Boolean).sort((a, b) => a.cap - b.cap);
+  return sumBreakdown(92, factors, caps[0] ?? {});
+}
 
-  // 基础分：晴空即享高分
-  let score = 92;
-
-  // 低云惩罚：太阳在地平线附近的直线视线通透度
-  if (low > 8) {
-    score -= Math.min(50, (low - 8) * 1.1);
-  }
-  if (pathLow > 10) {
-    score -= Math.min(40, (pathLow - 10) * 0.9);
-  }
-
-  // 中云遮挡
-  if (mid > 20) {
-    score -= Math.min(25, (mid - 20) * 0.45);
-  }
-
-  // 高云微调：少量薄高云带来层次，过厚则雾化太阳
-  if (high <= 20) {
-    score += 2;
-  } else if (high > 60) {
-    score -= Math.min(12, (high - 60) * 0.3);
-  }
-
-  // 能见度与水汽
-  if (metrics?.vis != null) {
-    if (metrics.vis >= 30_000) score += 4;
-    else if (metrics.vis < 10_000) score -= Math.min(18, (10_000 - metrics.vis) / 600);
-  }
-  if (metrics?.rh != null && metrics.rh > 80) {
-    score -= Math.min(10, (metrics.rh - 80) * 0.5);
-  }
-
-  // 严重气溶胶 / 灰霾阻日
-  if (metrics?.aod != null && metrics.aod > 0.55) {
-    score -= Math.min(22, (metrics.aod - 0.55) * 45);
-  }
-  if (metrics?.pm25 != null && metrics.pm25 > 80) {
-    score -= Math.min(16, (metrics.pm25 - 80) / 4);
-  }
-
-  // 强阻断判定：厚重低云或阴天封顶
-  const overcastLow = low > 40 || pathLow > 45;
-  if (overcastLow) {
-    score = Math.min(score, 18);
-  }
-  if (low > 70 && mid > 50) {
-    score = Math.min(score, 8);
-  }
-
-  // 降水直接封顶
-  if (precip > 0.1) {
-    score = Math.min(score, 10);
-  }
-
-  return Math.max(2, Math.min(99, Math.round(score)));
+export function scoreSunDisc(metrics) {
+  return sunDiscBreakdown(metrics).score;
 }
 
 /**
