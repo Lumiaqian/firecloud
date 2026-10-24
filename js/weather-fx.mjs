@@ -1,3 +1,5 @@
+import { createFrameLoop } from "./frame-loop.mjs";
+
 const PARTICLE_LIMITS = {
   rain: { divisor: 4_200, min: 64, max: 180 },
   snow: { divisor: 7_000, min: 46, max: 120 },
@@ -897,7 +899,8 @@ function drawStars(context, particles, alphaScale = 1) {
 
 export function createWeatherFx(canvas, {
   root = document.body,
-  contactCanvas = null
+  contactCanvas = null,
+  loop = createFrameLoop()
 } = {}) {
   const context = canvas?.getContext?.("2d");
   const contactContext = contactCanvas?.getContext?.("2d") ?? null;
@@ -919,7 +922,6 @@ export function createWeatherFx(canvas, {
   let contactDirty = false;
   let width = 0;
   let height = 0;
-  let animationFrame = null;
   let resizeFrame = null;
   let surfaceFrame = null;
   let previousTime = 0;
@@ -1159,12 +1161,10 @@ export function createWeatherFx(canvas, {
     } else if (root.style.getPropertyValue("--atmosphere-lightning-flash")) {
       root.style.removeProperty("--atmosphere-lightning-flash");
     }
-    animationFrame = window.requestAnimationFrame(drawFrame);
   }
 
   function stopAnimation() {
-    if (animationFrame != null) window.cancelAnimationFrame(animationFrame);
-    animationFrame = null;
+    loop.remove(drawFrame);
     previousTime = 0;
     retiringParticles.length = 0;
     retiringEffect = null;
@@ -1182,7 +1182,7 @@ export function createWeatherFx(canvas, {
       stopAnimation();
       return;
     }
-    if (animationFrame == null) animationFrame = window.requestAnimationFrame(drawFrame);
+    loop.add(drawFrame);
   }
 
   function syncTheme() {

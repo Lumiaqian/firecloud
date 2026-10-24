@@ -125,7 +125,7 @@ export function createSky({ storage, paperFx, moonView, themeColor, body = docum
         skyHorizon: computed.getPropertyValue("--sky-horizon").trim()
       });
 
-      paperFx?.syncWeather({
+      paperFx.syncWeather({
         weather: theme.weather,
         windSpeed: Number(windSpeed) || 0,
         windGust: Number(windGust) || 0,

@@ -17,8 +17,8 @@ import {
   tierFor,
   viewingWindow
 } from "./forecast.mjs";
+import { createFrameLoop } from "./frame-loop.mjs";
 import { createWeatherFx } from "./weather-fx.mjs";
-import { createJournalWeatherEngine } from "./journal-weather-engine.mjs";
 import { createForecastSession } from "./core/session.mjs";
 import { KEYS, createForecastCache, createStorage, normalizePlace } from "./core/storage.mjs";
 import { eventLabels, formatCountdown, localTimeZone } from "./core/format.mjs";
@@ -34,6 +34,7 @@ import { createPlaces } from "./ui/places.mjs";
 import { createDevLab } from "./ui/dev-lab.mjs";
 import { createWelcome } from "./ui/welcome.mjs";
 import { bindHeroTilt, bindPaperInteractions } from "./ui/paper.mjs";
+import { createPaperFx } from "./ui/paper-fx.mjs";
 
 const PANELS = ["welcome", "loading", "ready", "error"];
 const TICK_INTERVAL = 30_000;
@@ -50,18 +51,14 @@ const els = {
 
 trackInputModality(body);
 const storage = createStorage();
-createWeatherFx($("weather-canvas"), { contactCanvas: $("weather-contact-canvas") });
-const paperFx = createJournalWeatherEngine($("weather-background-canvas"), $("weather-foreground-canvas"));
+const frameLoop = createFrameLoop();
+createWeatherFx($("weather-canvas"), { contactCanvas: $("weather-contact-canvas"), loop: frameLoop });
+const paperFx = createPaperFx($("weather-foreground-canvas"), { loop: frameLoop });
 bindPaperInteractions(paperFx);
 bindHeroTilt();
 
 const moonView = createMoonView();
-const sky = createSky({
-  storage,
-  moonView,
-  themeColor: $("theme-color"),
-  paperFx: paperFx && { syncWeather: (conditions) => paperFx.syncWeatherConditions(conditions) }
-});
+const sky = createSky({ storage, moonView, paperFx, themeColor: $("theme-color") });
 const hero = createHeroView();
 const factors = createFactorsView();
 const week = createWeekView({ onSelectDay: selectDay });
@@ -276,8 +273,9 @@ function renderReady() {
   else startTicker(eventTime);
   setPanel("ready");
 
-  if (typeof metrics.precip === "number" && metrics.precip > 0.05) paperFx?.triggerRainSoak();
-  else if (body.dataset.weather !== "rain" && body.dataset.weather !== "thunder") paperFx?.restoreDryCard();
+  // 所选事件时刻有降水时纸面受潮；当前实况在下雨时保持受潮
+  if (typeof metrics.precip === "number" && metrics.precip > 0.05) paperFx.soak();
+  else if (body.dataset.weather !== "rain" && body.dataset.weather !== "thunder") paperFx.dry();
   if (wasReady) changing.forEach((element, index) => {
     if (element.textContent !== previousText[index]) fadeUpdate(element);
   });

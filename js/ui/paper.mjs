@@ -10,18 +10,17 @@ const SWIPE_STRONG = 160;
 const SWIPE_MAX_DRIFT = 55;
 
 export function bindPaperInteractions(paperFx) {
-  if (!paperFx) return;
   $("hero-brass-clip").addEventListener("click", () => {
     triggerHaptic([15, 30, 20]);
-    paperFx.triggerLightningStrike("clip");
+    paperFx.strike();
   });
   $("seal-stamp").addEventListener("click", () => {
     triggerHaptic(25);
-    paperFx.triggerSunWarm();
+    paperFx.warm();
   });
   const windFromTape = () => {
     triggerHaptic([12, 22]);
-    paperFx.triggerWindGust("high");
+    paperFx.gust("high");
   };
   $("hero-washi-tape").addEventListener("click", windFromTape);
   $("folio-washi-tape").addEventListener("click", windFromTape);
@@ -40,7 +39,7 @@ export function bindPaperInteractions(paperFx) {
     const deltaY = event.changedTouches[0].clientY - startY;
     if (deltaX > SWIPE_MIN && Math.abs(deltaY) < SWIPE_MAX_DRIFT) {
       triggerHaptic(12);
-      paperFx.triggerWindGust(deltaX > SWIPE_STRONG ? "high" : "gentle");
+      paperFx.gust(deltaX > SWIPE_STRONG ? "high" : "gentle");
     }
   }, { passive: true });
 }
