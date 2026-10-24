@@ -4,8 +4,7 @@
 
 实现入口：
 - 页面结构：[index.html](../index.html)
-- 基础样式与令牌：[css/style.css](../css/style.css)
-- 观测手记材质与微物理样式：[css/journal-stationery.css](../css/journal-stationery.css)
+- 全部样式：[css/style.css](../css/style.css)（前半为基础层，后半为手札纸面层，见 §9）
 - 业务交互与状态管理：[js/app.mjs](../js/app.mjs)
 - 气象微物理互动引擎：[js/journal-weather-engine.mjs](../js/journal-weather-engine.mjs)
 - 霞光评分与气象算法：[js/forecast.mjs](../js/forecast.mjs)
@@ -243,3 +242,12 @@
    - 960px / 1200px+：未来 7 日卡片 7 列规整排版与等宽数字对齐。
 3. **离线与缓存完整性**：
    - 每次样式或逻辑更新必须同步递增 `sw.js` 的 `SHELL_CACHE`，并让 `index.html`、`app.mjs` 的 import 与 `sw.js` 的 `SHELL` 列表使用同一组 `?v=` 参数。
+
+---
+
+## 9. 样式文件组织
+
+- **单一样式表**：所有样式在 `css/style.css`。前半为基础层（令牌、布局、天幕、弹窗），后半为手札纸面层（主卡、纸面组件、天气微物理、响应式）；后半依赖“写在后面”取胜，调整顺序前须确认层叠不变。
+- **`!important` 只用于两类场景**：压过 `prefers-reduced-motion` 等全局 `*` 规则，或压过更高特异性的基础层规则。新代码优先提高选择器准确度或直接修改基础层规则，不新增 `!important`。
+- **不留死代码**：删除组件时同步删除它的选择器与 `@keyframes`。类名与 id 只来自 HTML 属性和 JS 字符串，可据此静态检查死选择器。
+- **重构验收**：涉及大范围样式重排时，用计算样式快照（多视口 × 欢迎/预报/夜间/弹窗/错误/加载 × 强制天气状态）对比重构前后，差异须为零。
