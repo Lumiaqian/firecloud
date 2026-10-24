@@ -2,7 +2,7 @@
 
 > 结合高空云层、远端光路与空气质量的自然霞光指数预报 · 天幕微物理气象手记
 
-[![Verify Status](https://img.shields.io/badge/tests-42%20passed-success?style=flat-square)](tests/)
+[![Verify Status](https://img.shields.io/badge/tests-61%20passed-success?style=flat-square)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-Zero%20Dependencies%20%7C%20Vanilla%20ESM-blue?style=flat-square)](js/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Capable-orange?style=flat-square)](manifest.webmanifest)
 [![Online Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-green?style=flat-square)](https://lumiaqian.github.io/firecloud/)
@@ -100,6 +100,18 @@ npm test
 
 # 串联执行语法校验与测试套件 (部署前必查)
 npm run verify
+```
+
+### 模块与缓存版本
+
+页面通过 `index.html` 中的 import map 统一钉住各模块版本，Service Worker 预缓存同一组地址。新增或删除 `js/` 下的模块、或发布新版本时：
+
+```bash
+# 按实际模块重写 import map 与 sw.js 预缓存列表
+npm run sync-modules
+
+# 发布时同时把模块版本与 Service Worker 缓存名加一
+npm run sync-modules -- --bump
 ```
 
 ---

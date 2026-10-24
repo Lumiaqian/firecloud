@@ -4,9 +4,10 @@
 
 实现入口：
 - 页面结构：[index.html](../index.html)
-- 全部样式：[css/style.css](../css/style.css)（前半为基础层，后半为手札纸面层，见 §9）
-- 业务交互与状态管理：[js/app.mjs](../js/app.mjs)
-- 气象微物理互动引擎：[js/journal-weather-engine.mjs](../js/journal-weather-engine.mjs)
+- 全部样式：[css/style.css](../css/style.css)（按组件组织，见 §9）
+- 入口与接线：[js/app.mjs](../js/app.mjs)；预报状态与晨昏切换规则：[js/core/session.mjs](../js/core/session.mjs)
+- 界面组件：[js/ui/](../js/ui/)（主卡、影响因素、7 日、地点、弹窗抽屉、观测台、欢迎页）
+- 天幕粒子：[js/weather-fx.mjs](../js/weather-fx.mjs)；纸面天气联动：[js/ui/paper-fx.mjs](../js/ui/paper-fx.mjs)；两者共用 [js/frame-loop.mjs](../js/frame-loop.mjs)
 - 霞光评分与气象算法：[js/forecast.mjs](../js/forecast.mjs)
 
 ---
@@ -244,9 +245,17 @@
 
 ---
 
-## 9. 样式文件组织
+## 9. 代码组织
 
-- **单一样式表**：所有样式在 `css/style.css`。前半为基础层（令牌、布局、天幕、弹窗），后半为手札纸面层（主卡、纸面组件、天气微物理、响应式）；后半依赖“写在后面”取胜，调整顺序前须确认层叠不变。
-- **`!important` 只用于两类场景**：压过 `prefers-reduced-motion` 等全局 `*` 规则，或压过更高特异性的基础层规则。新代码优先提高选择器准确度或直接修改基础层规则，不新增 `!important`。
+### 9.1 样式表
+- **单一样式表、按组件分节**：`css/style.css` 依次为令牌与基础元素、天幕、顶栏与通用按钮、欢迎页、加载与错误面板、时段工具栏、主卡、区块与影响因素、未来 7 日、弹窗与抽屉、页脚、纸面天气联动。每节内先写基础状态，再写媒体查询与交互状态。
+- 少数规则因层叠先后约束留在后面的小节（同一元素同一属性、同重要性同特异性时，后写者生效），移动前须确认层叠不变。
+- **`!important` 只用于两类场景**：压过 `prefers-reduced-motion` 等全局 `*` 规则，或压过选择器更具体的通用规则。新代码优先调整选择器或直接修改原规则，不新增 `!important`。
 - **不留死代码**：删除组件时同步删除它的选择器与 `@keyframes`。类名与 id 只来自 HTML 属性和 JS 字符串，可据此静态检查死选择器。
-- **重构验收**：涉及大范围样式重排时，用计算样式快照（多视口 × 欢迎/预报/夜间/弹窗/错误/加载 × 强制天气状态）对比重构前后，差异须为零。
+- **重构验收**：大范围样式调整时，用计算样式快照（多视口 × 欢迎/预报/夜间/弹窗/搜索结果/错误/加载 × 强制天气状态 × 强制 hover/active/focus）对比前后，差异须为零。
+
+### 9.2 脚本模块
+- `core/` 不依赖 DOM：存储与缓存、展示格式、预报会话（状态流转），在 Node 中有单元测试。
+- `ui/` 每个模块负责一块界面，自己查找所需元素；`app.mjs` 只做创建与接线。
+- 模块之间按普通相对路径互相引用，版本号统一由 `index.html` 的 import map 钉住；新增、删除模块或发布前运行 `npm run sync-modules`（发布时加 `-- --bump`），`tests/release.test.mjs` 校验 import map、Service Worker 预缓存与实际文件一致。
+- 动画统一挂在 `frame-loop` 上，没有粒子或特效时不占用帧。
