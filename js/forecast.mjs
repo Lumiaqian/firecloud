@@ -88,7 +88,7 @@ export function weatherConditionFor({
     icon = "🌙";
   }
 
-  const tempStr = Number.isFinite(temperature) ? ` ${Math.round(temperature)}°C` : "";
+  const tempStr = Number.isFinite(temperature) ? ` ${Math.round(temperature)}℃` : "";
   return {
     label,
     icon,

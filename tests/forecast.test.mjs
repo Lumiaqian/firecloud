@@ -208,13 +208,13 @@ test("实况天气中文描述、图标与温度准确映射", () => {
   });
   assert.equal(xiamen.label, "晴间多云");
   assert.equal(xiamen.icon, "⛅");
-  assert.equal(xiamen.full, "⛅ 晴间多云 29°C");
-  assert.equal(xiamen.summary, "晴间多云 29°C");
+  assert.equal(xiamen.full, "⛅ 晴间多云 29℃");
+  assert.equal(xiamen.summary, "晴间多云 29℃");
 
   const overcast = weatherConditionFor({ weather: "overcast", isDay: 1, temperature: 22.1 });
   assert.equal(overcast.label, "阴天");
   assert.equal(overcast.icon, "☁️");
-  assert.equal(overcast.full, "☁️ 阴天 22°C");
+  assert.equal(overcast.full, "☁️ 阴天 22℃");
 
   const thunder = weatherConditionFor({ weather: "thunder", weatherCode: 95, isDay: 1, precipitation: 4 });
   assert.equal(thunder.label, "雷阵雨");
@@ -224,7 +224,7 @@ test("实况天气中文描述、图标与温度准确映射", () => {
   const clearNight = weatherConditionFor({ weather: "clear", isDay: 0, temperature: 18 });
   assert.equal(clearNight.label, "晴朗");
   assert.equal(clearNight.icon, "🌙");
-  assert.equal(clearNight.full, "🌙 晴朗 18°C");
+  assert.equal(clearNight.full, "🌙 晴朗 18℃");
 });
 
 test("天文月相算法准确计算照亮比例、月相命名与农历映射", () => {
