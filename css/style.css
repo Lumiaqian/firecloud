@@ -3782,7 +3782,6 @@ body[data-light="night"][data-state="ready"] .event-status > p {
   -webkit-clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
   clip-path: polygon(4% 0%, 100% 0%, 96% 100%, 0% 100%);
   transition: transform 300ms ease, opacity 300ms ease, filter 300ms ease;
-  pointer-events: none;
 }
 
 /* 右上角高光复古黄铜长尾夹 (Brass Metal Binder Clip) */
