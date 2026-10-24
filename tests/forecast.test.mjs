@@ -8,6 +8,9 @@ import {
   nextEvent,
   scoreSky,
   sealFor,
+  hasCloudLayers,
+  photographicAdviceFor,
+  twilightWarmthFor,
   skyBreakdown,
   sunDiscBreakdown,
   viewingWindow,
@@ -202,7 +205,7 @@ test("微量降水不触发雨雪主题，太阳方位可映射到屏幕坐标",
   assert.deepEqual(sunDiskPosition(180, -10), { x: 78, y: 19, valid: false });
 });
 
-test("实况天气中文描述、图标与温度准确映射", () => {
+test("实况天气中文描述与温度准确映射", () => {
   const xiamen = weatherConditionFor({
     weather: "partly",
     weatherCode: 1,
@@ -211,24 +214,19 @@ test("实况天气中文描述、图标与温度准确映射", () => {
     temperature: 28.7
   });
   assert.equal(xiamen.label, "晴间多云");
-  assert.equal(xiamen.icon, "⛅");
-  assert.equal(xiamen.full, "⛅ 晴间多云 29℃");
   assert.equal(xiamen.summary, "晴间多云 29℃");
 
   const overcast = weatherConditionFor({ weather: "overcast", isDay: 1, temperature: 22.1 });
   assert.equal(overcast.label, "阴天");
-  assert.equal(overcast.icon, "☁️");
-  assert.equal(overcast.full, "☁️ 阴天 22℃");
+  assert.equal(overcast.summary, "阴天 22℃");
 
   const thunder = weatherConditionFor({ weather: "thunder", weatherCode: 95, isDay: 1, precipitation: 4 });
   assert.equal(thunder.label, "雷阵雨");
-  assert.equal(thunder.icon, "⛈️");
-  assert.equal(thunder.full, "⛈️ 雷阵雨");
+  assert.equal(thunder.summary, "雷阵雨");
 
   const clearNight = weatherConditionFor({ weather: "clear", isDay: 0, temperature: 18 });
   assert.equal(clearNight.label, "晴朗");
-  assert.equal(clearNight.icon, "🌙");
-  assert.equal(clearNight.full, "🌙 晴朗 18℃");
+  assert.equal(clearNight.summary, "晴朗 18℃");
 });
 
 test("天文月相算法准确计算照亮比例、月相命名与农历映射", () => {
@@ -327,7 +325,6 @@ test("适度气溶胶与通透地平准确判定为红润咸蛋黄", () => {
   const phen = sunDiscPhenomenon(eggYolkSky, score);
   assert.equal(phen.key, "egg_yolk");
   assert.equal(phen.name, "红润咸蛋黄");
-  assert.equal(phen.icon, "🍳");
 
   const seal = sealForSunDisc(score, phen);
   assert.deepEqual(seal, { text: "丹曦", sub: "融融红日" });
@@ -410,4 +407,27 @@ test("方位角转十六方位中文名", () => {
   assert.equal(compassLabel(225), "西南");
   assert.equal(compassLabel(257), "西偏南");
   assert.equal(compassLabel(-90), "西");
+});
+
+test("三层云量缺任意一层时不做研判", () => {
+  assert.equal(hasCloudLayers({ low: 10, mid: 20, high: 30 }), true);
+  assert.equal(hasCloudLayers({ low: 10, mid: null, high: 30 }), false);
+  assert.equal(hasCloudLayers({ low: Number.NaN, mid: 20, high: 30 }), false);
+});
+
+test("霞光建议：降水优先，高分给出守候建议，少云但日轮出色时转荐日轮", () => {
+  assert.match(photographicAdviceFor({ ...cleanSky, precip: 1 }, 90, "sunset"), /降水/);
+  assert.match(photographicAdviceFor(cleanSky, 85, "sunset"), /驻足守候/);
+  assert.match(photographicAdviceFor({ ...cleanSky, low: 70 }, 10, "sunrise"), /朝霞显现机会渺茫/);
+  const crisp = { low: 0, mid: 0, high: 5, pathLow: 0, vis: 45_000, rh: 30, precip: 0, aod: 0.06, pm25: 8 };
+  assert.match(photographicAdviceFor(crisp, 30, "sunset"), /金盘落日/);
+});
+
+test("晨昏暖色在日落附近最高、正午为零", () => {
+  const sun = sunTimes(new Date("2026-10-24T04:00:00Z"), 30.27, 120.15);
+  const noon = new Date("2026-10-24T04:00:00Z");
+  assert.equal(twilightWarmthFor(noon, sun), 0);
+  const nearSunset = new Date(sun.sunset.getTime() - 5 * 60_000);
+  assert.ok(twilightWarmthFor(nearSunset, sun) > 0.6);
+  assert.equal(twilightWarmthFor(noon, { sunrise: null, sunset: null }), 0);
 });

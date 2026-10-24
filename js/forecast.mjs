@@ -47,54 +47,25 @@ export function weatherTheme({
 export function weatherConditionFor({
   weather = "clear",
   weatherCode,
-  isDay = 1,
   precipitation = 0,
   cloudCover = 0,
   temperature
 } = {}) {
   let label = "晴朗";
-  let icon = isDay === 0 ? "✨" : "☀️";
-
-  if (weather === "hail") {
-    label = "冰雹";
-    icon = "🌨️";
-  } else if (weather === "thunder") {
-    label = "雷阵雨";
-    icon = "⛈️";
-  } else if (weather === "snow") {
-    label = "降雪";
-    icon = "❄️";
-  } else if (weather === "rain") {
-    if (weatherCode === 80 || weatherCode === 81 || weatherCode === 82) {
-      label = "阵雨";
-    } else {
-      label = precipitation >= 3 ? "大雨" : precipitation >= 0.5 ? "中雨" : "小雨";
-    }
-    icon = "🌧️";
-  } else if (weather === "fog") {
-    label = "大雾";
-    icon = "🌫️";
-  } else if (weather === "overcast") {
-    label = "阴天";
-    icon = "☁️";
-  } else if (weather === "partly") {
-    label = weatherCode === 1 || cloudCover < 50 ? "晴间多云" : "多云";
-    icon = isDay === 0 ? "🌙" : "⛅";
-  } else if (weather === "wind") {
-    label = "大风";
-    icon = "💨";
-  } else if (isDay === 0) {
-    label = "晴朗";
-    icon = "🌙";
-  }
+  if (weather === "hail") label = "冰雹";
+  else if (weather === "thunder") label = "雷阵雨";
+  else if (weather === "snow") label = "降雪";
+  else if (weather === "rain") {
+    label = weatherCode === 80 || weatherCode === 81 || weatherCode === 82
+      ? "阵雨"
+      : precipitation >= 3 ? "大雨" : precipitation >= 0.5 ? "中雨" : "小雨";
+  } else if (weather === "fog") label = "大雾";
+  else if (weather === "overcast") label = "阴天";
+  else if (weather === "partly") label = weatherCode === 1 || cloudCover < 50 ? "晴间多云" : "多云";
+  else if (weather === "wind") label = "大风";
 
   const tempStr = Number.isFinite(temperature) ? ` ${Math.round(temperature)}℃` : "";
-  return {
-    label,
-    icon,
-    full: `${icon} ${label}${tempStr}`.trim(),
-    summary: `${label}${tempStr}`.trim()
-  };
+  return { label, summary: `${label}${tempStr}` };
 }
 
 /** Prefer local sunrise/sunset over a stale API is_day once the page has been sitting open. */
@@ -722,11 +693,11 @@ export function scoreSunDisc(metrics) {
 /**
  * 日轮视觉形态智能研判 (Sun Disc Phenomenon)
  * 返回形态分类及属性：
- * - egg_yolk: 🍳 红润咸蛋黄 (Soft Crimson Disc)
- * - crisp_gold: ☀️ 澄金贯日 (Crisp Golden Disc)
- * - crepuscular: ⛅ 云隙漏金 / 丁达尔 (Dramatic Sunbreak)
- * - swallowed: 🌫️ 地平吞日 (Swallowed by Horizon Clouds)
- * - clear_disc: 🌤️ 晴晖丽日 (Clear Disc)
+ * - egg_yolk: 红润咸蛋黄 (Soft Crimson Disc)
+ * - crisp_gold: 澄金贯日 (Crisp Golden Disc)
+ * - crepuscular: 云隙漏金 / 丁达尔 (Dramatic Sunbreak)
+ * - swallowed: 地平吞日 (Swallowed by Horizon Clouds)
+ * - clear_disc: 晴晖丽日 (Clear Disc)
  */
 export function sunDiscPhenomenon(metrics, score) {
   const low = metrics?.low ?? 0;
@@ -744,14 +715,7 @@ export function sunDiscPhenomenon(metrics, score) {
     return {
       key: "swallowed",
       name: "地平吞日",
-      sub: "隐入云墙",
-      icon: "🌫️",
-      title: "地平低云遮蔽 · 难见日轮入地",
-      desc: precip > 0.2
-        ? "降水伴随低空阴云，地平视线完全受阻"
-        : low >= 45 || pathLow >= 50
-        ? "地平线方向低云堆叠，太阳落山前恐提前没入云墙"
-        : "低层尘霾较重，太阳未及地平便已消散失色"
+      sub: "隐入云墙"
     };
   }
 
@@ -764,10 +728,7 @@ export function sunDiscPhenomenon(metrics, score) {
     return {
       key: "egg_yolk",
       name: "红润咸蛋黄",
-      sub: "融融红日",
-      icon: "🍳",
-      title: "适度消光滤去眩光 · 柔润可直视",
-      desc: "近地气溶胶与水汽自然散射刺目白光，太阳退去强芒，呈现肉眼可直视的温润红盘"
+      sub: "融融红日"
     };
   }
 
@@ -778,10 +739,7 @@ export function sunDiscPhenomenon(metrics, score) {
     return {
       key: "crisp_gold",
       name: "澄金贯日",
-      sub: "极目无遮",
-      icon: "☀️",
-      title: "极净大气澄澈无瑕 · 金乌朗曜",
-      desc: "地平线空旷无障，大气极其通透，金盘光芒万丈，地平呈现纯净绚丽金橙梯度"
+      sub: "极目无遮"
     };
   }
 
@@ -791,10 +749,7 @@ export function sunDiscPhenomenon(metrics, score) {
     return {
       key: "crepuscular",
       name: "云隙漏金",
-      sub: "破云漏光",
-      icon: "⛅",
-      title: "云际层叠光影交错 · 丁达尔神光",
-      desc: "中高云隙间洒落束束流光金柱，光影明暗交织，具强烈油画质感"
+      sub: "破云漏光"
     };
   }
 
@@ -802,10 +757,7 @@ export function sunDiscPhenomenon(metrics, score) {
   return {
     key: "clear_disc",
     name: "晴晖丽日",
-    sub: "日轮分明",
-    icon: "🌅",
-    title: "地平通透平稳 · 完整目送晨昏",
-    desc: "地平视线通畅，太阳轮廓明晰，可安然静赏日出日落全过程"
+    sub: "日轮分明"
   };
 }
 
@@ -829,6 +781,57 @@ export function sealForSunDisc(score, phenomenon) {
 /**
  * 日轮天空线索 (Reasons for Sun Disc)
  */
+// 本地低、中、高三层云量齐全才做研判，否则不推断晴天
+export function hasCloudLayers(metrics) {
+  return Number.isFinite(metrics.low) && Number.isFinite(metrics.mid) && Number.isFinite(metrics.high);
+}
+
+/**
+ * 霞光视角的观赏建议。霞光分低但地平通透、日轮出色时，改为推荐看日轮。
+ */
+export function photographicAdviceFor(metrics, score, eventType) {
+  if (metrics.precip != null && metrics.precip > 0.2) return "低云堆叠且伴随降水，光路受阻，天幕暗淡";
+  if (score >= 80) return "高云透光、地平光路通达，适宜寻开阔处驻足守候";
+  if (score >= 65) return "中高云舒展层叠，地平光路顺畅，极利于取景记录";
+  if (score >= 45) return eventType === "sunrise" ? "晨光柔和漫射，天际泛起温润渐变，适宜静心观赏" : "暮光柔和漫射，天际泛起温润渐变，适宜静心观赏";
+  if ((metrics.low ?? 0) > 50) return `低云密集沉降，光线穿透困难，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现机会渺茫`;
+
+  const sunScore = scoreSunDisc(metrics);
+  const phenomenon = sunDiscPhenomenon(metrics, sunScore);
+  if (sunScore >= 75 && phenomenon.key === "egg_yolk") {
+    return eventType === "sunrise"
+      ? "天幕云少难起彩霞，但地平通透，极适宜静候一轮红润旭日"
+      : "天幕云少难起彩霞，但地平通透，极适宜静赏一轮红润咸蛋黄";
+  }
+  if (sunScore >= 75 && phenomenon.key === "crisp_gold") {
+    return eventType === "sunrise"
+      ? "空中无云霞漫染，但长空如洗，极适宜静赏金盘破晓初芒"
+      : "空中无云霞漫染，但长空如洗，极适宜静赏金盘落日沉入地平";
+  }
+  return "空中云量稀疏，难有余晖衬托，天色归于平淡";
+}
+
+/**
+ * 晨昏暖色强度 0–1：日出前 35 分钟到黄金时刻后 25 分钟、黄金时刻前 25 分钟到日落后 35 分钟
+ * 两段窗口内呈三角分布，窗口中点最暖。供天幕晴空热闹度使用。
+ */
+export function twilightWarmthFor(now, { sunrise, sunset, goldenStart, goldenEnd }) {
+  if (!sunrise || !sunset) return 0;
+  const t = now.getTime();
+  const windows = [
+    [sunrise.getTime() - 35 * 60_000, (goldenEnd ?? sunrise).getTime() + 25 * 60_000],
+    [(goldenStart ?? sunset).getTime() - 25 * 60_000, sunset.getTime() + 35 * 60_000]
+  ];
+  let warmth = 0;
+  for (const [start, end] of windows) {
+    if (t < start || t > end || end <= start) continue;
+    const mid = (start + end) / 2;
+    const half = (end - start) / 2;
+    warmth = Math.max(warmth, 1 - Math.abs(t - mid) / half);
+  }
+  return Math.min(1, Math.max(0, warmth));
+}
+
 /**
  * 日轮摄影与观赏建议
  */

@@ -11,7 +11,10 @@ import {
   sunDiscPhenomenon,
   sealForSunDisc,
   sunDiscBreakdown,
+  photographicAdviceFor,
   photographicAdviceForSunDisc,
+  hasCloudLayers,
+  twilightWarmthFor,
   viewingWindow,
   compassLabel,
   solarAzimuth,
@@ -174,8 +177,7 @@ const elements = {
   indexLabel: $("index-label"),
   companionPill: $("hero-companion-pill"),
   companionText: $("companion-text"),
-  heroTimeSub: $("hero-time-sub"), entryTag: $("entry-tag"), sealStamp: $("seal-stamp"),
-  sealGrade: $("seal-grade"), sealSub: $("seal-sub"), brassClip: $("hero-brass-clip"),
+  entryTag: $("entry-tag"), sealGrade: $("seal-grade"), sealSub: $("seal-sub"),
   score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
   status: $("forecast-status"), source: $("data-source"), updated: $("updated-at"), week: $("week"),
   errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
@@ -457,27 +459,6 @@ function renderWindow(eventTime, timeZone, isSunDiscView) {
   elements.windowPeakMark.hidden = isSunDiscView;
 }
 
-function hasLocalCloudForecast(metrics) {
-  return Number.isFinite(metrics.low) && Number.isFinite(metrics.mid) && Number.isFinite(metrics.high);
-}
-
-function twilightWarmthFor(now, { sunrise, sunset, goldenStart, goldenEnd }) {
-  if (!sunrise || !sunset) return 0;
-  const t = now.getTime();
-  const windows = [
-    [sunrise.getTime() - 35 * 60_000, (goldenEnd ?? sunrise).getTime() + 25 * 60_000],
-    [(goldenStart ?? sunset).getTime() - 25 * 60_000, sunset.getTime() + 35 * 60_000]
-  ];
-  let warmth = 0;
-  for (const [start, end] of windows) {
-    if (t < start || t > end || end <= start) continue;
-    const mid = (start + end) / 2;
-    const half = (end - start) / 2;
-    warmth = Math.max(warmth, 1 - Math.abs(t - mid) / half);
-  }
-  return Math.min(1, Math.max(0, warmth));
-}
-
 function applyWeatherBackground(bundle) {
   const now = new Date();
   const current = bundle?.forecasts?.local?.current ?? {};
@@ -697,44 +678,6 @@ for (const region of document.querySelectorAll("[data-scroll-region]")) {
 }
 window.addEventListener("resize", updateHorizontalScrollRegions, { passive: true });
 
-function weatherSymbolFor(metrics) {
-  const precip = metrics.precip ?? 0;
-  const low = metrics.low ?? 0;
-  const high = metrics.high ?? 0;
-  const mid = metrics.mid ?? 0;
-  if (precip > 0.5) return "🌧️";
-  if (low > 60) return "☁️";
-  if (high > 60) return "🌤️";
-  if (high + mid > 40) return "⛅";
-  return "☀️";
-}
-
-function photographicAdviceFor(metrics, score, eventType, sunScore, sunPhen) {
-  if (metrics.precip != null && metrics.precip > 0.2) return "低云堆叠且伴随降水，光路受阻，天幕暗淡";
-  if (score >= 80) return "高云透光、地平光路通达，适宜寻开阔处驻足守候";
-  if (score >= 65) return "中高云舒展层叠，地平光路顺畅，极利于取景记录";
-  if (score >= 45) return eventType === "sunrise" ? "晨光柔和漫射，天际泛起温润渐变，适宜静心观赏" : "暮光柔和漫射，天际泛起温润渐变，适宜静心观赏";
-  if ((metrics.low ?? 0) > 50) return `低云密集沉降，光线穿透困难，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现机会渺茫`;
-
-  // 智能协同：霞光虽少云，但地平通透、落日/破晓极佳时给出积极导览
-  const effectiveSunScore = Number.isFinite(sunScore) ? sunScore : scoreSunDisc(metrics);
-  const effectiveSunPhen = sunPhen ?? sunDiscPhenomenon(metrics, effectiveSunScore);
-  if (effectiveSunScore >= 75) {
-    if (effectiveSunPhen.key === "egg_yolk") {
-      return eventType === "sunrise"
-        ? "天幕云少难起彩霞，但地平通透，极适宜静候一轮红润旭日"
-        : "天幕云少难起彩霞，但地平通透，极适宜静赏一轮红润咸蛋黄";
-    }
-    if (effectiveSunPhen.key === "crisp_gold") {
-      return eventType === "sunrise"
-        ? "空中无云霞漫染，但长空如洗，极适宜静赏金盘破晓初芒"
-        : "空中无云霞漫染，但长空如洗，极适宜静赏金盘落日沉入地平";
-    }
-  }
-
-  return "空中云量稀疏，难有余晖衬托，天色归于平淡";
-}
-
 // 第 5–7 天的数值预报可信度明显下降，界面上标为远期参考
 const FAR_DAY_INDEX = 4;
 
@@ -871,7 +814,7 @@ function renderWeek(bundle) {
       `;
     } else {
       const metrics = metricsAt(bundle, eventTime);
-      if (!hasLocalCloudForecast(metrics)) {
+      if (!hasCloudLayers(metrics)) {
         overview.push({ weekday: weekdayFormatter.format(eventTime), eventTime: null, score: null, tier: "unavailable", far });
         card.dataset.tier = "unavailable";
         card.dataset.grade = "dull";
@@ -973,7 +916,7 @@ function renderReady() {
     return false;
   }
   const metrics = metricsAt(state.bundle, eventTime);
-  if (!hasLocalCloudForecast(metrics)) {
+  if (!hasCloudLayers(metrics)) {
     showError("当地高空分层云量暂缺，无法完成研判，请稍后重试或选择临近城市");
     return false;
   }
@@ -1983,18 +1926,6 @@ elements.devMoonSlider?.addEventListener("input", (e) => {
   };
   updateMoonDisplay(mockMoon);
 });
-
-// 挂载全局方法，支持控制台即时调用测试
-window.renderMoonPhase = (fraction = 0.96, isWaxing = false) => {
-  const mockMoon = {
-    ...lunarPhase(new Date(), state.place?.lat || 30.27, state.place?.lon || 120.15),
-    phaseFraction: Math.max(0, Math.min(1, fraction)),
-    isWaxing,
-    phaseName: fraction > 0.95 ? "满月 (望)" : fraction < 0.05 ? "新月 (朔)" : isWaxing ? "上弦月/盈月" : "亏凸月/亏月"
-  };
-  updateMoonDisplay(mockMoon);
-  return mockMoon;
-};
 
 elements.welcomeSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
 elements.errorSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
