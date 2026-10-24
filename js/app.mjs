@@ -1,2106 +1,315 @@
-import { fetchForecastBundle, reverseGeocode, searchCities } from "./api.mjs?v=8";
+/**
+ * 入口：创建各模块并接线。预报状态由 core/session 管理，这里只负责把状态渲染到页面。
+ */
+import { fetchForecastBundle } from "./api.mjs";
 import {
-  indexBand,
-  lightFromSunClock,
+  hasCloudLayers,
   metricsAt,
   nextEvent,
-  scoreSky,
-  skyBreakdown,
-  sealFor,
-  scoreSunDisc,
-  sunDiscPhenomenon,
-  sealForSunDisc,
-  sunDiscBreakdown,
   photographicAdviceFor,
   photographicAdviceForSunDisc,
-  hasCloudLayers,
-  twilightWarmthFor,
-  viewingWindow,
-  compassLabel,
+  sealFor,
+  sealForSunDisc,
+  skyBreakdown,
   solarAzimuth,
-  solarElevation,
-  stormLevelFor,
+  sunDiscBreakdown,
+  sunDiscPhenomenon,
   tierFor,
-  sunDiskPosition,
-  moonDiskPosition,
-  lunarPhase,
-  buildMoonSvg,
-  sunTimes,
-  waitAdvice,
-  weatherConditionFor,
-  weatherTheme
-} from "./forecast.mjs?v=14";
-import { atmosphereDriveFor, clearEnergyFor, createWeatherFx } from "./weather-fx.mjs?v=9";
-import { createJournalWeatherEngine } from "./journal-weather-engine.mjs?v=7";
+  viewingWindow
+} from "./forecast.mjs";
+import { createWeatherFx } from "./weather-fx.mjs";
+import { createJournalWeatherEngine } from "./journal-weather-engine.mjs";
+import { createForecastSession } from "./core/session.mjs";
+import { KEYS, createForecastCache, createStorage, normalizePlace } from "./core/storage.mjs";
+import { eventLabels, formatCountdown, localTimeZone } from "./core/format.mjs";
+import { $ } from "./ui/dom.mjs";
+import { fadeUpdate, trackInputModality, triggerHaptic } from "./ui/motion.mjs";
+import { createMoonView } from "./ui/moon.mjs";
+import { createSky } from "./ui/sky.mjs";
+import { createHeroView } from "./ui/hero.mjs";
+import { createFactorsView } from "./ui/factors.mjs";
+import { createWeekView } from "./ui/week.mjs";
+import { initFluidDrawer } from "./ui/drawer.mjs";
+import { createPlaces } from "./ui/places.mjs";
+import { createDevLab } from "./ui/dev-lab.mjs";
+import { createWelcome } from "./ui/welcome.mjs";
+import { bindHeroTilt, bindPaperInteractions } from "./ui/paper.mjs";
 
-const PLACE_KEY = "firecloud:place:v1";
-const FAVORITES_KEY = "firecloud:favorites:v1";
-const VIEW_MODE_KEY = "firecloud:view_mode:v1";
-const DATA_KEY = "firecloud:data:v1";
-const CACHE_MAX_AGE = 12 * 60 * 60 * 1000;
-const CACHE_LIMIT = 16;
-const $ = (id) => document.getElementById(id);
-const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-document.addEventListener("pointerdown", () => { document.body.dataset.input = "pointer"; }, true);
-document.addEventListener("keydown", () => { document.body.dataset.input = "keyboard"; }, true);
-function motionAllowed() {
-  return !reducedMotion.matches && document.body.dataset.input !== "keyboard";
-}
-function triggerHaptic(pattern = 10) {
-  if (navigator.vibrate && motionAllowed()) {
-    try { navigator.vibrate(pattern); } catch {}
+const PANELS = ["welcome", "loading", "ready", "error"];
+const TICK_INTERVAL = 30_000;
+const body = document.body;
+const els = {
+  placeName: $("place-name"), brand: $("open-places"), favorite: $("favorite-button"), refresh: $("refresh-button"),
+  tabs: [$("tab-sunset"), $("tab-sunrise")], eventContext: $("event-context"), eventPending: $("event-pending"),
+  eventPendingLabel: $("event-pending-label"), eventPendingDetail: $("event-pending-detail"),
+  forecastContent: [...$("panel-ready").children].filter((element) => element.matches("article, section")),
+  status: $("forecast-status"), loadingText: $("loading-text"),
+  errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"),
+  placesDialog: $("places-dialog"), devDialog: $("dev-lab-dialog"), lunarDialog: $("lunar-dialog")
+};
+
+trackInputModality(body);
+const storage = createStorage();
+createWeatherFx($("weather-canvas"), { contactCanvas: $("weather-contact-canvas") });
+const paperFx = createJournalWeatherEngine($("weather-background-canvas"), $("weather-foreground-canvas"));
+bindPaperInteractions(paperFx);
+bindHeroTilt();
+
+const moonView = createMoonView();
+const sky = createSky({
+  storage,
+  moonView,
+  themeColor: $("theme-color"),
+  paperFx: paperFx && { syncWeather: (conditions) => paperFx.syncWeatherConditions(conditions) }
+});
+const hero = createHeroView();
+const factors = createFactorsView();
+const week = createWeekView({ onSelectDay: selectDay });
+const welcome = createWelcome();
+const resetPlacesDrawer = initFluidDrawer(els.placesDialog);
+initFluidDrawer(els.devDialog);
+initFluidDrawer(els.lunarDialog);
+
+const session = createForecastSession({
+  fetchBundle: fetchForecastBundle,
+  cache: createForecastCache(storage),
+  nextEvent,
+  persistPlace: (place) => storage.set(KEYS.place, place),
+  persistViewMode: (mode) => storage.set(KEYS.viewMode, mode),
+  viewMode: storage.get(KEYS.viewMode, "glow"),
+  view: {
+    isReady: () => body.dataset.state === "ready",
+    pendingChanged: renderPending,
+    placeChanged(place) {
+      els.placeName.textContent = place.name;
+      els.brand.setAttribute("aria-label", `选择地点，当前地点：${place.name}`);
+    },
+    setBusy,
+    updateSource: () => hero.updateSource(session.state),
+    restartTicker: () => startTicker(session.currentEventTime()),
+    stopTicker,
+    announce,
+    announceText: (text) => { els.status.textContent = text; },
+    showLoading: () => setPanel("loading"),
+    loadingText: (text) => { els.loadingText.textContent = text; },
+    render: renderReady,
+    focusResult() {
+      if (!els.placesDialog.open && !els.devDialog.open) hero.focusTarget.focus({ preventScroll: true });
+    },
+    showError,
+    reportError: (error) => console.error(error)
   }
+});
+
+const places = createPlaces({
+  storage,
+  getCurrentPlace: () => session.state.place,
+  onChoose: (place) => session.load(place),
+  resetDrawer: resetPlacesDrawer
+});
+createDevLab({
+  storage,
+  moonView,
+  getPlace: () => session.state.place,
+  onBrandClick: places.open,
+  onTestLoading() {
+    setPanel("loading");
+    els.loadingText.textContent = "正在模拟计算霞光云层…";
+    setTimeout(() => (session.state.bundle ? renderReady() : setPanel("welcome")), 3000);
+  }
+});
+
+// ---------- 面板与全局状态 ----------
+function setPanel(name) {
+  if (name !== "ready") stopTicker();
+  body.dataset.state = name;
+  if (name === "loading") hero.markLoading();
+  if (name === "welcome") welcome.sync();
+  for (const panel of PANELS) $(`panel-${panel}`).hidden = panel !== name;
+  els.favorite.hidden = name !== "ready";
+  els.refresh.hidden = name !== "ready";
 }
-function fadeUpdate(element) {
-  if (!motionAllowed() || !element) return;
-  element.getAnimations().forEach((animation) => animation.cancel());
-  element.animate([
-    { opacity: 0.45, transform: "translateY(3px)" },
-    { opacity: 1, transform: "translateY(0)" }
-  ], {
-    duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)"
-  });
+
+function setBusy(busy) {
+  els.refresh.disabled = busy;
+  els.refresh.classList.toggle("spin", busy);
+  els.refresh.setAttribute("aria-busy", String(busy));
 }
+
 function syncEventTabs() {
-  const selectedEvent = state.pendingEvent ?? state.event;
-  for (const tab of elements.tabs) {
-    tab.setAttribute("aria-pressed", String(tab.dataset.event === selectedEvent));
-    tab.setAttribute("aria-busy", String(tab.dataset.event === state.pendingEvent));
+  const { event, pendingEvent } = session.state;
+  for (const tab of els.tabs) {
+    tab.setAttribute("aria-pressed", String(tab.dataset.event === (pendingEvent ?? event)));
+    tab.setAttribute("aria-busy", String(tab.dataset.event === pendingEvent));
   }
 }
 
-function setEventPending(eventType = null, failedEvent = null) {
-  state.pendingEvent = eventType;
-  const switching = eventType !== null;
-  if (switching) document.body.dataset.switching = "true";
-  else delete document.body.dataset.switching;
-  elements.eventContext.hidden = switching || Boolean(failedEvent);
-  elements.eventPending.hidden = !switching && !failedEvent;
-  elements.eventPending.dataset.status = failedEvent ? "error" : "loading";
-  const targetLabel = (eventType ?? failedEvent) === "sunset" ? "晚霞" : "朝霞";
-  elements.eventPendingLabel.textContent = switching ? `正在读取${targetLabel}` : failedEvent ? `${targetLabel}读取未果` : "";
-  elements.eventPendingDetail.textContent = switching || failedEvent ? `暂留${state.event === "sunset" ? "晚霞" : "朝霞"}手记` : "";
-  for (const content of elements.forecastContent) {
+// 时段切换中或切换失败时，在工具栏说明目标时段与暂留的手记，并冻结正文交互
+function renderPending(failedEvent) {
+  const { event, pendingEvent } = session.state;
+  const switching = pendingEvent !== null;
+  if (switching) body.dataset.switching = "true";
+  else delete body.dataset.switching;
+  els.eventContext.hidden = switching || Boolean(failedEvent);
+  els.eventPending.hidden = !switching && !failedEvent;
+  els.eventPending.dataset.status = failedEvent ? "error" : "loading";
+  const target = eventLabels.glow[pendingEvent ?? failedEvent];
+  els.eventPendingLabel.textContent = switching ? `正在读取${target}` : failedEvent ? `${target}读取未果` : "";
+  els.eventPendingDetail.textContent = switching || failedEvent ? `暂留${eventLabels.glow[event]}手记` : "";
+  for (const content of els.forecastContent) {
     content.inert = switching;
     content.setAttribute("aria-busy", String(switching));
   }
   syncEventTabs();
 }
-const panels = ["welcome", "loading", "ready", "error"];
-createWeatherFx($("weather-canvas"), {
-  contactCanvas: $("weather-contact-canvas")
-});
-const journalWeather = createJournalWeatherEngine(
-  $("weather-background-canvas"),
-  $("weather-foreground-canvas")
-);
 
-// 纸面装饰只作指针彩蛋：不进入 Tab 顺序与读屏，避免挡在正文前面
-$("hero-brass-clip")?.addEventListener("click", () => {
-  triggerHaptic([15, 30, 20]);
-  journalWeather?.triggerLightningStrike("clip");
-});
-$("seal-stamp")?.addEventListener("click", () => {
-  triggerHaptic(25);
-  journalWeather?.triggerSunWarm();
-});
-
-// 绑定手撕条纹和纸胶带吹风交互 (Tap Washi Tape to blow wind)
-const triggerWindFromTape = () => {
-  triggerHaptic([12, 22]);
-  journalWeather?.triggerWindGust("high");
-};
-$("hero-washi-tape")?.addEventListener("click", triggerWindFromTape);
-$("folio-washi-tape")?.addEventListener("click", triggerWindFromTape);
-
-// 手机端向右滑扫清风微手势 (Swipe Right to summon ambient breeze)
-let touchWindStartX = 0;
-let touchWindStartY = 0;
-document.addEventListener("touchstart", (e) => {
-  if (e.touches.length === 1) {
-    touchWindStartX = e.touches[0].clientX;
-    touchWindStartY = e.touches[0].clientY;
-  }
-}, { passive: true });
-
-document.addEventListener("touchend", (e) => {
-  if (e.changedTouches.length === 1) {
-    const deltaX = e.changedTouches[0].clientX - touchWindStartX;
-    const deltaY = e.changedTouches[0].clientY - touchWindStartY;
-    if (deltaX > 90 && Math.abs(deltaY) < 55) {
-      triggerHaptic(12);
-      journalWeather?.triggerWindGust(deltaX > 160 ? "high" : "gentle");
+function showError(message) {
+  els.status.textContent = "";
+  hero.markError();
+  els.errorText.textContent = message;
+  setPanel("error");
+  queueMicrotask(() => {
+    if (!els.placesDialog.open && !els.devDialog.open && body.dataset.state === "error") {
+      els.errorTitle.focus({ preventScroll: true });
     }
-  }
-}, { passive: true });
-
-// 手帐主体卡片物理微倾动效 (Subtle 3D Physics Tilt)
-const heroMasterCard = $("hero-master-card");
-if (heroMasterCard) {
-  let tiltRaf = 0;
-  heroMasterCard.addEventListener("mousemove", (e) => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    cancelAnimationFrame(tiltRaf);
-    tiltRaf = requestAnimationFrame(() => {
-      const rect = heroMasterCard.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-      const rotX = -(y / (rect.height / 2)) * 1.5;
-      const rotY = (x / (rect.width / 2)) * 2.0;
-      heroMasterCard.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(-0.35deg) translateY(-2px)`;
-    });
-  });
-  heroMasterCard.addEventListener("mouseleave", () => {
-    cancelAnimationFrame(tiltRaf);
-    heroMasterCard.style.transform = "";
   });
 }
 
-const elements = {
-  themeColor: $("theme-color"), placeName: $("place-name"), openPlaces: $("open-places"),
-  favorite: $("favorite-button"), refresh: $("refresh-button"), locate: $("locate-button"),
-  welcomeSearch: $("welcome-search"), geoNotice: $("geo-notice"), loadingText: $("loading-text"),
-  loaderStage: $("loader-stage"), devDialog: $("dev-lab-dialog"), devPreviewStage: $("dev-preview-stage"),
-  devLensSlider: $("dev-lens-slider"),
-  devBtnTestLoading: $("dev-btn-test-loading"), devBtnSaveDefault: $("dev-btn-save-default"),
-  devBtnToggleNight: $("dev-btn-toggle-night"), devMoonSlider: $("dev-moon-slider"),
-  skyMoon: $("sky-moon"), skyMoonDisk: $("sky-moon-disk"), skyMoonHalo: $("sky-moon-halo"),
-  heroLunarBadge: $("hero-lunar-badge"), lunarBadgeIcon: $("lunar-badge-icon"), lunarBadgeText: $("lunar-badge-text"),
-  lunarDialog: $("lunar-dialog"), lunarDialogMoon: $("lunar-dialog-moon"), lunarDialogName: $("lunar-dialog-name"),
-  lunarDialogDate: $("lunar-dialog-date"), lunarCellFraction: $("lunar-cell-fraction"), lunarCellAge: $("lunar-cell-age"),
-  lunarCellAlt: $("lunar-cell-alt"), lunarCellAz: $("lunar-cell-az"),
-  lunarDialogAdvice: $("lunar-dialog-advice"), lunarDialogStamp: $("lunar-dialog-stamp"),
-  tabs: [$("tab-sunset"), $("tab-sunrise")], eventTime: $("event-time"), eventDate: $("event-date"),
-  eventContext: $("event-context"), eventPending: $("event-pending"),
-  eventPendingLabel: $("event-pending-label"), eventPendingDetail: $("event-pending-detail"),
-  forecastContent: Array.from($("panel-ready").children).filter((element) => element.matches("article, section")),
-  indexLabel: $("index-label"),
-  companionPill: $("hero-companion-pill"),
-  companionText: $("companion-text"),
-  entryTag: $("entry-tag"), sealGrade: $("seal-grade"), sealSub: $("seal-sub"),
-  score: $("score"), band: $("band"), verdict: $("verdict"), countdown: $("countdown"),
-  status: $("forecast-status"), source: $("data-source"), updated: $("updated-at"), week: $("week"),
-  errorTitle: $("error-title"), errorText: $("error-text"), retry: $("retry-button"), errorSearch: $("error-search"),
-  dialog: $("places-dialog"), dialogLocate: $("dialog-locate"), search: $("city-search"),
-  searchStatus: $("search-status"), searchSpinner: $("search-spinner"), searchResults: $("search-results"),
-  favoritesList: $("favorites-list"), favoritesEmpty: $("favorites-empty"),
-  favoriteFeedback: $("favorite-feedback"), favoriteMessage: $("favorite-message"), undoFavorite: $("undo-favorite"),
-  dialogFavoriteFeedback: $("dialog-favorite-feedback"), dialogFavoriteMessage: $("dialog-favorite-message"),
-  dialogUndoFavorite: $("dialog-undo-favorite"),
-  factors: $("factors"), factorsBase: $("factors-base"), factorsCap: $("factors-cap"),
-  windowLabel: $("window-label"), windowRange: $("window-range"), windowPeak: $("window-peak"),
-  windowEventMark: $("window-event-mark"), windowPeakMark: $("window-peak-mark"),
-  weekOverview: $("week-overview"), weekBest: $("week-best")
-};
-
-const storage = {
-  get(key, fallback = null) {
-    try {
-      const value = JSON.parse(localStorage.getItem(key));
-      return value ?? fallback;
-    } catch {
-      return fallback;
-    }
-  },
-  set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private browsing */ }
-  }
-};
-
-const state = {
-  place: null,
-  bundle: null,
-  dataTimestamp: null,
-  event: "sunset",
-  pendingEvent: null,
-  selectedEventTime: null,
-  viewMode: storage.get(VIEW_MODE_KEY, "glow"),
-  stale: false,
-  refreshing: false,
-  refreshFailed: false,
-  favorites: normalizeFavorites(storage.get(FAVORITES_KEY, [])),
-  ticker: null,
-  loadRequestId: 0,
-  locateRequestId: 0
-};
-
-function normalizePlace(place) {
-  if (!place || !Number.isFinite(Number(place.lat)) || !Number.isFinite(Number(place.lon))) return null;
-  return { name: String(place.name || "未命名地点"), lat: Number(place.lat), lon: Number(place.lon) };
+function announce() {
+  const { state } = session;
+  const isSunDiscView = state.viewMode === "sundisc";
+  const viewLabel = eventLabels[isSunDiscView ? "sundisc" : "glow"][state.event];
+  const freshness = state.refreshFailed ? "更新未果，沿用先前观测记录" : state.stale ? "先前观测记录" : "实时数据";
+  els.status.textContent = `${state.place.name}，${viewLabel}，${isSunDiscView ? "日轮指数" : "霞光指数"} ${hero.scoreText}，${freshness}`;
 }
 
-function normalizeFavorites(favorites) {
-  if (!Array.isArray(favorites)) return [];
-  const seen = new Set();
-  return favorites.map(normalizePlace).filter((place) => {
-    if (!place) return false;
-    const key = placeIdentity(place);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 8);
-}
-
-function placeIdentity(place) {
-  return `${place.lat.toFixed(4)},${place.lon.toFixed(4)}`;
-}
-
-function cacheKey(place, eventType) {
-  return `${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${eventType}`;
-}
-
-function readValidCache(place, eventType) {
-  const entries = storage.get(DATA_KEY, {});
-  const entry = entries?.[cacheKey(place, eventType)];
-  if (!entry || !entry.bundle || !Number.isFinite(entry.savedAt)) return null;
-  const age = Date.now() - entry.savedAt;
-  if (age < 0 || age > CACHE_MAX_AGE) return null;
-  return { bundle: entry.bundle, savedAt: entry.savedAt, age };
-}
-
-function writeCache(bundle) {
-  const entries = storage.get(DATA_KEY, {});
-  entries[cacheKey(bundle.place, bundle.eventType)] = { bundle, savedAt: Date.now() };
-  const newest = Object.entries(entries)
-    .sort(([, a], [, b]) => (b.savedAt ?? 0) - (a.savedAt ?? 0))
-    .slice(0, CACHE_LIMIT);
-  storage.set(DATA_KEY, Object.fromEntries(newest));
-}
-
-function setPanel(name) {
-  if (name !== "ready") stopTicker();
-  document.body.dataset.state = name;
-  if (name === "loading") {
-    elements.source.textContent = "更新中";
-    elements.source.dataset.status = "loading";
-  }
-  if (name === "welcome") {
-    syncWelcomeJournal();
-  }
-  for (const panel of panels) $(`panel-${panel}`).hidden = panel !== name;
-  const ready = name === "ready";
-  elements.favorite.hidden = !ready;
-  elements.refresh.hidden = !ready;
-}
-
-function setBusy(busy) {
-  elements.refresh.disabled = busy;
-  elements.refresh.classList.toggle("spin", busy);
-  elements.refresh.setAttribute("aria-busy", String(busy));
-}
-
-function localTimeZone(bundle) {
-  const timeZone = bundle?.forecasts?.local?.timezone;
-  if (typeof timeZone !== "string" || !timeZone) return undefined;
-  try {
-    new Intl.DateTimeFormat("zh-CN", { timeZone }).format(0);
-    return timeZone;
-  } catch {
-    return undefined;
-  }
-}
-
-function formatClock(date, timeZone) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone
-  }).format(date);
-}
-
-function formatEventDate(date, timeZone) {
-  const formatted = new Intl.DateTimeFormat("zh-CN", {
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-    timeZone
-  }).format(date);
-  return formatted.replace(/(?=周)/, " · ");
-}
-
-function formatUpdated(timestamp, timeZone) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone
-  }).format(new Date(timestamp));
-}
-
-function formatAge(milliseconds) {
-  const minutes = Math.max(1, Math.round(milliseconds / 60_000));
-  return minutes < 60 ? `${minutes} 分钟前` : `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分钟前`;
-}
-
-// 倒计时以观赏窗口为准：开始前倒数，窗口内提示进行中
-function formatCountdown(viewing) {
-  const now = Date.now();
-  if (now > viewing.end.getTime()) return "本场已结束";
-  if (now >= viewing.start.getTime()) return "观赏窗口进行中";
-  const totalMinutes = Math.max(1, Math.floor((viewing.start.getTime() - now) / 60_000));
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-  if (days) return hours ? `${days} 天 ${hours} 小时后开始` : `${days} 天后开始`;
-  if (hours) return minutes ? `${hours} 小时 ${minutes} 分钟后开始` : `${hours} 小时后开始`;
-  return `${minutes} 分钟后开始`;
-}
-
-function windowFor(eventTime) {
-  return viewingWindow(state.event, eventTime, state.place.lat, state.place.lon, state.viewMode);
-}
-
-function currentEventTime() {
-  if (!state.place) return null;
-  if (state.selectedEventTime) return state.selectedEventTime;
-  return nextEvent(state.event, state.place.lat, state.place.lon, new Date());
-}
-
-function updateFavoriteButton() {
-  const active = Boolean(state.place && state.favorites.some((place) => placeIdentity(place) === placeIdentity(state.place)));
-  elements.favorite.classList.toggle("is-active", active);
-  elements.favorite.setAttribute("aria-pressed", String(active));
-  elements.favorite.setAttribute("aria-label", active ? "取消收藏当前地点" : "收藏当前地点");
-}
-
-function setLocationStatus(message) {
-  elements.geoNotice.textContent = message;
-  elements.searchStatus.textContent = message;
-}
-
-function updateTicker(eventTime) {
-  stopTicker();
-  const viewing = windowFor(eventTime);
-  const tick = () => {
-    elements.countdown.textContent = formatCountdown(viewing);
-    if (state.bundle && state.place) applyWeatherBackground(state.bundle);
-  };
-  tick();
-  state.ticker = setInterval(tick, 30_000);
-}
+// ---------- 倒计时 ----------
+let ticker = null;
 
 function stopTicker() {
-  clearInterval(state.ticker);
-  state.ticker = null;
+  clearInterval(ticker);
+  ticker = null;
 }
 
-const clamp01 = (value) => Math.max(0, Math.min(1, value));
-
-function formatDelta(delta) {
-  const rounded = Math.round(delta);
-  if (rounded === 0) return "±0";
-  return rounded > 0 ? `+${rounded}` : `−${Math.abs(rounded)}`;
-}
-
-// 影响因素：每行一个要素，数值落在理想区间示意条上，右侧是对分数的增减
-function renderFactors(breakdown) {
-  const ranked = breakdown.factors.map((item) => Math.abs(item.delta)).sort((a, b) => b - a);
-  const majorThreshold = Math.max(3, ranked[1] ?? 0);
-  elements.factors.replaceChildren(...breakdown.factors.map((item) => {
-    const row = document.createElement("li");
-    row.className = "factor-row";
-    const rounded = Math.round(item.delta);
-    row.dataset.effect = rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
-    if (Math.abs(item.delta) >= majorThreshold) row.dataset.major = "true";
-
-    const head = document.createElement("div");
-    head.className = "factor-head";
-    const label = document.createElement("span");
-    label.className = "factor-label";
-    label.textContent = item.label;
-    const value = document.createElement("strong");
-    value.className = "factor-value";
-    value.textContent = item.display;
-    head.append(label, value);
-
-    const delta = document.createElement("span");
-    delta.className = "factor-delta";
-    delta.textContent = `${formatDelta(item.delta)} 分`;
-
-    const gauge = document.createElement("div");
-    gauge.className = "factor-gauge";
-    gauge.setAttribute("aria-hidden", "true");
-    if (item.gauge) {
-      const { min, max, ideal, value: raw } = item.gauge;
-      const span = max - min;
-      const ideal0 = clamp01((ideal[0] - min) / span);
-      const ideal1 = clamp01((ideal[1] - min) / span);
-      const zone = document.createElement("span");
-      zone.className = "factor-ideal";
-      zone.style.left = `${ideal0 * 100}%`;
-      zone.style.width = `${Math.max(1.5, (ideal1 - ideal0) * 100)}%`;
-      const marker = document.createElement("span");
-      marker.className = "factor-marker";
-      marker.style.left = `${clamp01((raw - min) / span) * 100}%`;
-      gauge.append(zone, marker);
-    } else {
-      gauge.dataset.missing = "true";
-    }
-
-    const note = document.createElement("p");
-    note.className = "factor-note";
-    note.textContent = item.note;
-    row.append(head, delta, gauge, note);
-    return row;
-  }));
-  elements.factorsBase.textContent = `基准 ${breakdown.base} 分 · 逐项增减`;
-  elements.factorsCap.hidden = !breakdown.capNote;
-  elements.factorsCap.textContent = breakdown.capNote ?? "";
-}
-
-function renderWindow(eventTime, timeZone, isSunDiscView) {
-  const viewing = windowFor(eventTime);
-  const span = viewing.end - viewing.start;
-  elements.windowLabel.textContent = isSunDiscView ? "日轮窗口" : "观赏窗口";
-  elements.windowRange.textContent = `${formatClock(viewing.start, timeZone)}–${formatClock(viewing.end, timeZone)}`;
-  elements.windowPeak.textContent = isSunDiscView
-    ? `${state.event === "sunset" ? "触地" : "露头"} ${formatClock(viewing.peak, timeZone)}`
-    : `余晖峰值约 ${formatClock(viewing.peak, timeZone)}`;
-  elements.windowEventMark.style.left = `${clamp01((eventTime - viewing.start) / span) * 100}%`;
-  elements.windowPeakMark.style.left = `${clamp01((viewing.peak - viewing.start) / span) * 100}%`;
-  elements.windowPeakMark.hidden = isSunDiscView;
-}
-
-function applyWeatherBackground(bundle) {
-  const now = new Date();
-  const current = bundle?.forecasts?.local?.current ?? {};
-  const metrics = metricsAt(bundle, now);
-  const cloudLayers = [metrics.low, metrics.mid, metrics.high].filter(Number.isFinite);
-  const sun = sunTimes(now, state.place.lat, state.place.lon);
-  const { sunrise, sunset } = sun;
-  const apiLight = current.is_day === 0 ? "night" : current.is_day === 1 ? "day" : "day";
-  const light = lightFromSunClock(now, sun, apiLight);
-  const precipitation = current.precipitation ?? metrics.precip;
-  const theme = weatherTheme({
-    weatherCode: current.weather_code,
-    isDay: light === "night" ? 0 : 1,
-    cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
-    precipitation,
-    snowfall: current.snowfall,
-    fallbackLight: light
-  });
-  const windSpeed = current.wind_speed_10m;
-  const windDirection = current.wind_direction_10m;
-  const windGust = current.wind_gusts_10m;
-  const pressure = current.pressure_msl;
-  const visibility = metrics.vis;
-  const storm = stormLevelFor({ windSpeed, windGust, pressure });
-  const atmosphereInputs = {
-    precipitation,
-    snowfall: current.snowfall,
-    windSpeed,
-    windDirection,
-    windGust,
-    pressure,
-    visibility
+// 每 30 秒刷新倒计时并按当前时刻重算天幕
+function startTicker(eventTime) {
+  stopTicker();
+  const { state } = session;
+  const viewing = viewingWindow(state.event, eventTime, state.place.lat, state.place.lon, state.viewMode);
+  const tick = () => {
+    hero.setCountdown(formatCountdown(viewing));
+    if (state.bundle && state.place) sky.apply(state.bundle, state.place);
   };
-  const drive = atmosphereDriveFor({
-    weather: theme.weather,
-    light: theme.light,
-    storm,
-    precipitation,
-    snowfall: current.snowfall,
-    windSpeed,
-    windDirection,
-    windGust,
-    visibility
-  });
-  const windStrength = Math.min(1, Math.max(0, Math.max(windSpeed ?? 0, windGust ?? 0) / 100));
-  const fogDensity = Number.isFinite(visibility)
-    ? Math.min(0.86, Math.max(0.2, 1 - visibility / 20_000))
-    : 0.52;
-  const precipFogBoost = (theme.weather === "rain" || theme.weather === "thunder")
-    && Number.isFinite(visibility) && visibility < 8_000
-    ? Math.min(0.85, Math.max(0.15, 1 - visibility / 8_000))
-    : 0;
-  const twilightWarmth = twilightWarmthFor(now, sun);
-  const clearEnergy = clearEnergyFor({
-    twilightWarmth,
-    tier: document.body.dataset.tier || "great"
-  });
-  const azimuth = solarAzimuth(now, state.place.lat, state.place.lon);
-  const elevation = solarElevation(now, state.place.lat, state.place.lon);
-  const sunPos = theme.light === "night"
-    ? { x: 78, y: 19, valid: false }
-    : sunDiskPosition(azimuth, elevation);
-
-  // 天体月相计算 (Lunar Phase & Horizon Coordinates)
-  const moon = lunarPhase(now, state.place.lat, state.place.lon);
-  const moonPos = moon.disk;
-
-  const atmosphereStyles = {
-    "--sun-x": `${sunPos.x.toFixed(1)}%`,
-    "--sun-y": `${sunPos.y.toFixed(1)}%`,
-    "--sun-elevation": Number.isFinite(elevation) ? elevation.toFixed(2) : "-90",
-    "--moon-x": `${moonPos.x.toFixed(1)}%`,
-    "--moon-y": `${moonPos.y.toFixed(1)}%`,
-    "--moon-elevation": `${moon.altitude.toFixed(2)}`,
-    "--moon-illumination": `${moon.phaseFraction.toFixed(3)}`,
-    "--precip-intensity": drive.precipIntensity.toFixed(3),
-    "--fx-density": drive.fxDensity.toFixed(3),
-    "--twilight-warmth": twilightWarmth.toFixed(3),
-    "--clear-energy": clearEnergy.toFixed(3),
-    "--precip-fog-boost": precipFogBoost.toFixed(3),
-    "--wind-strength": windStrength.toFixed(3),
-    "--wind-direction": `${Number.isFinite(windDirection) ? windDirection : 0}deg`,
-    "--wind-motion-add": `${(windStrength * 10).toFixed(2)}vw`,
-    "--wind-back-speed-cut": `${(windStrength * 22).toFixed(2)}s`,
-    "--wind-front-speed-cut": `${(windStrength * 17).toFixed(2)}s`,
-    "--wind-sweep-speed-cut": `${(windStrength * 3.5).toFixed(2)}s`,
-    "--fog-density": fogDensity.toFixed(3),
-    "--fog-back-opacity": Math.min(0.72, 0.34 + fogDensity * 0.4).toFixed(3),
-    "--fog-front-opacity": Math.min(0.74, 0.3 + fogDensity * 0.46).toFixed(3),
-    "--fog-back-opacity-reduced": Math.min(0.22, 0.1 + fogDensity * 0.12).toFixed(3),
-    "--fog-front-opacity-reduced": Math.min(0.22, 0.08 + fogDensity * 0.14).toFixed(3),
-    "--strong-cloud-duration": `${Math.max(9, 16 - windStrength * 5).toFixed(2)}s`,
-    "--severe-cloud-duration": `${Math.max(6, 11 - windStrength * 4).toFixed(2)}s`
-  };
-  document.body.dataset.weather = theme.weather;
-  document.body.dataset.light = theme.light;
-  document.body.dataset.storm = storm;
-  document.body.dataset.windActive = String(Math.max(windSpeed ?? 0, windGust ?? 0) >= 40);
-  document.body.dataset.lightning = String(theme.weather === "thunder" || theme.weather === "hail");
-  for (const [name, value] of Object.entries(atmosphereStyles)) {
-    document.body.style.setProperty(name, value);
-  }
-  for (const [name, value] of Object.entries(atmosphereInputs)) {
-    if (Number.isFinite(value)) document.body.dataset[name] = String(value);
-    else delete document.body.dataset[name];
-  }
-  const skyTop = getComputedStyle(document.body).getPropertyValue("--sky-top").trim();
-  if (/^#[\da-f]{6}$/i.test(skyTop)) elements.themeColor.content = skyTop;
-  try {
-    storage.set("firecloud:theme:v1", {
-      light: theme.light,
-      weather: theme.weather,
-      storm,
-      tier: document.body.dataset.tier || "great",
-      skyTop,
-      skyMid: getComputedStyle(document.body).getPropertyValue("--sky-mid").trim(),
-      skyHorizon: getComputedStyle(document.body).getPropertyValue("--sky-horizon").trim()
-    });
-  } catch {}
-  const condition = weatherConditionFor({
-    weather: theme.weather,
-    weatherCode: current.weather_code,
-    isDay: theme.light === "night" ? 0 : 1,
-    precipitation,
-    cloudCover: current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null),
-    temperature: current.temperature_2m
-  });
-
-  // 联动手帐主体卡片气象微物理状态 (Auto-sync stationery weather physics)
-  journalWeather?.syncWeatherConditions({
-    weather: theme.weather,
-    windSpeed: Number(windSpeed) || 0,
-    windGust: Number(windGust) || 0,
-    cloudCover: Number(current.cloud_cover) || 0,
-    precipitation: Number(precipitation) || 0,
-    isDay: theme.light !== "night"
-  });
-
-  // 联动天幕与手札夜间真实月相渲染 (Update celestial moon & stationery lunar badge)
-  updateMoonDisplay(moon);
-
-  return { theme, condition };
+  tick();
+  ticker = setInterval(tick, TICK_INTERVAL);
 }
 
-function updateMoonDisplay(moon) {
-  if (!moon) return;
-  // 1. 天幕月亮真实矢量渲染与月晕缩放
-  if (elements.skyMoonDisk) {
-    elements.skyMoonDisk.innerHTML = buildMoonSvg(moon.phaseFraction, moon.isWaxing, 76, "sky");
-  }
-  if (elements.skyMoonHalo) {
-    elements.skyMoonHalo.style.transform = `scale(${(0.7 + moon.phaseFraction * 0.6).toFixed(2)})`;
-    elements.skyMoonHalo.style.opacity = (0.25 + moon.phaseFraction * 0.5).toFixed(2);
-  }
-
-  // 2. 主手札便签月相微徽章
-  if (elements.lunarBadgeIcon) {
-    elements.lunarBadgeIcon.innerHTML = buildMoonSvg(moon.phaseFraction, moon.isWaxing, 15, "badge");
-  }
-  if (elements.lunarBadgeText) {
-    const pct = Math.round(moon.phaseFraction * 100);
-    elements.lunarBadgeText.textContent = `${moon.lunarDate} · ${moon.phaseName} ${pct}%`;
-  }
-
-  // 3. 夜间月相天文观测详情弹窗填充
-  if (elements.lunarDialogMoon) {
-    elements.lunarDialogMoon.innerHTML = buildMoonSvg(moon.phaseFraction, moon.isWaxing, 96, "dialog");
-  }
-  if (elements.lunarDialogName) {
-    elements.lunarDialogName.textContent = moon.phaseName;
-  }
-  if (elements.lunarDialogDate) {
-    elements.lunarDialogDate.textContent = `${moon.lunarDate} · 日月距角 ${moon.elongation.toFixed(1)}°`;
-  }
-  if (elements.lunarCellFraction) {
-    elements.lunarCellFraction.textContent = `${(moon.phaseFraction * 100).toFixed(1)}%`;
-  }
-  if (elements.lunarCellAge) {
-    elements.lunarCellAge.textContent = `${moon.moonAge.toFixed(1)} 天`;
-  }
-  if (elements.lunarCellAlt) {
-    elements.lunarCellAlt.textContent = `${moon.altitude.toFixed(1)}° (${moon.isAboveHorizon ? "地平线上" : "已入地平"})`;
-  }
-  if (elements.lunarCellAz) {
-    elements.lunarCellAz.textContent = `${moon.azimuth.toFixed(1)}°`;
-  }
-  if (elements.lunarDialogAdvice) {
-    if (moon.phaseFraction >= 0.9) {
-      elements.lunarDialogAdvice.textContent = "今宵月相趋满，银辉满天，适宜长焦拍摄地景接月或赏月夜景。";
-    } else if (moon.phaseFraction >= 0.4) {
-      elements.lunarDialogAdvice.textContent = "晨昏分界明显，月球环形山与月海暗影极具立体层次，适宜天文望远镜观测。";
-    } else if (moon.phaseFraction >= 0.05) {
-      elements.lunarDialogAdvice.textContent = "月如银钩，伴有地照微光（达芬奇辉光），极宜在暮光余晖初垂时与地景同框记录。";
-    } else {
-      elements.lunarDialogAdvice.textContent = "新月朔日，月隐星繁，天幕背景无月光干扰，极宜观测深空天体与拍摄银河暗夜。";
-    }
-  }
-  if (elements.lunarDialogStamp) {
-    elements.lunarDialogStamp.textContent = moon.phaseFraction >= 0.7 ? "宜赏月" : moon.phaseFraction <= 0.05 ? "宜深空" : "观象札记";
-  }
-}
-
-function updateHorizontalScrollRegions() {
-  for (const region of document.querySelectorAll("[data-scroll-region]")) {
-    const scroller = region.firstElementChild;
-    const canScroll = scroller.scrollWidth > scroller.clientWidth + 1;
-    const isAtStart = scroller.scrollLeft <= 2;
-    const isAtEnd = !canScroll || scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2;
-    region.classList.toggle("can-scroll", canScroll);
-    region.classList.toggle("is-at-start", isAtStart);
-    region.classList.toggle("is-at-end", isAtEnd);
-  }
-}
-
-for (const region of document.querySelectorAll("[data-scroll-region]")) {
-  region.firstElementChild.addEventListener("scroll", () => updateHorizontalScrollRegions(), { passive: true });
-}
-window.addEventListener("resize", updateHorizontalScrollRegions, { passive: true });
-
-// 第 5–7 天的数值预报可信度明显下降，界面上标为远期参考
-const FAR_DAY_INDEX = 4;
-
-function selectDay(timestamp) {
-  if (!timestamp || state.pendingEvent) return;
-  triggerHaptic(12);
-  state.selectedEventTime = new Date(Number(timestamp));
-  if (renderReady()) announceReady();
-}
-
-function renderWeekOverview(days, selectedTime) {
-  const scored = days.filter((day) => day.score != null);
-  const best = scored.reduce((top, day) => (top == null || day.score > top.score ? day : top), null);
-  elements.weekBest.hidden = !best;
-  if (best) {
-    elements.weekBest.dataset.eventTime = String(best.eventTime.getTime());
-    elements.weekBest.dataset.tier = best.tier;
-    elements.weekBest.textContent = best.score >= 50
-      ? `本周最佳 · ${best.weekday} ${best.score} 分 · ${best.band}`
-      : `本周最高 ${best.score} 分 · ${best.weekday}`;
-    elements.weekBest.setAttribute("aria-label", `查看本周得分最高的一天：${best.date}，${best.score} 分，${best.band}`);
-  }
-  elements.weekOverview.replaceChildren(...days.map((day) => {
-    const bar = document.createElement("div");
-    bar.className = "week-bar";
-    bar.dataset.tier = day.tier;
-    if (day.far) bar.dataset.far = "true";
-    if (day.eventTime) bar.dataset.eventTime = String(day.eventTime.getTime());
-    if (day.eventTime?.getTime() === selectedTime) bar.dataset.active = "true";
-    if (best && day === best) bar.dataset.best = "true";
-    const score = document.createElement("span");
-    score.className = "week-bar-score";
-    score.textContent = day.score ?? "—";
-    const track = document.createElement("span");
-    track.className = "week-bar-track";
-    const fill = document.createElement("span");
-    fill.className = "week-bar-fill";
-    fill.style.height = `${Math.max(4, day.score ?? 0)}%`;
-    track.append(fill);
-    const label = document.createElement("span");
-    label.className = "week-bar-day";
-    label.textContent = day.weekday;
-    bar.append(score, track, label);
-    return bar;
-  }));
-}
-
-elements.weekBest.addEventListener("click", (event) => selectDay(event.currentTarget.dataset.eventTime));
-elements.weekOverview.addEventListener("click", (event) => {
-  selectDay(event.target.closest(".week-bar")?.dataset.eventTime);
-});
-
-function renderWeek(bundle) {
-  const previous = [...elements.week.children];
-  let cardIndex = 0;
-  const appendCard = (card) => {
-    const old = previous[cardIndex++];
-    if (!old) {
-      elements.week.append(card);
-      return;
-    }
-    const changed = old.innerHTML !== card.innerHTML || old.dataset.tier !== card.dataset.tier;
-    if (changed) old.innerHTML = card.innerHTML;
-    for (const name of ["data-tier", "data-grade", "data-event-time", "aria-label", "aria-pressed", "role", "tabindex"]) {
-      const value = card.getAttribute(name);
-      if (value === null) old.removeAttribute(name);
-      else old.setAttribute(name, value);
-    }
-    old.classList.toggle("is-active-day", card.classList.contains("is-active-day"));
-    old.classList.toggle("is-rain-damp", card.classList.contains("is-rain-damp"));
-    old.classList.toggle("is-far", card.classList.contains("is-far"));
-    if (changed) {
-      old.dataset.updated = "true";
-      fadeUpdate(old);
-    }
-  };
-  const base = nextEvent(state.event, state.place.lat, state.place.lon, new Date());
-  if (!base) return;
-  const selectedTime = currentEventTime()?.getTime();
-  const timeZone = localTimeZone(bundle);
-  const formatter = new Intl.DateTimeFormat("zh-CN", {
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-    timeZone
-  });
-  const eventLabel = state.event === "sunset" ? "日落" : "日出";
-  const weekdayFormatter = new Intl.DateTimeFormat("zh-CN", { weekday: "short", timeZone });
-  const overview = [];
-
-  for (let day = 0; day < 7; day += 1) {
-    const probe = new Date(base.getTime() + day * 86_400_000);
-    const eventTime = sunTimes(probe, state.place.lat, state.place.lon)[state.event];
-    const card = document.createElement("article");
-    card.className = "day-card day-journal-card";
-    card.style.setProperty("--day-idx", String(day));
-
-    const selectCard = (event) => selectDay(event.currentTarget.dataset.eventTime);
-    card.addEventListener("click", selectCard);
-    card.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        if (!event.currentTarget.dataset.eventTime) return;
-        event.preventDefault();
-        selectCard(event);
-      }
-    });
-    // 入场动效完成后固化为就绪静止态，避免后续风吹交互结束时误触发入场回放
-    const markSettled = () => card.classList.add("is-settled");
-    card.addEventListener("animationend", (e) => {
-      if (e.animationName === "day-card-in") markSettled();
-    }, { once: true });
-    setTimeout(markSettled, 600);
-
-    const far = day >= FAR_DAY_INDEX;
-    card.classList.toggle("is-far", far);
-    if (!eventTime) {
-      overview.push({ weekday: weekdayFormatter.format(probe), score: null, tier: "unavailable", far });
-      card.dataset.tier = "unavailable";
-      card.dataset.grade = "dull";
-      card.innerHTML = `
-        <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
-        <div class="day-date-row">
-          <span class="day-card-date">${formatter.format(probe)}</span>
-          <span class="day-mini-seal">地平未沉</span>
-        </div>
-        <div class="day-card-watercolor"></div>
-        <div class="day-score-block">
-          <span class="day-score-num">—</span>
-          <div class="day-score-tag">
-            <span>极昼无晨昏</span>
-          </div>
-        </div>
-        <p class="day-tip-line">当前纬度该日处于极昼/极夜，无对应晨昏视窗</p>
-      `;
-    } else {
-      const metrics = metricsAt(bundle, eventTime);
-      if (!hasCloudLayers(metrics)) {
-        overview.push({ weekday: weekdayFormatter.format(eventTime), eventTime: null, score: null, tier: "unavailable", far });
-        card.dataset.tier = "unavailable";
-        card.dataset.grade = "dull";
-        card.innerHTML = `
-          <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
-          <div class="day-date-row">
-            <span class="day-card-date">${formatter.format(eventTime)}</span>
-            <span class="day-mini-seal">待测</span>
-          </div>
-          <div class="day-card-watercolor"></div>
-          <div class="day-score-block">
-            <span class="day-score-num">—</span>
-            <div class="day-score-tag">
-              <span>云况待测</span>
-            </div>
-          </div>
-          <p class="day-tip-line">高空云层要素暂缺</p>
-        `;
-        appendCard(card);
-        continue;
-      }
-      const glowScore = scoreSky(metrics);
-      const sunScore = scoreSunDisc(metrics);
-      const sunPhen = sunDiscPhenomenon(metrics, sunScore);
-      const isSunDiscView = state.viewMode === "sundisc";
-      const score = isSunDiscView ? sunScore : glowScore;
-      const tier = tierFor(score);
-      const advice = isSunDiscView
-        ? photographicAdviceForSunDisc(metrics, sunScore, sunPhen, state.event)
-        : photographicAdviceFor(metrics, glowScore, state.event);
-      const formattedDate = formatter.format(eventTime);
-      const seal = isSunDiscView ? sealForSunDisc(sunScore, sunPhen) : sealFor(glowScore);
-      const miniSeal = seal.text;
-      overview.push({
-        weekday: weekdayFormatter.format(eventTime), date: formattedDate, eventTime,
-        score, tier, band: indexBand(score), far
-      });
-
-      card.dataset.tier = tier;
-      card.dataset.grade = tier;
-      if (typeof metrics.precip === "number" && metrics.precip > 0.05) {
-        card.classList.add("is-rain-damp");
-      }
-      card.innerHTML = `
-        <div class="day-card-perfs"><i></i><i></i><i></i><i></i></div>
-        <div class="day-date-row">
-          <span class="day-card-date">${formattedDate}</span>
-          <span class="day-mini-seal">${miniSeal}</span>
-        </div>
-        <div class="day-card-watercolor"></div>
-        <div class="day-score-block">
-          <span class="day-score-num">${score}</span>
-          <div class="day-score-tag">
-            <span>${indexBand(score)}${far ? " · 远期" : ""}</span>
-            <small class="day-score-clock">${formatClock(eventTime, timeZone)}</small>
-          </div>
-        </div>
-        <p class="day-tip-line">${advice}</p>
-      `;
-
-      card.setAttribute("tabindex", "0");
-      card.setAttribute("role", "button");
-      card.setAttribute("aria-label", `${formattedDate} ${eventLabel}，${isSunDiscView ? "日轮" : "霞光"}指数 ${score}分，${indexBand(score)}，${advice}${far ? "，远期预报仅供参考" : ""}`);
-      card.dataset.eventTime = String(eventTime.getTime());
-      card.classList.toggle("is-active-day", eventTime.getTime() === selectedTime);
-      card.setAttribute("aria-pressed", String(eventTime.getTime() === selectedTime));
-    }
-    appendCard(card);
-  }
-  renderWeekOverview(overview, selectedTime);
-  requestAnimationFrame(updateHorizontalScrollRegions);
-}
-
-function updateSourceStatus() {
-  elements.source.textContent = state.pendingEvent ? `读取${state.pendingEvent === "sunset" ? "晚霞" : "朝霞"}中` : state.refreshing ? "更新中" : state.refreshFailed ? "更新未果 · 沿用先前记录" : state.stale ? "先前记录" : "实时数据";
-  elements.source.dataset.status = state.pendingEvent || state.refreshing ? "loading" : state.refreshFailed ? "error" : state.stale ? "stale" : "live";
-}
-
-function announceReady() {
-  const isSunDiscView = state.viewMode === "sundisc";
-  const eventLabel = state.event === "sunset" ? (isSunDiscView ? "落日" : "晚霞") : (isSunDiscView ? "日出" : "朝霞");
-  const modelLabel = isSunDiscView ? "日轮指数" : "霞光指数";
-  const freshness = state.refreshFailed ? "更新未果，沿用先前观测记录" : state.stale ? "先前观测记录" : "实时数据";
-  elements.status.textContent = `${state.place.name}，${eventLabel}，${modelLabel} ${elements.score.textContent}，${freshness}`;
-}
-
-function focusNewResult() {
-  if (!elements.dialog.open && !elements.devDialog.open) elements.eventTime.focus({ preventScroll: true });
-}
-
+// ---------- 渲染 ----------
 function renderReady() {
-  const eventTime = currentEventTime();
+  const { state } = session;
+  const eventTime = session.currentEventTime();
   if (!eventTime) {
-    showError("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
+    session.fail("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
     return false;
   }
   if (!state.bundle) {
-    showError("暂无可用预测，请稍后重试");
+    session.fail("暂无可用预测，请稍后重试");
     return false;
   }
   const metrics = metricsAt(state.bundle, eventTime);
   if (!hasCloudLayers(metrics)) {
-    showError("当地高空分层云量暂缺，无法完成研判，请稍后重试或选择临近城市");
+    session.fail("当地高空分层云量暂缺，无法完成研判，请稍后重试或选择临近城市");
     return false;
   }
-  const wasReady = document.body.dataset.state === "ready";
-  const changing = [elements.eventTime, elements.eventDate, elements.score, elements.band,
-    elements.verdict, elements.windowRange, elements.factors];
+  const wasReady = body.dataset.state === "ready";
+  const changing = [...hero.changing, factors.element];
   const previousText = changing.map((element) => element.textContent);
 
   const glowBreakdown = skyBreakdown(metrics);
   const sunBreakdown = sunDiscBreakdown(metrics);
-  const glowScore = glowBreakdown.score;
-  const sunScore = sunBreakdown.score;
-  const sunPhen = sunDiscPhenomenon(metrics, sunScore);
-  const glowSeal = sealFor(glowScore);
-  const sunSeal = sealForSunDisc(sunScore, sunPhen);
-  const glowAdvice = photographicAdviceFor(metrics, glowScore, state.event);
-  const sunAdvice = photographicAdviceForSunDisc(metrics, sunScore, sunPhen, state.event);
+  const phenomenon = sunDiscPhenomenon(metrics, sunBreakdown.score);
+  const glow = {
+    score: glowBreakdown.score,
+    breakdown: glowBreakdown,
+    seal: sealFor(glowBreakdown.score),
+    advice: photographicAdviceFor(metrics, glowBreakdown.score, state.event)
+  };
+  const sun = {
+    score: sunBreakdown.score,
+    breakdown: sunBreakdown,
+    phenomenon,
+    seal: sealForSunDisc(sunBreakdown.score, phenomenon),
+    advice: photographicAdviceForSunDisc(metrics, sunBreakdown.score, phenomenon, state.event)
+  };
+  const active = state.viewMode === "sundisc" ? sun : glow;
 
-  // 研判视角分流 (glow vs sundisc)
-  const isSunDiscView = state.viewMode === "sundisc";
-  const activeScore = isSunDiscView ? sunScore : glowScore;
-  const activeSeal = isSunDiscView ? sunSeal : glowSeal;
-  const activeAdvice = isSunDiscView ? sunAdvice : glowAdvice;
+  body.dataset.tier = tierFor(active.score);
+  const condition = sky.apply(state.bundle, state.place);
+  const weatherSuffix = condition?.summary ? ` · ${condition.summary}` : "";
+  els.placeName.textContent = `${state.place.name}${weatherSuffix}`;
+  els.brand.setAttribute("aria-label",
+    `霞光预报 - 选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`);
 
-  document.body.dataset.tier = tierFor(activeScore);
-  const { condition } = applyWeatherBackground(state.bundle) ?? {};
-  const eventLabel = state.event === "sunset" ? (isSunDiscView ? "落日" : "晚霞") : (isSunDiscView ? "日出" : "朝霞");
-  const sunLabel = state.event === "sunset" ? "日落" : "日出";
-  const azimuth = solarAzimuth(eventTime, state.place.lat, state.place.lon);
-  const timeZone = localTimeZone(state.bundle);
-  const conditionSuffix = condition?.summary ? ` · ${condition.summary}` : "";
-  elements.placeName.textContent = `${state.place.name}${conditionSuffix}`;
-  elements.openPlaces.setAttribute(
-    "aria-label",
-    `霞光预报 - 选择地点，当前地点：${state.place.name}${condition?.summary ? `，当前天气：${condition.summary}` : ""}`
-  );
-  const clockStr = formatClock(eventTime, timeZone);
-  elements.eventTime.innerHTML = `${clockStr} <small id="hero-time-sub">${sunLabel} · ${compassLabel(azimuth)} ${Math.round(azimuth)}°</small>`;
-  renderWindow(eventTime, timeZone, isSunDiscView);
-  elements.eventDate.textContent = `${formatEventDate(eventTime, timeZone)} · ${timeZone ? "地点当地时间" : "设备时间"}`;
-  if (elements.entryTag) {
-    elements.entryTag.textContent = `${formatEventDate(eventTime, timeZone)} · ${eventLabel}观测手记`;
-  }
-  elements.score.textContent = String(activeScore);
-  if (!wasReady) elements.week.replaceChildren();
-  elements.band.textContent = isSunDiscView
-    ? `${indexBand(activeScore)} · ${sunPhen.sub}`
-    : `${indexBand(activeScore)} · ${waitAdvice(activeScore)}`;
-  elements.indexLabel.textContent = isSunDiscView ? "日轮指数" : "霞光指数";
-
-  // 朱砂印章研判与手记建议
-  if (elements.sealGrade) elements.sealGrade.textContent = activeSeal.text;
-  if (elements.sealSub) elements.sealSub.textContent = activeSeal.sub;
-  elements.verdict.textContent = `“${activeAdvice}”`;
-
-  // 另一视角的分数同时作为切换入口，主卡只保留这一个视角切换
-  elements.companionText.textContent = isSunDiscView
-    ? `霞光指数 ${glowScore} 分 · ${glowSeal.text}`
-    : `日轮指数 ${sunScore} 分 · ${sunPhen.name}`;
-  elements.companionPill.setAttribute("aria-label", isSunDiscView
-    ? `切换到霞光视角，霞光指数 ${glowScore} 分，${glowSeal.text}`
-    : `切换到日轮视角，日轮指数 ${sunScore} 分，${sunPhen.name}`);
-
-  updateSourceStatus();
-  elements.updated.textContent = state.stale ? `缓存于 ${formatAge(Date.now() - state.dataTimestamp)}` : `更新于 ${formatUpdated(state.bundle.fetchedAt, timeZone)}`;
-  renderFactors(isSunDiscView ? sunBreakdown : glowBreakdown);
+  const { lat, lon } = state.place;
+  hero.render({
+    state,
+    eventTime,
+    timeZone: localTimeZone(state.bundle),
+    azimuth: solarAzimuth(eventTime, lat, lon),
+    viewing: viewingWindow(state.event, eventTime, lat, lon, state.viewMode),
+    glow,
+    sun
+  });
+  factors.render(active.breakdown);
   syncEventTabs();
-  updateFavoriteButton();
-  renderWeek(state.bundle);
+  places.updateFavoriteButton();
+  if (!wasReady) week.reset();
+  week.render({
+    bundle: state.bundle,
+    place: state.place,
+    event: state.event,
+    viewMode: state.viewMode,
+    base: nextEvent(state.event, lat, lon, new Date()),
+    selectedTime: eventTime.getTime()
+  });
   if (state.pendingEvent) stopTicker();
-  else updateTicker(eventTime);
+  else startTicker(eventTime);
   setPanel("ready");
-  if (typeof metrics.precip === "number" && metrics.precip > 0.05) {
-    journalWeather?.triggerRainSoak();
-  } else if (document.body.dataset.weather !== "rain" && document.body.dataset.weather !== "thunder") {
-    journalWeather?.restoreDryCard();
-  }
+
+  if (typeof metrics.precip === "number" && metrics.precip > 0.05) paperFx?.triggerRainSoak();
+  else if (body.dataset.weather !== "rain" && body.dataset.weather !== "thunder") paperFx?.restoreDryCard();
   if (wasReady) changing.forEach((element, index) => {
     if (element.textContent !== previousText[index]) fadeUpdate(element);
   });
   return true;
 }
 
-function showError(message) {
-  setBusy(false);
-  setEventPending();
-  elements.status.textContent = "";
-  elements.source.dataset.status = "error";
-  elements.errorText.textContent = message;
-  setPanel("error");
-  queueMicrotask(() => {
-    if (!elements.dialog.open && !elements.devDialog.open && document.body.dataset.state === "error") {
-      elements.errorTitle.focus({ preventScroll: true });
-    }
-  });
+// ---------- 交互 ----------
+function selectDay(timestamp) {
+  if (timestamp && session.selectDay(new Date(Number(timestamp)))) triggerHaptic(12);
 }
 
-async function loadPlace(place, { eventType = state.pendingEvent ?? state.event, preferCache = false, force = false } = {}) {
-  const requestId = ++state.loadRequestId;
-  const normalized = normalizePlace(place);
-  if (!normalized) return showError("未获取到有效地点信息，请重新搜索");
-  const sameForecast = state.bundle
-    && placeIdentity(state.bundle.place) === placeIdentity(normalized) && state.bundle.eventType === eventType;
-  const keepReady = document.body.dataset.state === "ready"
-    && state.bundle && placeIdentity(state.bundle.place) === placeIdentity(normalized);
-  const sameReady = keepReady && state.bundle.eventType === eventType;
-  const cancelledSwitch = sameReady && state.pendingEvent !== null && !force;
-  setEventPending();
-  if (state.place && placeIdentity(state.place) !== placeIdentity(normalized)) state.selectedEventTime = null;
-  state.place = normalized;
-  storage.set(PLACE_KEY, normalized);
-  if (!keepReady) {
-    state.event = eventType;
-    elements.placeName.textContent = normalized.name;
-    elements.openPlaces.setAttribute("aria-label", `选择地点，当前地点：${normalized.name}`);
-  }
-  if (cancelledSwitch) {
-    state.refreshing = false;
-    setBusy(false);
-    updateSourceStatus();
-    updateTicker(currentEventTime());
-    announceReady();
-    return;
-  }
-  const cached = readValidCache(normalized, eventType);
-  if (!force && preferCache && cached) {
-    if (!sameForecast) state.selectedEventTime = null;
-    state.bundle = cached.bundle;
-    state.dataTimestamp = cached.savedAt;
-    state.event = eventType;
-    state.stale = true;
-    state.refreshing = false;
-    state.refreshFailed = false;
-    setBusy(false);
-    if (renderReady()) {
-      announceReady();
-      if (!keepReady) focusNewResult();
-    }
-    if (cached.age > 5 * 60 * 1000) {
-      loadPlace(normalized, { force: true });
-    }
-    return;
-  }
-  const eventTime = nextEvent(eventType, normalized.lat, normalized.lon, new Date());
-  if (!eventTime) return showError("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
-  if (keepReady && !sameReady) {
-    stopTicker();
-    setEventPending(eventType);
-    updateSourceStatus();
-  }
-  state.refreshing = sameReady;
-  if (sameReady) {
-    updateSourceStatus();
-    elements.status.textContent = `正在更新${normalized.name}${eventType === "sunset" ? "晚霞" : "朝霞"}预报`;
-  } else if (!keepReady) {
-    setPanel("loading");
-  }
-  setBusy(true);
-  elements.loadingText.textContent = `正在计算${eventType === "sunset" ? "晚霞" : "朝霞"}方向的云层…`;
-  try {
-    const bundle = await fetchForecastBundle(normalized, eventType, eventTime);
-    if (requestId !== state.loadRequestId) return;
-    if (!sameForecast) state.selectedEventTime = null;
-    state.bundle = bundle;
-    state.dataTimestamp = bundle.fetchedAt;
-    state.event = eventType;
-    state.stale = false;
-    state.refreshing = false;
-    state.refreshFailed = false;
-    setEventPending();
-    writeCache(bundle);
-    if (renderReady()) {
-      announceReady();
-      if (!keepReady) focusNewResult();
-    }
-  } catch (error) {
-    if (requestId !== state.loadRequestId) return;
-    state.refreshing = false;
-    if (keepReady) {
-      if (sameReady) {
-        state.stale = true;
-        state.refreshFailed = true;
-      }
-      setEventPending(null, sameReady ? null : eventType);
-      renderReady();
-      announceReady();
-    } else {
-      const fallback = readValidCache(normalized, eventType);
-      state.refreshFailed = true;
-      if (fallback) {
-        if (!sameForecast) state.selectedEventTime = null;
-        state.stale = true;
-        state.bundle = fallback.bundle;
-        state.dataTimestamp = fallback.savedAt;
-        state.event = eventType;
-        if (renderReady()) {
-          announceReady();
-          focusNewResult();
-        }
-      } else {
-        console.error(error);
-        showError("暂无可用预测，请稍后重试");
-      }
-    }
-  } finally {
-    if (requestId === state.loadRequestId) setBusy(false);
-  }
-}
-
-function openPlaces() {
-  if (!elements.dialog.open) {
-    renderFavorites();
-    resetPlacesDrawer();
-    elements.dialog.showModal();
-    renderFavoriteFeedback();
-  }
-}
-
-async function locate() {
-  const requestId = ++state.locateRequestId;
-  if (!navigator.geolocation) {
-    setLocationStatus("未能获取设备定位，请尝试搜索城市");
-    openPlaces();
-    elements.search.focus();
-    return;
-  }
-  setLocationStatus("正在探寻当前位置…");
-  navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-    if (requestId !== state.locateRequestId) return;
-    const point = { lat: coords.latitude, lon: coords.longitude };
-    let place = { ...point, name: "当前位置" };
-    try { place = await reverseGeocode(point); } catch { /* location remains usable */ }
-    if (requestId !== state.locateRequestId) return;
-    setLocationStatus("");
-    clearSearch();
-    if (elements.dialog.open) elements.dialog.close();
-    loadPlace(place);
-  }, () => {
-    if (requestId !== state.locateRequestId) return;
-    setLocationStatus("未能获取设备定位，请尝试搜索城市");
-    openPlaces();
-    elements.search.focus();
-  }, { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 });
-}
-
-let searchTimer;
-let searchRequestId = 0;
-
-function clearSearch() {
-  searchRequestId += 1;
-  clearTimeout(searchTimer);
-  elements.search.value = "";
-  elements.search.removeAttribute("aria-busy");
-  elements.searchResults.removeAttribute("aria-busy");
-  elements.searchSpinner.hidden = true;
-  elements.searchStatus.textContent = "";
-  elements.searchResults.replaceChildren();
-}
-
-function choosePlace(place) {
-  state.locateRequestId += 1;
-  clearSearch();
-  elements.dialog.close();
-  loadPlace(place);
-}
-
-function renderSearchResults(results) {
-  elements.searchResults.replaceChildren(...results.map((place) => {
-    const item = document.createElement("li");
-    const button = document.createElement("button");
-    button.type = "button";
-    const name = document.createElement("strong");
-    name.className = "place-label";
-    name.textContent = place.name;
-    const detail = document.createElement("small");
-    detail.textContent = place.detail || "";
-    button.append(name, detail);
-    button.addEventListener("click", () => choosePlace(place));
-    item.append(button);
-    return item;
-  }));
-}
-
-elements.search.addEventListener("input", () => {
-  clearTimeout(searchTimer);
-  const requestId = ++searchRequestId;
-  const query = elements.search.value.trim();
-  if (query.length < 2) {
-    elements.searchResults.replaceChildren();
-    elements.searchStatus.textContent = "";
-    elements.searchSpinner.hidden = true;
-    elements.search.removeAttribute("aria-busy");
-    elements.searchResults.removeAttribute("aria-busy");
-    return;
-  }
-  searchTimer = setTimeout(async () => {
-    elements.searchSpinner.hidden = false;
-    elements.search.setAttribute("aria-busy", "true");
-    elements.searchResults.setAttribute("aria-busy", "true");
-    elements.searchStatus.textContent = "正在搜索…";
-    try {
-      const results = await searchCities(query);
-      if (requestId !== searchRequestId) return;
-      renderSearchResults(results);
-      elements.searchStatus.textContent = results.length ? `找到 ${results.length} 处地点` : "未寻得匹配城市，建议尝试输入省市全称";
-    } catch {
-      if (requestId !== searchRequestId) return;
-      elements.searchResults.replaceChildren();
-      elements.searchStatus.textContent = "城市检索网络未通，请稍后重试";
-    } finally {
-      if (requestId === searchRequestId) {
-        elements.searchSpinner.hidden = true;
-        elements.search.removeAttribute("aria-busy");
-        elements.searchResults.removeAttribute("aria-busy");
-      }
-    }
-  }, 300);
-});
-
-let pendingFavorite = null;
-
-function renderFavoriteFeedback() {
-  const inDialog = elements.dialog.open;
-  elements.favoriteFeedback.hidden = !pendingFavorite || inDialog;
-  elements.dialogFavoriteFeedback.hidden = !pendingFavorite || !inDialog;
-  for (const feedback of [elements.favoriteFeedback, elements.dialogFavoriteFeedback]) {
-    feedback.inert = feedback.hidden;
-    if (pendingFavorite?.error) feedback.dataset.status = "error";
-    else feedback.removeAttribute("data-status");
-  }
-  if (pendingFavorite) {
-    const message = pendingFavorite.error
-      ? "最多珍藏 8 处地点，请先移出一处后再撤销"
-      : pendingFavorite.retryRemoved
-        ? `已移出「${pendingFavorite.retryRemoved}」，可撤销先前移出的「${pendingFavorite.place.name}」`
-        : `已移出收藏「${pendingFavorite.place.name}」`;
-    (inDialog ? elements.dialogFavoriteMessage : elements.favoriteMessage).textContent = message;
-  }
-  scheduleFavoriteUndo();
-}
-
-function scheduleFavoriteUndo() {
-  if (!pendingFavorite) return;
-  clearTimeout(pendingFavorite.timer);
-  const feedback = elements.dialog.open ? elements.dialogFavoriteFeedback : elements.favoriteFeedback;
-  if (feedback.matches(":hover") || feedback.contains(document.activeElement)) return;
-  const pending = pendingFavorite;
-  pending.timer = setTimeout(() => {
-    if (pendingFavorite === pending) clearFavoriteUndo();
-  }, 7000);
-}
-
-function clearFavoriteUndo() {
-  if (!pendingFavorite) return;
-  clearTimeout(pendingFavorite.timer);
-  pendingFavorite = null;
-  const undoHadFocus = document.activeElement === elements.undoFavorite || document.activeElement === elements.dialogUndoFavorite;
-  renderFavoriteFeedback();
-  if (undoHadFocus) {
-    (elements.dialog.open ? elements.search : elements.favorite.hidden ? elements.openPlaces : elements.favorite).focus({ preventScroll: true });
-  }
-}
-
-function removeFavorite(place) {
-  const index = state.favorites.findIndex((favorite) => placeIdentity(favorite) === placeIdentity(place));
-  if (index < 0) return;
-  const retryingUndo = Boolean(pendingFavorite?.error);
-  if (!retryingUndo) clearFavoriteUndo();
-  const [removed] = state.favorites.splice(index, 1);
-  storage.set(FAVORITES_KEY, state.favorites);
-  renderFavorites();
-  updateFavoriteButton();
-  if (elements.dialog.open) {
-    const adjacent = elements.favoritesList.children[Math.min(index, state.favorites.length - 1)];
-    (adjacent?.querySelector(".delete-favorite") || elements.search).focus({ preventScroll: true });
-  }
-  if (retryingUndo) {
-    pendingFavorite.error = false;
-    pendingFavorite.retryRemoved = removed.name;
-  } else {
-    pendingFavorite = { place: removed, index, timer: null, error: false };
-  }
-  renderFavoriteFeedback();
-}
-
-function undoFavorite() {
-  if (!pendingFavorite) return;
-  const { place, index } = pendingFavorite;
-  const alreadyRestored = state.favorites.some((favorite) => placeIdentity(favorite) === placeIdentity(place));
-  if (!alreadyRestored && state.favorites.length >= 8) {
-    pendingFavorite.error = true;
-    pendingFavorite.retryRemoved = null;
-    renderFavoriteFeedback();
-    (elements.dialog.open ? elements.dialogUndoFavorite : elements.undoFavorite).focus({ preventScroll: true });
-    return;
-  }
-  clearFavoriteUndo();
-  let restoredIndex = state.favorites.findIndex((favorite) => placeIdentity(favorite) === placeIdentity(place));
-  if (restoredIndex < 0 && state.favorites.length < 8) {
-    restoredIndex = Math.min(index, state.favorites.length);
-    state.favorites.splice(restoredIndex, 0, place);
-    storage.set(FAVORITES_KEY, state.favorites);
-    renderFavorites();
-    updateFavoriteButton();
-  }
-  if (elements.dialog.open) {
-    (restoredIndex >= 0 ? elements.favoritesList.children[restoredIndex]?.querySelector(".favorite-place") : elements.search)
-      .focus({ preventScroll: true });
-  } else if (!elements.favorite.hidden) {
-    elements.favorite.focus({ preventScroll: true });
-  }
-}
-
-function renderFavorites() {
-  const list = elements.favoritesList;
-  const oldRows = new Map([...list.children].filter((row) => !row.dataset.exiting)
-    .map((row) => [row.dataset.place, row]));
-  const positions = new Map([...oldRows].map(([key, row]) => [key, row.getBoundingClientRect()]));
-  const animate = elements.dialog.open && motionAllowed();
-  const easing = getComputedStyle(document.documentElement).getPropertyValue("--ease-out").trim();
-  const rows = state.favorites.map((place) => {
-    const key = placeIdentity(place);
-    if (oldRows.has(key)) return oldRows.get(key);
-    const item = document.createElement("li");
-    item.className = "favorite-row";
-    item.dataset.place = key;
-    const choose = document.createElement("button");
-    choose.type = "button";
-    choose.className = "favorite-place";
-    const name = document.createElement("strong");
-    name.className = "place-label";
-    name.textContent = place.name;
-    choose.append(name);
-    choose.addEventListener("click", () => choosePlace(place));
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "delete-favorite";
-    remove.setAttribute("aria-label", `移出收藏 ${place.name}`);
-    remove.textContent = "×";
-    remove.addEventListener("click", () => removeFavorite(place));
-    item.append(choose, remove);
-    return item;
-  });
-  const retained = new Set(rows);
-  for (const row of oldRows.values()) {
-    if (retained.has(row)) continue;
-    const rect = positions.get(row.dataset.place);
-    row.remove();
-    if (animate) {
-      row.dataset.exiting = "true";
-      row.inert = true;
-      row.setAttribute("aria-hidden", "true");
-      row.style.cssText = `position:absolute;top:${rect.top - list.getBoundingClientRect().top}px;left:0;width:${rect.width}px;pointer-events:none`;
-      list.append(row);
-      row.animate([{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(-8px)" }],
-        { duration: 120, easing }).finished.then(() => row.remove(), () => row.remove());
-    }
-  }
-  rows.forEach((row, index) => {
-    if (list.children[index] !== row) list.insertBefore(row, list.children[index] || null);
-  });
-  for (const row of rows) {
-    const previous = positions.get(row.dataset.place);
-    row.getAnimations().forEach((animation) => animation.cancel());
-    if (!animate) continue;
-    const delta = previous ? previous.top - row.getBoundingClientRect().top : 4;
-    if (previous && Math.abs(delta) < 0.5) continue;
-    row.animate([
-      { transform: `translateY(${delta}px)`, opacity: previous ? 1 : 0 },
-      { transform: "translateY(0)", opacity: 1 }
-    ], { duration: 160, easing });
-  }
-  elements.favoritesEmpty.hidden = state.favorites.length > 0;
-}
-
-function toggleFavorite() {
-  if (!state.place) return;
-  const identity = placeIdentity(state.place);
-  const index = state.favorites.findIndex((place) => placeIdentity(place) === identity);
-  if (index >= 0) {
-    removeFavorite(state.place);
-    return;
-  }
-  if (state.favorites.length >= 8) {
-    setLocationStatus("最多珍藏 8 处地点");
-    openPlaces();
-    return;
-  }
-  if (pendingFavorite && placeIdentity(pendingFavorite.place) === identity) clearFavoriteUndo();
-  state.favorites.push({ ...state.place });
-  storage.set(FAVORITES_KEY, state.favorites);
-  updateFavoriteButton();
-  renderFavorites();
-}
-
-function initFluidDrawer(dialog) {
-  if (!dialog) return;
-
-  const handle = dialog.querySelector("#drawer-handle") || dialog.querySelector(".drawer-handle");
-  const head = dialog.querySelector(".dialog-head");
-
-  let isDragging = false;
-  let startY = 0;
-  let currentY = 0;
-  let currentTranslateY = 0;
-  let activePointerId = null;
-  let history = [];
-  let motionTimer = null;
-  let motionEnd = null;
-  let didDrag = false;
-
-  function cancelMotion() {
-    clearTimeout(motionTimer);
-    motionTimer = null;
-    if (motionEnd) dialog.removeEventListener("transitionend", motionEnd);
-    motionEnd = null;
-  }
-
-  function finishMotion(callback, delay) {
-    cancelMotion();
-    const onEnd = (event) => {
-      if (event && (event.target !== dialog || event.propertyName !== "transform")) return;
-      cancelMotion();
-      callback();
-    };
-    motionEnd = onEnd;
-    dialog.addEventListener("transitionend", onEnd);
-    motionTimer = setTimeout(() => onEnd(), delay);
-  }
-
-
-  function rubberband(overshoot, dimension = 350, constant = 0.45) {
-    return (overshoot * dimension * constant) / (dimension + constant * Math.abs(overshoot));
-  }
-
-  function project(velocity, decelerationRate = 0.992) {
-    return (velocity / 1000) * decelerationRate / (1 - decelerationRate);
-  }
-
-  function setTranslateY(y) {
-    currentTranslateY = y;
-    dialog.style.setProperty("--sheet-translate-y", `${y}px`);
-    const height = dialog.offsetHeight || 500;
-    const progress = Math.min(1, Math.max(0, 1 - (Math.max(0, y) / height)));
-    dialog.style.setProperty("--backdrop-opacity", String(progress));
-  }
-
-  function resetDialogStyles() {
-    cancelMotion();
-    dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
-    dialog.style.removeProperty("--sheet-translate-y");
-    dialog.style.removeProperty("--backdrop-opacity");
-    dialog.style.removeProperty("animation");
-    currentTranslateY = 0;
-    isDragging = false;
-    activePointerId = null;
-    didDrag = false;
-  }
-
-  function dismissDrawer() {
-    if (!motionAllowed()) {
-      dialog.close();
-      resetDialogStyles();
-      return;
-    }
-    const presentation = getComputedStyle(dialog);
-    dialog.style.transform = presentation.transform;
-    dialog.style.opacity = presentation.opacity;
-    dialog.style.animation = "none";
-    void dialog.offsetWidth;
-    dialog.classList.remove("is-dragging", "is-settling");
-    dialog.classList.add("is-dismissing");
-    dialog.style.removeProperty("transform");
-    dialog.style.removeProperty("opacity");
-    dialog.style.setProperty("--backdrop-opacity", "0");
-    finishMotion(() => {
-      if (dialog.open) dialog.close();
-      resetDialogStyles();
-    }, 240);
-  }
-
-  function springBack() {
-    dialog.classList.remove("is-dragging", "is-dismissing");
-    dialog.classList.add("is-settling");
-    setTranslateY(0);
-    finishMotion(resetDialogStyles, 320);
-  }
-
-  function canStartDrag(e) {
-    if (!dialog.open) return false;
-    if (window.matchMedia("(min-width: 761px)").matches) return false;
-    const rect = dialog.getBoundingClientRect();
-    if (e.clientY < rect.top || e.clientY > rect.bottom || e.clientX < rect.left || e.clientX > rect.right) {
-      return false;
-    }
-    if (handle && (e.target === handle || handle.contains(e.target))) return true;
-    if (head && (e.target === head || head.contains(e.target))) {
-      if (e.target.closest("button, a, input")) return false;
-      return true;
-    }
-    if (dialog.scrollTop <= 0) {
-      if (e.target.closest("button, a, input")) return false;
-      return true;
-    }
-    return false;
-  }
-
-  dialog.addEventListener("pointerdown", (e) => {
-    if (activePointerId !== null) return;
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-    if (!canStartDrag(e)) return;
-
-    didDrag = false;
-
-    if (dialog.classList.contains("is-settling") || dialog.classList.contains("is-dismissing")) {
-      const presentationY = new DOMMatrix(getComputedStyle(dialog).transform).m42;
-      cancelMotion();
-      dialog.classList.remove("is-settling", "is-dismissing");
-      dialog.classList.add("is-dragging");
-      setTranslateY(presentationY);
-    } else {
-      dialog.classList.add("is-dragging");
-    }
-
-    isDragging = true;
-    activePointerId = e.pointerId;
-    startY = e.clientY - currentTranslateY;
-    currentY = e.clientY;
-    history = [{ y: e.clientY, t: performance.now() }];
-    try { dialog.setPointerCapture(e.pointerId); } catch {}
-
-    if (document.activeElement && document.activeElement.tagName === "INPUT") {
-      document.activeElement.blur();
-    }
-  });
-
-  dialog.addEventListener("pointermove", (e) => {
-    if (!isDragging || e.pointerId !== activePointerId) return;
-
-    currentY = e.clientY;
-    if (Math.abs(currentY - startY) > 5) {
-      didDrag = true;
-    }
-    const now = performance.now();
-    history.push({ y: currentY, t: now });
-    while (history.length > 2 && now - history[0].t > 100) {
-      history.shift();
-    }
-
-    const deltaY = currentY - startY;
-    let appliedY;
-    if (deltaY < 0) {
-      appliedY = rubberband(deltaY, 300, 0.4);
-    } else {
-      appliedY = deltaY;
-    }
-
-    setTranslateY(appliedY);
-  });
-
-  function handlePointerEnd(e) {
-    if (!isDragging || e.pointerId !== activePointerId) return;
-    isDragging = false;
-    activePointerId = null;
-    try { dialog.releasePointerCapture(e.pointerId); } catch {}
-    if (e.type === "pointercancel") {
-      if (dialog.open) springBack();
-      return;
-    }
-
-    const now = performance.now();
-    const recent = history.filter((p) => now - p.t < 120);
-    const first = recent[0] || history[0] || { y: currentY, t: now - 16 };
-    const dt = Math.max(0.016, (now - first.t) / 1000);
-    const releaseVelocity = (currentY - first.y) / dt;
-
-    const projectedY = currentTranslateY + project(releaseVelocity, 0.992);
-    const dialogHeight = dialog.offsetHeight || 400;
-
-    if (projectedY > dialogHeight * 0.35 || (releaseVelocity > 550 && currentTranslateY > 30)) {
-      dismissDrawer();
-    } else {
-      springBack();
-    }
-  }
-
-  dialog.addEventListener("pointerup", handlePointerEnd);
-  dialog.addEventListener("pointercancel", handlePointerEnd);
-  dialog.querySelector(".dialog-close")?.addEventListener("click", (event) => {
-    if (!event.detail || !motionAllowed()) return;
-    event.preventDefault();
-    dismissDrawer();
-  });
-  dialog.addEventListener("click", (e) => {
-    if (didDrag) {
-      didDrag = false;
-      return;
-    }
-    if (e.target !== dialog) return;
-    const rect = dialog.getBoundingClientRect();
-    const isInside = (
-      rect.top <= e.clientY && e.clientY <= rect.bottom &&
-      rect.left <= e.clientX && e.clientX <= rect.right
-    );
-    if (!isInside) {
-      dismissDrawer();
-    }
-  });
-  dialog.addEventListener("close", () => {
-    if (!dialog.open) resetDialogStyles();
-  });
-  return resetDialogStyles;
-}
-
-const resetPlacesDrawer = initFluidDrawer(elements.dialog);
-initFluidDrawer(elements.devDialog);
-initFluidDrawer(elements.lunarDialog);
-
-const LOADER_STORAGE_KEY = "firecloud:loader_style:v1";
-let currentLoaderStyle = storage.get(LOADER_STORAGE_KEY, "horizon");
-let currentSpeedFactor = 1;
-
-function getLoaderHTML(style, prefix = "") {
-  if (style === "horizon-classic") {
-    return `
-      <div class="loader-horizon-classic" aria-hidden="true">
-        <span class="horizon-classic-glow"></span>
-        <svg class="horizon-classic-svg" viewBox="0 0 160 52" fill="none">
-          <defs>
-            <linearGradient id="${prefix}horizon-classic-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#edb56f" stop-opacity="0"/>
-              <stop offset="25%" stop-color="#ffd07c" stop-opacity="0.95"/>
-              <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
-              <stop offset="75%" stop-color="#ff6e38" stop-opacity="0.9"/>
-              <stop offset="100%" stop-color="#edb56f" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path class="horizon-classic-track" d="M 16 38 Q 80 18 144 38" />
-          <path class="horizon-classic-beam" stroke="url(#${prefix}horizon-classic-beam-grad)" d="M 16 38 Q 80 18 144 38" />
-        </svg>
-        <div class="horizon-classic-vapors">
-          <span class="horizon-classic-vapor v1"></span>
-          <span class="horizon-classic-vapor v2"></span>
-          <span class="horizon-classic-vapor v3"></span>
-        </div>
-      </div>
-    `;
-  }
-  if (style === "kepler") {
-    return `
-      <div class="loader-kepler" aria-hidden="true">
-        <span class="kepler-ambient"></span>
-        <span class="kepler-shockwave"></span>
-        <svg class="kepler-svg" viewBox="0 0 104 104" fill="none">
-          <defs>
-            <linearGradient id="${prefix}kepler-plasma-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-              <stop offset="25%" stop-color="#ffd07c" stop-opacity="1"/>
-              <stop offset="65%" stop-color="#ff7e4a" stop-opacity="0.8"/>
-              <stop offset="100%" stop-color="#ff7e4a" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="${prefix}kepler-dust-grad" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#a855f7" stop-opacity="0"/>
-              <stop offset="40%" stop-color="#a855f7" stop-opacity="0.5"/>
-              <stop offset="80%" stop-color="#9ebbf8" stop-opacity="0.8"/>
-              <stop offset="100%" stop-color="#9ebbf8" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <ellipse class="kepler-orbit-cross" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
-          <ellipse class="kepler-dust-stream" stroke="url(#${prefix}kepler-dust-grad)" cx="52" cy="52" rx="42" ry="20" transform="rotate(32 52 52)" />
-          <ellipse class="kepler-orbit-guide" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
-          <ellipse class="kepler-plasma-comet" stroke="url(#${prefix}kepler-plasma-grad)" cx="52" cy="52" rx="44" ry="24" transform="rotate(-18 52 52)" />
-        </svg>
-        <div class="kepler-star-system">
-          <span class="kepler-corona-outer"></span>
-          <span class="kepler-photosphere"></span>
-        </div>
-      </div>
-    `;
-  }
-  if (style === "prismatic") {
-    return `
-      <div class="loader-prismatic" aria-hidden="true">
-        <span class="chromatic-glow-bg"></span>
-        <svg class="chromatic-svg" viewBox="0 0 104 104" fill="none">
-          <defs>
-            <linearGradient id="${prefix}chroma-grad-red" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ff4757" stop-opacity="1"/>
-              <stop offset="50%" stop-color="#ff7e4a" stop-opacity="0.7"/>
-              <stop offset="100%" stop-color="#ff7e4a" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="${prefix}chroma-grad-green" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#2ed573" stop-opacity="1"/>
-              <stop offset="40%" stop-color="#ffd07c" stop-opacity="0.8"/>
-              <stop offset="100%" stop-color="#ffd07c" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="${prefix}chroma-grad-blue" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stop-color="#1e90ff" stop-opacity="1"/>
-              <stop offset="50%" stop-color="#c48aff" stop-opacity="0.7"/>
-              <stop offset="100%" stop-color="#c48aff" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="${prefix}chroma-laser" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-              <stop offset="35%" stop-color="#ffffff" stop-opacity="0.95"/>
-              <stop offset="70%" stop-color="#ffd07c" stop-opacity="0.4"/>
-              <stop offset="100%" stop-color="#ffd07c" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <circle class="chroma-track" cx="52" cy="52" r="38" />
-          <circle class="chroma-arc arc-red" stroke="url(#${prefix}chroma-grad-red)" cx="52" cy="52" r="38" />
-          <circle class="chroma-arc arc-green" stroke="url(#${prefix}chroma-grad-green)" cx="52" cy="52" r="38" />
-          <circle class="chroma-arc arc-blue" stroke="url(#${prefix}chroma-grad-blue)" cx="52" cy="52" r="38" />
-          <circle class="chroma-arc arc-core" stroke="url(#${prefix}chroma-laser)" cx="52" cy="52" r="38" />
-        </svg>
-      </div>
-    `;
-  }
-  // 默认：horizon (地平线霞光探测仪 2.0 大气分层与宽银幕耀斑)
-  return `
-    <div class="loader-horizon" aria-hidden="true">
-      <span class="horizon-glow"></span>
-      <span class="horizon-aerosol-mist"></span>
-      <span class="horizon-evening-star"></span>
-      <div class="horizon-glint">
-        <span class="horizon-glint-streak"></span>
-        <span class="horizon-glint-core"></span>
-      </div>
-      <svg class="horizon-svg" viewBox="0 0 160 56" fill="none">
-        <defs>
-          <linearGradient id="${prefix}horizon-beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#edb56f" stop-opacity="0"/>
-            <stop offset="25%" stop-color="#ffd07c" stop-opacity="0.95"/>
-            <stop offset="50%" stop-color="#ffffff" stop-opacity="1"/>
-            <stop offset="75%" stop-color="#ff6e38" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#edb56f" stop-opacity="0"/>
-          </linearGradient>
-          <linearGradient id="${prefix}horizon-stratosphere-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#9ebbf8" stop-opacity="0"/>
-            <stop offset="35%" stop-color="#9ebbf8" stop-opacity="0.8"/>
-            <stop offset="70%" stop-color="#c48aff" stop-opacity="0.7"/>
-            <stop offset="100%" stop-color="#c48aff" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        <path class="horizon-track-stratosphere" d="M 22 36 Q 80 16 138 36" />
-        <path class="horizon-stratosphere-glow" stroke="url(#${prefix}horizon-stratosphere-grad)" d="M 22 36 Q 80 16 138 36" />
-        <path class="horizon-track-troposphere" d="M 16 42 Q 80 22 144 42" />
-        <path class="horizon-beam" stroke="url(#${prefix}horizon-beam-grad)" d="M 16 42 Q 80 22 144 42" />
-      </svg>
-    </div>
-  `;
-}
-
-function applySpeedToStage(stageEl, factor) {
-  if (!stageEl) return;
-  const anims = stageEl.querySelectorAll('[class*="kepler"], [class*="prism"], [class*="chroma"], [class*="horizon"]');
-  anims.forEach((el) => {
-    if (!el.hasAttribute("data-orig-duration")) {
-      const cs = window.getComputedStyle(el);
-      const dur = parseFloat(cs.animationDuration);
-      if (dur > 0) el.setAttribute("data-orig-duration", dur);
-    }
-    const orig = parseFloat(el.getAttribute("data-orig-duration"));
-    if (orig && orig > 0) {
-      el.style.animationDuration = `${orig * factor}s`;
-    }
-  });
-}
-
-function applyLoaderStyle(style) {
-  currentLoaderStyle = style;
-  if (elements.loaderStage) {
-    elements.loaderStage.innerHTML = getLoaderHTML(style, "main-");
-  }
-  if (elements.devPreviewStage) {
-    elements.devPreviewStage.innerHTML = getLoaderHTML(style, "prev-");
-    if (currentSpeedFactor !== 1) applySpeedToStage(elements.devPreviewStage, currentSpeedFactor);
-  }
-  const tabs = document.querySelectorAll(".lens-tab");
-  tabs.forEach((tab) => {
-    const active = tab.dataset.style === style;
-    tab.setAttribute("data-active", String(active));
-    tab.setAttribute("aria-selected", String(active));
-    if (active && elements.devLensSlider) {
-      const idx = parseInt(tab.dataset.idx, 10);
-      elements.devLensSlider.style.transform = `translateX(calc(${idx} * (100% + 2px)))`;
-    }
-  });
-}
-
-function openDevLab() {
-  applyLoaderStyle(currentLoaderStyle);
-  if (!elements.devDialog.open) {
-    elements.devDialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
-    elements.devDialog.style.removeProperty("--sheet-translate-y");
-    elements.devDialog.style.removeProperty("--backdrop-opacity");
-    elements.devDialog.showModal();
-    if (navigator.vibrate) try { navigator.vibrate(14); } catch {}
-  }
-}
-
-let brandClickCount = 0;
-let brandClickTimer = null;
-elements.openPlaces.addEventListener("click", (e) => {
-  brandClickCount++;
-  clearTimeout(brandClickTimer);
-  brandClickTimer = setTimeout(() => { brandClickCount = 0; }, 600);
-  if (brandClickCount >= 3) {
-    brandClickCount = 0;
-    e.preventDefault();
-    e.stopPropagation();
-    openDevLab();
-    return;
-  }
-  openPlaces();
-});
-
-window.addEventListener("keydown", (e) => {
-  const target = e.target;
-  if (e.isComposing || target instanceof HTMLElement
-    && (target.isContentEditable || target.closest("input, textarea, select"))) return;
-  if (e.key === "D" && e.shiftKey && !e.metaKey && !e.ctrlKey) {
-    e.preventDefault();
-    openDevLab();
-  }
-});
-
-const devLensTabs = Array.from(document.querySelectorAll(".lens-tab"));
-devLensTabs.forEach((tab, idx) => {
+for (const tab of els.tabs) {
   tab.addEventListener("click", () => {
-    applyLoaderStyle(tab.dataset.style);
-    if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+    if (session.switchEvent(tab.dataset.event)) triggerHaptic(10);
   });
-  tab.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      e.preventDefault();
-      const next = devLensTabs[(idx + 1) % devLensTabs.length];
-      next.focus();
-      applyLoaderStyle(next.dataset.style);
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      e.preventDefault();
-      const prev = devLensTabs[(idx - 1 + devLensTabs.length) % devLensTabs.length];
-      prev.focus();
-      applyLoaderStyle(prev.dataset.style);
-    }
-  });
+}
+hero.companion.addEventListener("click", () => {
+  if (session.setViewMode(session.state.viewMode === "glow" ? "sundisc" : "glow")) triggerHaptic(12);
 });
-
-document.querySelectorAll(".lens-speed-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".lens-speed-btn").forEach(b => b.removeAttribute("data-active"));
-    btn.setAttribute("data-active", "true");
-    currentSpeedFactor = parseFloat(btn.dataset.speed) || 1;
-    if (elements.devPreviewStage) {
-      applySpeedToStage(elements.devPreviewStage, currentSpeedFactor);
-    }
-    if (navigator.vibrate) try { navigator.vibrate(10); } catch {}
-  });
+els.refresh.addEventListener("click", () => session.refresh());
+els.retry.addEventListener("click", () => {
+  if (!session.refresh()) places.open();
 });
-
-elements.devBtnSaveDefault.addEventListener("click", () => {
-  storage.set(LOADER_STORAGE_KEY, currentLoaderStyle);
-  const btn = elements.devBtnSaveDefault;
-  const label = btn.firstElementChild;
-  const original = label.textContent;
-  label.textContent = "已设为默认 ✓";
-  btn.disabled = true;
-  setTimeout(() => {
-    label.textContent = original;
-    btn.disabled = false;
-  }, 1600);
-});
-
-elements.devBtnTestLoading.addEventListener("click", () => {
-  elements.devDialog.close();
-  setPanel("loading");
-  elements.loadingText.textContent = "正在模拟计算霞光云层…";
-  setTimeout(() => {
-    if (state.bundle) renderReady();
-    else setPanel("welcome");
-  }, 3000);
-});
-
-// 🌙 月相天文观测便签点击呼出详情弹窗
-elements.heroLunarBadge?.addEventListener("click", () => {
+$("hero-lunar-badge").addEventListener("click", () => {
   triggerHaptic(12);
-  elements.lunarDialog?.showModal();
+  els.lunarDialog.showModal();
 });
 
-// 天体观测台实验室：昼夜切换与月相动态模拟滑块
-elements.devBtnToggleNight?.addEventListener("click", () => {
-  triggerHaptic(12);
-  const cur = document.body.dataset.light;
-  const next = cur === "night" ? "day" : "night";
-  document.body.dataset.light = next;
-  elements.devBtnToggleNight.textContent = `切换夜幕天体 (当前: ${next === "night" ? "夜" : "昼"})`;
-});
-
-elements.devMoonSlider?.addEventListener("input", (e) => {
-  const val = parseInt(e.target.value, 10);
-  const frac = val / 100;
-  const isWax = val <= 50;
-  const mockMoon = {
-    ...lunarPhase(new Date(), state.place?.lat || 30.27, state.place?.lon || 120.15),
-    phaseFraction: frac,
-    isWaxing: isWax,
-    phaseName: frac > 0.95 ? "满月 (望)" : frac < 0.05 ? "新月 (朔)" : isWax ? (frac > 0.4 ? "盈凸月" : "蛾眉月") : (frac > 0.4 ? "亏凸月" : "残月")
-  };
-  updateMoonDisplay(mockMoon);
-});
-
-elements.welcomeSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
-elements.errorSearch.addEventListener("click", () => { openPlaces(); elements.search.focus(); });
-elements.locate.addEventListener("click", locate);
-elements.dialogLocate.addEventListener("click", locate);
-elements.favorite.addEventListener("click", toggleFavorite);
-elements.undoFavorite.addEventListener("click", undoFavorite);
-elements.dialogUndoFavorite.addEventListener("click", undoFavorite);
-elements.dialog.addEventListener("close", renderFavoriteFeedback);
-for (const feedback of [elements.favoriteFeedback, elements.dialogFavoriteFeedback]) {
-  for (const event of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
-    feedback.addEventListener(event, () => queueMicrotask(scheduleFavoriteUndo));
-  }
-}
-elements.refresh.addEventListener("click", () => state.place && loadPlace(state.place, { force: true }));
-elements.retry.addEventListener("click", () => state.place ? loadPlace(state.place, { force: true }) : openPlaces());
-for (const tab of elements.tabs) {
-  tab.addEventListener("click", () => {
-    if (tab.dataset.event === (state.pendingEvent ?? state.event) || !state.place) return;
-    triggerHaptic(10);
-    loadPlace(state.place, { eventType: tab.dataset.event, preferCache: true });
-  });
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
 }
 
-function setViewMode(mode) {
-  if (state.viewMode === mode) return;
-  triggerHaptic(12);
-  state.viewMode = mode;
-  storage.set(VIEW_MODE_KEY, mode);
-  if (state.bundle) {
-    renderReady();
-  }
-}
-
-elements.companionPill.addEventListener("click", () => {
-  setViewMode(state.viewMode === "glow" ? "sundisc" : "glow");
-});
-
-if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
-
-applyLoaderStyle(currentLoaderStyle);
-renderFavorites();
-
-const SPECIMEN_JOURNALS = {
-  sunset: {
-    titlePrefix: "今晚落日",
-    titleSuffix: "值得等吗",
-    intro: "读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。",
-    photo: "assets/sayram_sunset.jpg",
-    photoAlt: "新疆赛里木湖西海落日雪山实景观测",
-    place: "新疆 · 赛里木湖 (2,073 m)",
-    target: "暮天火烧云与雪峰漫射实录 · 标杆观测",
-    stamp: "晚霞极佳 · 值得专程等待",
-    window: "21:25 – 22:15",
-    m1Title: "云幕受光",
-    m1Desc: "博罗科努高层卷云迎阳，将映衬出近半小时壮阔火烧云",
-    m2Title: "地平光路",
-    m2Desc: "西海低云仅 8%，太阳落入地平前无遮挡",
-    m3Title: "高山空气",
-    m3Desc: "视距超 80km，瑞利散射纯净，雪山倒影赤红"
-  },
-  sunrise: {
-    titlePrefix: "明早破晓",
-    titleSuffix: "值得早起吗",
-    intro: "读取东方低层光路与高空卷云受光角，为明早第一缕晨光给出一份出行参考。",
-    photo: "assets/sayram_sunrise.jpg",
-    photoAlt: "新疆赛里木湖松树头晨曦霞光S弯实景观测",
-    place: "新疆 · 赛里木湖 (2,073 m)",
-    target: "晨曦破晓映S弯与金顶实录 · 标杆观测",
-    stamp: "朝霞极佳 · 值得拂晓守候",
-    window: "06:40 – 07:25",
-    m1Title: "东方初阳",
-    m1Desc: "卷云受光仰角 14.8°，率先捕获第一缕晨曦金光",
-    m2Title: "地影天幕",
-    m2Desc: "反日点粉蓝地影弧（维纳斯带）横贯天际",
-    m3Title: "镜面水色",
-    m3Desc: "晨风微弱，松树头 S 弯水面静如明镜，倒映金山"
-  }
-};
-
-let currentSpecimenSlot = null;
-let specimenUserManual = false;
-
-function setSpecimenSlot(slot, manual = false) {
-  if (manual) specimenUserManual = true;
-  currentSpecimenSlot = slot;
-  const data = SPECIMEN_JOURNALS[slot];
-  if (!data) return;
-
-  const card = $("specimen-card");
-  if (!card) return;
-  card.dataset.slot = slot;
-
-  for (const tab of card.querySelectorAll(".specimen-tab")) {
-    const active = tab.dataset.slot === slot;
-    tab.classList.toggle("active", active);
-    tab.setAttribute("aria-checked", String(active));
-  }
-
-  const titlePrefix = $("welcome-title-prefix");
-  if (titlePrefix) titlePrefix.textContent = data.titlePrefix;
-  const titleSuffix = $("welcome-title-suffix");
-  if (titleSuffix) titleSuffix.textContent = data.titleSuffix;
-  const intro = $("welcome-intro");
-  if (intro) intro.textContent = data.intro;
-
-  const body = $("specimen-body");
-  const photo = $("specimen-photo");
-  const place = $("specimen-place");
-  const target = $("specimen-target");
-  const stamp = $("specimen-stamp-text");
-  const windowEl = $("specimen-time-val");
-  const m1T = $("specimen-m1-title"), m1D = $("specimen-m1-desc");
-  const m2T = $("specimen-m2-title"), m2D = $("specimen-m2-desc");
-  const m3T = $("specimen-m3-title"), m3D = $("specimen-m3-desc");
-
-  const apply = () => {
-    if (photo) { photo.src = data.photo; photo.alt = data.photoAlt; }
-    if (place) place.textContent = data.place;
-    if (target) target.textContent = data.target;
-    if (stamp) stamp.textContent = data.stamp;
-    if (windowEl) windowEl.textContent = data.window;
-    if (m1T && m1D) { m1T.textContent = data.m1Title; m1D.textContent = data.m1Desc; }
-    if (m2T && m2D) { m2T.textContent = data.m2Title; m2D.textContent = data.m2Desc; }
-    if (m3T && m3D) { m3T.textContent = data.m3Title; m3D.textContent = data.m3Desc; }
-  };
-
-  if (body) {
-    body.classList.add("fade-out");
-    if (photo) photo.classList.add("fade-out");
-    setTimeout(() => {
-      apply();
-      body.classList.remove("fade-out");
-      if (photo) photo.classList.remove("fade-out");
-    }, 120);
-  } else {
-    apply();
-  }
-}
-
-function syncWelcomeJournal() {
-  if (specimenUserManual) return;
-  const now = new Date();
-  const h = now.getHours() + now.getMinutes() / 60;
-  const autoSlot = (h >= 4 && h < 19.5) ? "sunset" : "sunrise";
-  if (autoSlot !== currentSpecimenSlot) {
-    setSpecimenSlot(autoSlot, false);
-  }
-}
-
-function initWelcomeJournalEvents() {
-  const card = $("specimen-card");
-  if (!card) return;
-  const tabs = Array.from(card.querySelectorAll(".specimen-tab"));
-  tabs.forEach((tab, idx) => {
-    tab.addEventListener("click", () => setSpecimenSlot(tab.dataset.slot, true));
-    tab.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        e.preventDefault();
-        const next = tabs[(idx + 1) % tabs.length];
-        next.focus();
-        setSpecimenSlot(next.dataset.slot, true);
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        e.preventDefault();
-        const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
-        prev.focus();
-        setSpecimenSlot(prev.dataset.slot, true);
-      }
-    });
-  });
-  syncWelcomeJournal();
-}
-
-initWelcomeJournalEvents();
-
-const lastPlace = normalizePlace(storage.get(PLACE_KEY));
-if (lastPlace) loadPlace(lastPlace, { preferCache: true });
+const lastPlace = normalizePlace(storage.get(KEYS.place));
+if (lastPlace) session.load(lastPlace, { preferCache: true });
 else setPanel("welcome");
