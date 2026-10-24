@@ -2,7 +2,7 @@
 
 > 结合高空云层、远端光路与空气质量的自然霞光指数预报 · 天幕微物理气象手记
 
-[![Verify Status](https://img.shields.io/badge/tests-32%20passed-success?style=flat-square)](tests/)
+[![Verify Status](https://img.shields.io/badge/tests-38%20passed-success?style=flat-square)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-Zero%20Dependencies%20%7C%20Vanilla%20ESM-blue?style=flat-square)](js/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Capable-orange?style=flat-square)](manifest.webmanifest)
 [![Online Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-green?style=flat-square)](https://lumiaqian.github.io/firecloud/)
@@ -25,12 +25,12 @@
   * 深度融合高、中、低三层云量遮蔽度。
   * 沿太阳落入/升起方位角，向外延伸 6 个视距采样点（近端、中端、远端与侧翼对照点），精准评估远端光路通透性。
   * 结合空气相对湿度、视距能见度、气溶胶（AOD）、PM2.5 及沙尘指标，测算瑞利散射与余晖衰减。
-  * 产出 0–99 经验量表分值，并盖上专属朱砂印章研判：
-    * **紫金**（85–99 分 · 绝艳霞天）
-    * **晴金**（70–84 分 · 绚彩可期）
-    * **柔光**（50–69 分 · 浮云堪赏）
-    * **敛光**（30–49 分 · 云厚光微）
-    * **微茫**（0–29 分 · 且待新晴）
+  * 产出 0–99 经验量表分值，档位文字、行动建议与朱砂印章共用同一组分界：
+    * **80–99 极佳**：值得专程等待 · 紫金印
+    * **65–79 值得追**：值得追这场霞光 · 晴金印
+    * **50–64 有机会**：可以顺路看看 · 柔光印
+    * **35–49 一般**：有空可以留意 · 敛光印
+    * **0–34 平淡**：不建议专程等待 · 微茫印
 
 * 🌧️ **真实气象微物理系统**
   * 基于当前实况天气驱动的纯 Canvas/物理运动学粒子引擎。

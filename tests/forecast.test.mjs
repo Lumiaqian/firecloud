@@ -8,6 +8,7 @@ import {
   nextEvent,
   scoreSky,
   sealFor,
+  tierFor,
   scoreSunDisc,
   sunDiscPhenomenon,
   sealForSunDisc,
@@ -62,6 +63,19 @@ test("朱砂印章研判与副标覆盖全部五档指数分档", () => {
   assert.deepEqual(sealFor(55), { text: "柔光", sub: "浮云堪赏" });
   assert.deepEqual(sealFor(35), { text: "敛光", sub: "云厚光微" });
   assert.deepEqual(sealFor(20), { text: "微茫", sub: "且待新晴" });
+});
+
+test("档位文字、印章与主题档位共用同一组分界", () => {
+  for (const [score, band, seal, tier] of [
+    [80, "极佳", "紫金", "epic"], [79, "值得追", "晴金", "great"],
+    [65, "值得追", "晴金", "great"], [64, "有机会", "柔光", "good"],
+    [50, "有机会", "柔光", "good"], [49, "一般", "敛光", "fair"],
+    [35, "一般", "敛光", "fair"], [34, "平淡", "微茫", "dull"]
+  ]) {
+    assert.equal(indexBand(score), band);
+    assert.equal(sealFor(score).text, seal);
+    assert.equal(tierFor(score), tier);
+  }
 });
 
 test("低云和中云同时厚重时封顶 10", () => {

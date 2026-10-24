@@ -537,12 +537,21 @@ export function scoreSky(metrics) {
   return Math.max(2, Math.min(overcast ? 10 : 99, Math.round(score)));
 }
 
+// 唯一档位表：主卡、印章、7 日卡片与主题色都从这里取值，避免分界各自漂移。
+const GRADES = [
+  { min: 80, tier: "epic", band: "极佳", advice: "值得专程等待", seal: { text: "紫金", sub: "绝艳霞天" } },
+  { min: 65, tier: "great", band: "值得追", advice: "值得追这场霞光", seal: { text: "晴金", sub: "绚彩可期" } },
+  { min: 50, tier: "good", band: "有机会", advice: "可以顺路看看", seal: { text: "柔光", sub: "浮云堪赏" } },
+  { min: 35, tier: "fair", band: "一般", advice: "有空可以留意", seal: { text: "敛光", sub: "云厚光微" } },
+  { min: -Infinity, tier: "dull", band: "平淡", advice: "不建议专程等待", seal: { text: "微茫", sub: "且待新晴" } }
+];
+
+export function gradeFor(score) {
+  return GRADES.find((grade) => score >= grade.min);
+}
+
 export function sealFor(score) {
-  if (score >= 85) return { text: "紫金", sub: "绝艳霞天" };
-  if (score >= 70) return { text: "晴金", sub: "绚彩可期" };
-  if (score >= 50) return { text: "柔光", sub: "浮云堪赏" };
-  if (score >= 30) return { text: "敛光", sub: "云厚光微" };
-  return { text: "微茫", sub: "且待新晴" };
+  return { ...gradeFor(score).seal };
 }
 
 export function reasonsFor(metrics) {
@@ -570,19 +579,15 @@ export function reasonsFor(metrics) {
 }
 
 export function indexBand(score) {
-  if (score >= 80) return "极佳";
-  if (score >= 65) return "值得追";
-  if (score >= 50) return "有机会";
-  if (score >= 35) return "一般";
-  return "平淡";
+  return gradeFor(score).band;
 }
 
 export function waitAdvice(score) {
-  if (score >= 80) return "值得专程等待";
-  if (score >= 65) return "值得追这场霞光";
-  if (score >= 50) return "可以顺路看看";
-  if (score >= 35) return "有空可以留意";
-  return "不建议专程等待";
+  return gradeFor(score).advice;
+}
+
+export function tierFor(score) {
+  return gradeFor(score).tier;
 }
 
 /**
