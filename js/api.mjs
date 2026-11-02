@@ -22,13 +22,14 @@ export async function fetchJson(url, timeoutMs = 12_000) {
 }
 
 export function fetchForecastPoint(point, { includeCurrent = false } = {}) {
+  // 当下一场已在明天，七日手记最远会用到今天 +7；天气需覆盖八个当地日。
   const query = new URLSearchParams({
     latitude: Number(point.lat).toFixed(4),
     longitude: Number(point.lon).toFixed(4),
     hourly: "cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility,precipitation",
     precipitation_unit: "mm",
     wind_speed_unit: "kmh",
-    forecast_days: "7",
+    forecast_days: "8",
     timeformat: "unixtime",
     timezone: "auto"
   });

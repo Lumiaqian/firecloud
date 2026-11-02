@@ -7,11 +7,14 @@
  * - 切换进行中点回当前时段即取消切换，保留原数据新鲜度。
  * - 切换失败保留当前手记与所选日期，并提示未能读取的时段。
  * - 切换研判视角、刷新同地点同时段时保留所选日期；换地点或成功切换时段后回到下一场事件。
+ * - 网络响应与缓存仅在当前目标日期的本地分层云量齐全时采用；缺测沿用加载失败流程，不替换旧手记或缓存。
  */
 import { normalizePlace, samePlace } from "./storage.mjs";
+import { hasCloudLayers, metricsAt } from "../forecast.mjs";
 
 const BACKGROUND_REFRESH_AGE = 5 * 60 * 1000;
 const label = (eventType) => (eventType === "sunset" ? "晚霞" : "朝霞");
+const MISSING_CLOUD_LAYERS = "当地高空分层云量暂缺，无法完成研判，请稍后重试或选择临近城市";
 
 export function createForecastSession({
   fetchBundle,
@@ -62,6 +65,15 @@ export function createForecastSession({
     state.stale = stale;
   }
 
+  function targetTime(place, eventType, sameForecast) {
+    return (sameForecast && state.selectedEventTime)
+      || nextEvent(eventType, place.lat, place.lon, now());
+  }
+
+  function usable(bundle, eventTime) {
+    return Boolean(eventTime) && hasCloudLayers(metricsAt(bundle, eventTime));
+  }
+
   function show({ focus }) {
     if (!view.render()) return;
     view.announce();
@@ -96,8 +108,10 @@ export function createForecastSession({
       return;
     }
 
+    const eventTime = targetTime(normalized, eventType, sameForecast);
+    if (!eventTime) return fail("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
     const cached = cache.read(normalized, eventType);
-    if (!force && preferCache && cached) {
+    if (!force && preferCache && cached && usable(cached.bundle, eventTime)) {
       adopt(cached.bundle, cached.savedAt, eventType, { stale: true, sameForecast });
       state.refreshing = false;
       state.refreshFailed = false;
@@ -107,8 +121,6 @@ export function createForecastSession({
       return;
     }
 
-    const eventTime = nextEvent(eventType, normalized.lat, normalized.lon, now());
-    if (!eventTime) return fail("该纬度处于极昼或极夜，未来三天无对应晨昏视窗");
     if (keepReady && !sameReady) {
       view.stopTicker();
       setPending(eventType);
@@ -127,6 +139,10 @@ export function createForecastSession({
     try {
       const bundle = await fetchBundle(normalized, eventType, eventTime);
       if (requestId !== loadRequestId) return;
+      // 刷新期间仍可改选日期，提交时必须校验最新选择，而非请求开始时的日期。
+      if (!usable(bundle, targetTime(normalized, eventType, sameForecast))) {
+        throw new Error(MISSING_CLOUD_LAYERS);
+      }
       adopt(bundle, bundle.fetchedAt, eventType, { stale: false, sameForecast });
       state.refreshing = false;
       state.refreshFailed = false;
@@ -147,12 +163,12 @@ export function createForecastSession({
       } else {
         const fallback = cache.read(normalized, eventType);
         state.refreshFailed = true;
-        if (fallback) {
+        if (fallback && usable(fallback.bundle, targetTime(normalized, eventType, sameForecast))) {
           adopt(fallback.bundle, fallback.savedAt, eventType, { stale: true, sameForecast });
           show({ focus: true });
         } else {
           view.reportError?.(error);
-          fail("暂无可用预测，请稍后重试");
+          fail(error?.message === MISSING_CLOUD_LAYERS ? MISSING_CLOUD_LAYERS : "暂无可用预测，请稍后重试");
         }
       }
     } finally {

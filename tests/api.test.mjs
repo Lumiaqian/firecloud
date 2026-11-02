@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fetchForecastPoint, searchCities } from "../js/api.mjs";
+import { fetchForecastBundle, fetchForecastPoint, searchCities } from "../js/api.mjs";
+import { hasCloudLayers, metricsAt, nextEvent, sunTimes } from "../js/forecast.mjs";
 
 test("本地点位请求包含当前天气字段，远端点位保持原请求", async () => {
   const requested = [];
@@ -49,6 +50,58 @@ test("城市搜索补全行政区、去重并优先精确高人口结果", async
       { name: "上海", detail: "大理州 · 云南 · 中国", lat: 26, lon: 100 },
       { name: "上海县", detail: "上海市 · 中国", lat: 31.1, lon: 121.3 }
     ]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("下一场在明天时七张日卡均有天气，第七天空气质量越界或失败仍正常降级", async () => {
+  const originalFetch = globalThis.fetch;
+  const place = { name: "杭州", lat: 30.27, lon: 120.15 };
+  const now = new Date("2026-10-24T14:00:00Z");
+  const localMidnight = Date.parse("2026-10-24T00:00:00+08:00");
+  const values = {
+    cloud_cover_low: 10, cloud_cover_mid: 30, cloud_cover_high: 40,
+    relative_humidity_2m: 55, visibility: 20_000, precipitation: 0,
+    aerosol_optical_depth: 0.1, pm2_5: 12, dust: 0
+  };
+  let airAvailable = true;
+  globalThis.fetch = async (url) => {
+    const request = new URL(url);
+    const isAir = request.hostname === "air-quality-api.open-meteo.com";
+    const days = Number(request.searchParams.get("forecast_days"));
+    // 模拟两个端点各自的实际范围：天气可扩展，空气质量仍仅提供七个当地日。
+    if (isAir && (!airAvailable || days > 7)) {
+      return { ok: false, status: 503 };
+    }
+    const time = Array.from({ length: days * 24 }, (_, hour) => localMidnight / 1000 + hour * 3600);
+    const hourly = { time };
+    for (const key of request.searchParams.get("hourly").split(",")) {
+      hourly[key] = time.map(() => values[key]);
+    }
+    return { ok: true, json: async () => ({ hourly, timezone: "Asia/Shanghai" }) };
+  };
+
+  try {
+    for (const available of [true, false]) {
+      airAvailable = available;
+      for (const eventType of ["sunrise", "sunset"]) {
+        const base = nextEvent(eventType, place.lat, place.lon, now);
+        assert.ok(base.getTime() > Date.parse("2026-10-25T00:00:00+08:00"));
+        const bundle = await fetchForecastBundle(place, eventType, base);
+        const events = Array.from({ length: 7 }, (_, index) =>
+          sunTimes(new Date(base.getTime() + index * 86_400_000), place.lat, place.lon)[eventType]);
+        assert.ok(events.at(-1).getTime() > localMidnight + 7 * 86_400_000);
+        for (const eventTime of events) {
+          const metrics = metricsAt(bundle, eventTime);
+          assert.equal(hasCloudLayers(metrics), true, `${eventType} ${eventTime.toISOString()}`);
+          assert.equal(metrics.availableRemote.length, 5);
+        }
+        assert.equal(metricsAt(bundle, events[0]).aod, available ? 0.1 : null);
+        assert.equal(metricsAt(bundle, events.at(-1)).aod, null);
+        assert.equal(bundle.missingRemote.includes("air"), !available);
+      }
+    }
   } finally {
     globalThis.fetch = originalFetch;
   }

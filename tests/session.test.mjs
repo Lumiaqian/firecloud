@@ -7,6 +7,8 @@ const HZ = { name: "杭州", lat: 30.27, lon: 120.15 };
 const SH = { name: "上海", lat: 31.23, lon: 121.47 };
 const NOW = new Date("2026-10-24T08:00:00Z");
 const DAY = 86_400_000;
+const HOUR = 3_600_000;
+const eventAt = (type) => new Date(NOW.getTime() + (type === "sunset" ? 9 : 22) * HOUR);
 
 function memoryBackend() {
   const map = new Map();
@@ -42,17 +44,31 @@ function setup({ clock = () => NOW.getTime() } = {}) {
     showError: (message) => { panel = "error"; calls.push(["error", message]); }
   };
   const session = createForecastSession({
-    fetchBundle: (place, eventType) => {
+    fetchBundle: (place, eventType, eventTime) => {
       const d = deferred();
-      requests.push({ place, eventType, ...d });
+      requests.push({ place, eventType, eventTime, ...d });
       return d.promise;
     },
     cache,
-    nextEvent: (type) => new Date(NOW.getTime() + (type === "sunset" ? 9 : 22) * 3_600_000),
+    nextEvent: eventAt,
     now: () => new Date(clock()),
     view
   });
-  const bundle = (place, eventType) => ({ place, eventType, fetchedAt: clock() });
+  const bundle = (place, eventType, { missingAt = [], missingLayer = "cloud_cover_mid" } = {}) => {
+    const time = Array.from({ length: 9 * 24 }, (_, index) => (NOW.getTime() - 8 * HOUR + index * HOUR) / 1000);
+    const hourly = {
+      time,
+      cloud_cover_low: time.map(() => 10),
+      cloud_cover_mid: time.map(() => 30),
+      cloud_cover_high: time.map(() => 40)
+    };
+    for (const date of missingAt) {
+      const lower = Math.floor(date.getTime() / HOUR) * HOUR / 1000;
+      hourly[missingLayer] = hourly[missingLayer].map((value, index) =>
+        time[index] === lower || time[index] === lower + HOUR / 1000 ? null : value);
+    }
+    return { place, eventType, fetchedAt: clock(), forecasts: { local: { hourly } } };
+  };
   const settle = () => new Promise((r) => setImmediate(r));
   return { session, requests, calls, cache, bundle, settle, panel: () => panel };
 }
@@ -214,4 +230,201 @@ test("无效地点直接报错", () => {
   ctx.session.load({ name: "x", lat: "abc", lon: 1 });
   assert.equal(ctx.panel(), "error");
   assert.equal(ctx.requests.length, 0);
+});
+
+test("切换返回缺测云层时保留原手记、日期和缓存，之后有效响应可恢复切换", async () => {
+  for (const missingLayer of ["cloud_cover_low", "cloud_cover_mid", "cloud_cover_high"]) {
+    const ctx = setup();
+    await loadReady(ctx);
+    const previous = ctx.session.state.bundle;
+    const timestamp = ctx.session.state.dataTimestamp;
+    const chosen = new Date(NOW.getTime() + 3 * DAY);
+    ctx.session.selectDay(chosen);
+    const cached = ctx.cache.read(HZ, "sunset");
+
+    ctx.session.switchEvent("sunrise");
+    ctx.requests.at(-1).resolve(ctx.bundle(HZ, "sunrise", { missingAt: [eventAt("sunrise")], missingLayer }));
+    await ctx.settle();
+    assert.equal(ctx.panel(), "ready");
+    assert.equal(ctx.session.state.bundle, previous);
+    assert.equal(ctx.session.state.event, "sunset");
+    assert.equal(ctx.session.state.selectedEventTime, chosen);
+    assert.equal(ctx.session.state.dataTimestamp, timestamp);
+    assert.equal(ctx.session.state.stale, false);
+    assert.deepEqual(ctx.cache.read(HZ, "sunset"), cached);
+    assert.equal(ctx.cache.read(HZ, "sunrise"), null);
+    assert.deepEqual(ctx.calls.find(([name, , failed]) => name === "pending" && failed), ["pending", null, "sunrise"]);
+
+    ctx.session.switchEvent("sunrise");
+    const recovered = ctx.bundle(HZ, "sunrise");
+    ctx.requests.at(-1).resolve(recovered);
+    await ctx.settle();
+    assert.equal(ctx.session.state.bundle, recovered);
+    assert.equal(ctx.session.state.event, "sunrise");
+    assert.equal(ctx.session.state.selectedEventTime, null);
+    assert.deepEqual(ctx.cache.read(HZ, "sunrise").bundle, recovered);
+  }
+});
+
+test("刷新验证所选日期而非下一场，缺测保留原手记及缓存，有效后续刷新清除失败状态", async () => {
+  const ctx = setup();
+  await loadReady(ctx);
+  const previous = ctx.session.state.bundle;
+  const chosen = new Date(NOW.getTime() + 6 * DAY);
+  ctx.session.selectDay(chosen);
+  const cached = ctx.cache.read(HZ, "sunset");
+
+  ctx.session.refresh();
+  ctx.requests.at(-1).resolve(ctx.bundle(HZ, "sunset", { missingAt: [chosen] }));
+  await ctx.settle();
+  assert.equal(ctx.session.state.bundle, previous);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.equal(ctx.session.state.stale, true);
+  assert.equal(ctx.session.state.refreshFailed, true);
+  assert.equal(ctx.session.state.refreshing, false);
+  assert.equal(ctx.panel(), "ready");
+  assert.deepEqual(ctx.cache.read(HZ, "sunset"), cached);
+
+  ctx.session.refresh();
+  const recovered = ctx.bundle(HZ, "sunset", { missingAt: [eventAt("sunset")] });
+  ctx.requests.at(-1).resolve(recovered);
+  await ctx.settle();
+  assert.equal(ctx.session.state.bundle, recovered);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.equal(ctx.session.state.stale, false);
+  assert.equal(ctx.session.state.refreshFailed, false);
+  assert.deepEqual(ctx.cache.read(HZ, "sunset").bundle, recovered);
+});
+
+test("刷新提交时以请求期间最新改选日期为准，迟到的旧刷新缺测响应不覆盖有效数据", async () => {
+  const ctx = setup();
+  await loadReady(ctx);
+  const previous = ctx.session.state.bundle;
+  ctx.session.refresh();
+  const chosen = new Date(NOW.getTime() + 5 * DAY);
+  ctx.session.selectDay(chosen);
+  ctx.requests.at(-1).resolve(ctx.bundle(HZ, "sunset", { missingAt: [chosen] }));
+  await ctx.settle();
+  assert.equal(ctx.session.state.bundle, previous);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.equal(ctx.session.state.refreshFailed, true);
+
+  ctx.session.refresh();
+  const obsolete = ctx.requests.at(-1);
+  ctx.session.refresh();
+  const recovered = ctx.bundle(HZ, "sunset");
+  ctx.requests.at(-1).resolve(recovered);
+  await ctx.settle();
+  obsolete.resolve(ctx.bundle(HZ, "sunset", { missingAt: [chosen] }));
+  await ctx.settle();
+  assert.equal(ctx.session.state.bundle, recovered);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.equal(ctx.session.state.refreshFailed, false);
+  assert.deepEqual(ctx.cache.read(HZ, "sunset").bundle, recovered);
+});
+
+test("刷新期间改选有效日期后，不因请求开始时所选日期缺测而拒收", async () => {
+  const ctx = setup();
+  await loadReady(ctx);
+  const original = new Date(NOW.getTime() + 2 * DAY);
+  const chosen = new Date(NOW.getTime() + 4 * DAY);
+  ctx.session.selectDay(original);
+  ctx.session.refresh();
+  ctx.session.selectDay(chosen);
+  const updated = ctx.bundle(HZ, "sunset", { missingAt: [original] });
+  ctx.requests.at(-1).resolve(updated);
+  await ctx.settle();
+  assert.equal(ctx.session.state.bundle, updated);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.equal(ctx.session.state.refreshFailed, false);
+});
+
+test("缺测缓存不能用于首次加载或网络失败回退，首次缺测返回有意义错误且可重试恢复", async () => {
+  const ctx = setup();
+  const invalid = ctx.bundle(HZ, "sunrise", { missingAt: [eventAt("sunrise")] });
+  ctx.cache.write(invalid);
+  ctx.session.load(HZ, { eventType: "sunrise", preferCache: true });
+  assert.equal(ctx.panel(), "loading");
+  assert.equal(ctx.session.state.bundle, null);
+  assert.equal(ctx.requests.length, 1);
+  ctx.requests.at(-1).reject(new Error("offline"));
+  await ctx.settle();
+  assert.equal(ctx.panel(), "error");
+  assert.equal(ctx.session.state.bundle, null);
+
+  ctx.session.refresh();
+  ctx.requests.at(-1).resolve(invalid);
+  await ctx.settle();
+  assert.equal(ctx.panel(), "error");
+  assert.equal(ctx.session.state.bundle, null);
+  assert.match(ctx.calls.findLast(([name]) => name === "error")[1], /分层云量暂缺/);
+
+  ctx.session.refresh();
+  const recovered = ctx.bundle(HZ, "sunrise");
+  ctx.requests.at(-1).resolve(recovered);
+  await ctx.settle();
+  assert.equal(ctx.panel(), "ready");
+  assert.equal(ctx.session.state.bundle, recovered);
+  assert.equal(ctx.session.state.refreshFailed, false);
+  assert.deepEqual(ctx.cache.read(HZ, "sunrise").bundle, recovered);
+});
+
+test("切换跳过缺测缓存，失败不替换旧手记；刷新回退只采用目标日期可用的缓存", async () => {
+  const ctx = setup();
+  await loadReady(ctx);
+  const previous = ctx.session.state.bundle;
+  const chosen = new Date(NOW.getTime() + 4 * DAY);
+  ctx.session.selectDay(chosen);
+  const invalid = ctx.bundle(HZ, "sunrise", { missingAt: [eventAt("sunrise")] });
+  ctx.cache.write(invalid);
+  ctx.session.switchEvent("sunrise");
+  assert.equal(ctx.session.state.bundle, previous);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  ctx.requests.at(-1).resolve(invalid);
+  await ctx.settle();
+  assert.equal(ctx.session.state.bundle, previous);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.deepEqual(ctx.cache.read(HZ, "sunrise").bundle, invalid);
+
+  const fresh = setup();
+  const valid = fresh.bundle(HZ, "sunset");
+  fresh.cache.write(valid);
+  fresh.session.load(HZ);
+  fresh.requests.at(-1).resolve(fresh.bundle(HZ, "sunset", { missingAt: [eventAt("sunset")] }));
+  await fresh.settle();
+  assert.equal(fresh.panel(), "ready");
+  assert.deepEqual(fresh.session.state.bundle, valid);
+  assert.equal(fresh.session.state.stale, true);
+  assert.equal(fresh.session.state.refreshFailed, true);
+});
+
+test("缓存读取也以当前所选日期校验，不能用只覆盖下一场的缓存替换有效手记", async () => {
+  const ctx = setup();
+  await loadReady(ctx);
+  const previous = ctx.session.state.bundle;
+  const chosen = new Date(NOW.getTime() + 6 * DAY);
+  ctx.session.selectDay(chosen);
+  const invalid = ctx.bundle(HZ, "sunset", { missingAt: [chosen] });
+  ctx.cache.write(invalid);
+  ctx.session.load(HZ, { preferCache: true });
+  assert.equal(ctx.requests.length, 2);
+  assert.equal(ctx.session.state.bundle, previous);
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  ctx.requests.at(-1).resolve(ctx.bundle(HZ, "sunset"));
+  await ctx.settle();
+  assert.equal(ctx.panel(), "ready");
+  assert.equal(ctx.session.state.selectedEventTime, chosen);
+  assert.equal(ctx.session.state.stale, false);
+});
+
+test("首次缺测且没有缓存时保留空数据，显示云层缺测而非渲染不可用手记", async () => {
+  const ctx = setup();
+  ctx.session.load(HZ);
+  ctx.requests.at(-1).resolve(ctx.bundle(HZ, "sunset", { missingAt: [eventAt("sunset")] }));
+  await ctx.settle();
+  assert.equal(ctx.panel(), "error");
+  assert.equal(ctx.session.state.bundle, null);
+  assert.equal(ctx.cache.read(HZ, "sunset"), null);
+  assert.match(ctx.calls.findLast(([name]) => name === "error")[1], /分层云量暂缺/);
+  assert.equal(ctx.calls.some(([name]) => name === "render"), false);
 });

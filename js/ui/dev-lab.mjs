@@ -26,9 +26,11 @@ export function createDevLab({ storage, moonView, getPlace, onBrandClick, onTest
     toggleNight: $("dev-btn-toggle-night"), moonSlider: $("dev-moon-slider")
   };
   const lensTabs = [...document.querySelectorAll(".lens-tab")];
-  const speedButtons = [...document.querySelectorAll(".lens-speed-btn")];
+  const speedButtons = [...document.querySelectorAll(".lens-speed-options [data-speed]")];
   let loaderStyle = storage.get(KEYS.loaderStyle, "horizon");
   let speedFactor = 1;
+  let brandClicks = 0;
+  let brandTimer = null;
 
   // 按倍率缩放预览中各动画的原始时长
   function applySpeed(stage, factor) {
@@ -56,6 +58,9 @@ export function createDevLab({ storage, moonView, getPlace, onBrandClick, onTest
   }
 
   function open() {
+    clearTimeout(brandTimer);
+    brandTimer = null;
+    brandClicks = 0;
     applyLoaderStyle(loaderStyle);
     if (els.dialog.open) return;
     els.dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
@@ -65,21 +70,29 @@ export function createDevLab({ storage, moonView, getPlace, onBrandClick, onTest
     triggerHaptic(14);
   }
 
-  // 品牌按钮：单击交给地点弹窗，600ms 内连点 3 次打开观测台
-  let brandClicks = 0;
-  let brandTimer = null;
+  // 等待首击后的识别窗口，避免地点模态让后续指针点击失效；键盘激活无需等待。
   els.brand.addEventListener("click", (event) => {
-    brandClicks += 1;
-    clearTimeout(brandTimer);
-    brandTimer = setTimeout(() => { brandClicks = 0; }, BRAND_CLICK_WINDOW);
-    if (brandClicks >= BRAND_CLICKS) {
+    if (event.detail === 0) {
+      clearTimeout(brandTimer);
+      brandTimer = null;
       brandClicks = 0;
+      onBrandClick();
+      return;
+    }
+    brandClicks += 1;
+    if (brandClicks >= BRAND_CLICKS) {
       event.preventDefault();
       event.stopPropagation();
       open();
       return;
     }
-    onBrandClick();
+    if (brandTimer === null) {
+      brandTimer = setTimeout(() => {
+        brandTimer = null;
+        brandClicks = 0;
+        onBrandClick();
+      }, BRAND_CLICK_WINDOW);
+    }
   });
 
   window.addEventListener("keydown", (event) => {

@@ -1,30 +1,30 @@
-const SHELL_CACHE = "firecloud-shell-v86";
+const SHELL_CACHE = "firecloud-shell-v87";
 const SHELL = [
   "./",
   "./index.html",
   "./css/style.css?v=62",
-  "./js/api.mjs?v=22",
-  "./js/app.mjs?v=22",
-  "./js/core/format.mjs?v=22",
-  "./js/core/session.mjs?v=22",
-  "./js/core/storage.mjs?v=22",
-  "./js/forecast.mjs?v=22",
-  "./js/frame-loop.mjs?v=22",
-  "./js/ui/dev-lab.mjs?v=22",
-  "./js/ui/dom.mjs?v=22",
-  "./js/ui/drawer.mjs?v=22",
-  "./js/ui/factors.mjs?v=22",
-  "./js/ui/hero.mjs?v=22",
-  "./js/ui/loaders.mjs?v=22",
-  "./js/ui/moon.mjs?v=22",
-  "./js/ui/motion.mjs?v=22",
-  "./js/ui/paper-fx.mjs?v=22",
-  "./js/ui/paper.mjs?v=22",
-  "./js/ui/places.mjs?v=22",
-  "./js/ui/sky.mjs?v=22",
-  "./js/ui/week.mjs?v=22",
-  "./js/ui/welcome.mjs?v=22",
-  "./js/weather-fx.mjs?v=22",
+  "./js/api.mjs?v=23",
+  "./js/app.mjs?v=23",
+  "./js/core/format.mjs?v=23",
+  "./js/core/session.mjs?v=23",
+  "./js/core/storage.mjs?v=23",
+  "./js/forecast.mjs?v=23",
+  "./js/frame-loop.mjs?v=23",
+  "./js/ui/dev-lab.mjs?v=23",
+  "./js/ui/dom.mjs?v=23",
+  "./js/ui/drawer.mjs?v=23",
+  "./js/ui/factors.mjs?v=23",
+  "./js/ui/hero.mjs?v=23",
+  "./js/ui/loaders.mjs?v=23",
+  "./js/ui/moon.mjs?v=23",
+  "./js/ui/motion.mjs?v=23",
+  "./js/ui/paper-fx.mjs?v=23",
+  "./js/ui/paper.mjs?v=23",
+  "./js/ui/places.mjs?v=23",
+  "./js/ui/sky.mjs?v=23",
+  "./js/ui/week.mjs?v=23",
+  "./js/ui/welcome.mjs?v=23",
+  "./js/weather-fx.mjs?v=23",
   "./manifest.webmanifest?v=5",
   "./icons/icon.svg?v=4",
   "./icons/brand-mark.svg?v=1",
@@ -34,7 +34,10 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL)));
+  // 新缓存不能复用 HTTP 缓存中的旧 HTML，否则离线入口仍会引用上一版模块。
+  event.waitUntil(caches.open(SHELL_CACHE).then((cache) =>
+    cache.addAll(SHELL.map((url) => new Request(url, { cache: "reload" })))
+  ));
   self.skipWaiting();
 });
 
@@ -56,6 +59,13 @@ self.addEventListener("fetch", (event) => {
       await cache.put(event.request, response.clone());
     }
     return response;
+  }, async (error) => {
+    if (event.request.mode === "navigate" && url.href.startsWith(self.registration.scope)) {
+      const shell = await caches.match(new URL("./index.html", self.registration.scope).href)
+        || await caches.match(self.registration.scope);
+      if (shell) return shell;
+    }
+    throw error;
   });
 
   event.waitUntil(networkResponse.catch(() => undefined));
