@@ -2,7 +2,7 @@
 
 > 结合高空云层、远端光路与空气质量的自然霞光指数预报 · 天幕微物理气象手记
 
-[![Verify Status](https://img.shields.io/badge/tests-82%20passed-success?style=flat-square)](tests/)
+[![Verify Status](https://img.shields.io/badge/tests-81%20passed-success?style=flat-square)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-Zero%20Dependencies%20%7C%20Vanilla%20ESM-blue?style=flat-square)](js/)
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Capable-orange?style=flat-square)](manifest.webmanifest)
 [![Online Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-green?style=flat-square)](https://lumiaqian.github.io/firecloud/)
@@ -35,7 +35,8 @@
 * 🧭 **观赏窗口与影响因素**
   * 主卡给出观赏窗口（起止与余晖峰值，按当天民用晨昏蒙影推算）与太阳方位，倒计时以窗口开始为准。
   * “影响因素”逐项列出各气象要素对指数的增减与理想区间，评分即这些增减之和，展示与评分始终一致。
-  * 未来 7 日标出本周最佳一天，手机端提供七日分数概览；第 5–7 天标为远期参考。天气请求覆盖当前日起 8 个当地日，避免下一场在明天时第七天超出范围；空气质量按实际可用范围降级。
+  * 未来 7 日按滚动日期范围标出最高分及具体日期，不使用自然周的“本周”表述；手机端提供七日分数概览，第 5–7 天标为远期参考。天气请求覆盖当前日起 8 个当地日，避免下一场在明天时第七天超出范围；空气质量按实际可用范围降级。
+  * 主卡、逐日卡片与读屏建议共用朝霞／晚霞对应文案，以“可能”“可留意”等措辞表达预报条件，不将红日、云隙光等现象描述为必然发生。
 
 * 🌧️ **真实气象微物理系统**
   * 基于当前实况天气驱动的纯 Canvas/物理运动学粒子引擎。

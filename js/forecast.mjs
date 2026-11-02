@@ -790,25 +790,27 @@ export function hasCloudLayers(metrics) {
  * 霞光视角的观赏建议。霞光分低但地平通透、日轮出色时，改为推荐看日轮。
  */
 export function photographicAdviceFor(metrics, score, eventType) {
-  if (metrics.precip != null && metrics.precip > 0.2) return "低云堆叠且伴随降水，光路受阻，天幕暗淡";
-  if (score >= 80) return "高云透光、地平光路通达，适宜寻开阔处驻足守候";
-  if (score >= 65) return "中高云舒展层叠，地平光路顺畅，极利于取景记录";
-  if (score >= 45) return eventType === "sunrise" ? "晨光柔和漫射，天际泛起温润渐变，适宜静心观赏" : "暮光柔和漫射，天际泛起温润渐变，适宜静心观赏";
-  if ((metrics.low ?? 0) > 50) return `低云密集沉降，光线穿透困难，${eventType === "sunrise" ? "朝霞" : "晚霞"}显现机会渺茫`;
+  if (metrics.precip != null && metrics.precip > 0.2) return "预报有降水，光路可能受阻，霞光观赏条件较弱";
+  if (score >= 80) return "云层与地平光路条件较好，可选择开阔处留意霞光变化";
+  if (score >= 65) return "中高云与地平光路条件较有利，可留意天际色彩变化";
+  if (score >= 45) return eventType === "sunrise" ? "晨光可能映出柔和渐变，可留意朝霞变化" : "暮光可能映出柔和渐变，可留意晚霞变化";
+  if ((metrics.low ?? 0) > 50) return `低云较厚，光线可能受阻，${eventType === "sunrise" ? "朝霞" : "晚霞"}观赏条件较弱`;
 
   const sunScore = scoreSunDisc(metrics);
   const phenomenon = sunDiscPhenomenon(metrics, sunScore);
   if (sunScore >= 75 && phenomenon.key === "egg_yolk") {
     return eventType === "sunrise"
-      ? "天幕云少难起彩霞，但地平通透，极适宜静候一轮红润旭日"
-      : "天幕云少难起彩霞，但地平通透，极适宜静赏一轮红润咸蛋黄";
+      ? "云量偏少，朝霞可能不明显；地平线方向较通透，可留意日出"
+      : "云量偏少，晚霞可能不明显；地平线方向较通透，可留意日落";
   }
   if (sunScore >= 75 && phenomenon.key === "crisp_gold") {
     return eventType === "sunrise"
-      ? "空中无云霞漫染，但长空如洗，极适宜静赏金盘破晓初芒"
-      : "空中无云霞漫染，但长空如洗，极适宜静赏金盘落日沉入地平";
+      ? "云量偏少，朝霞可能较淡；空气较清朗，可留意旭日与地景剪影"
+      : "云量偏少，晚霞可能较淡；空气较清朗，可留意落日与地景剪影";
   }
-  return "空中云量稀疏，难有余晖衬托，天色归于平淡";
+  return eventType === "sunrise"
+    ? "云量偏少，缺少映照晨光的云层，朝霞可能较淡"
+    : "云量偏少，缺少映照暮光的云层，晚霞可能较淡";
 }
 
 /**
@@ -838,19 +840,19 @@ export function twilightWarmthFor(now, { sunrise, sunset, goldenStart, goldenEnd
 export function photographicAdviceForSunDisc(metrics, score, phenomenon, eventType) {
   const eventLabel = eventType === "sunrise" ? "日出" : "日落";
   if (phenomenon?.key === "egg_yolk") {
-    return `${eventLabel}圆润红艳如咸蛋黄，光线柔和，长焦与地景特写绝佳`;
+    return `${eventLabel}时可能出现偏红的日轮，可留意日轮与地景的组合`;
   }
   if (phenomenon?.key === "crisp_gold") {
-    return "万里无云、地平通透至极，宜用小光圈拍摄金阳星芒与大地剪影";
+    return `${eventLabel}方向较通透，可留意金色日轮与地景剪影`;
   }
   if (phenomenon?.key === "crepuscular") {
-    return "云层开合有致，极易偶遇丁达尔云隙光，适宜广角捕捉神圣光柱";
+    return "云层间可能出现透射光束，可留意云隙光与地景的变化";
   }
   if (phenomenon?.key === "swallowed") {
-    return `地平低云厚重，太阳恐怕提前隐入云墙，难见完整${eventLabel}`;
+    return `地平低云较厚，${eventLabel}可能受遮挡，可留意云隙中的短暂显现`;
   }
   if (score >= 75) {
-    return `地平视线通畅，${eventLabel}过程完整清晰，适宜驻足静静守候`;
+    return `地平视线较通畅，可选择开阔处留意${eventLabel}`;
   }
   return "低空云气略显杂乱，可留意太阳穿出云隙的短暂瞬间";
 }

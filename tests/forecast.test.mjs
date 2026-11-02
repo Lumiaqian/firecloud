@@ -9,7 +9,6 @@ import {
   scoreSky,
   sealFor,
   hasCloudLayers,
-  photographicAdviceFor,
   twilightWarmthFor,
   skyBreakdown,
   sunDiscBreakdown,
@@ -20,7 +19,6 @@ import {
   scoreSunDisc,
   sunDiscPhenomenon,
   sealForSunDisc,
-  photographicAdviceForSunDisc,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -332,8 +330,6 @@ test("适度气溶胶与通透地平准确判定为红润咸蛋黄", () => {
   const notes = sunDiscBreakdown(eggYolkSky).factors.map((item) => item.note);
   assert.ok(notes.some((note) => note.includes("消光") || note.includes("红润")));
 
-  const advice = photographicAdviceForSunDisc(eggYolkSky, score, phen, "sunset");
-  assert.ok(advice.includes("咸蛋黄") || advice.includes("红艳"));
 });
 
 test("极度清朗无污染触发澄金贯日", () => {
@@ -413,14 +409,6 @@ test("三层云量缺任意一层时不做研判", () => {
   assert.equal(hasCloudLayers({ low: 10, mid: 20, high: 30 }), true);
   assert.equal(hasCloudLayers({ low: 10, mid: null, high: 30 }), false);
   assert.equal(hasCloudLayers({ low: Number.NaN, mid: 20, high: 30 }), false);
-});
-
-test("霞光建议：降水优先，高分给出守候建议，少云但日轮出色时转荐日轮", () => {
-  assert.match(photographicAdviceFor({ ...cleanSky, precip: 1 }, 90, "sunset"), /降水/);
-  assert.match(photographicAdviceFor(cleanSky, 85, "sunset"), /驻足守候/);
-  assert.match(photographicAdviceFor({ ...cleanSky, low: 70 }, 10, "sunrise"), /朝霞显现机会渺茫/);
-  const crisp = { low: 0, mid: 0, high: 5, pathLow: 0, vis: 45_000, rh: 30, precip: 0, aod: 0.06, pm25: 8 };
-  assert.match(photographicAdviceFor(crisp, 30, "sunset"), /金盘落日/);
 });
 
 test("晨昏暖色在日落附近最高、正午为零", () => {

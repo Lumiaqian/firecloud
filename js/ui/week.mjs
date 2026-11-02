@@ -1,5 +1,5 @@
 /**
- * 未来 7 日：本周最佳按钮、窄屏分数概览与逐日卡片。
+ * 未来 7 日：七日最高分按钮、窄屏分数概览与逐日卡片。
  * 卡片按位置复用旧节点，内容变化时才替换并淡入，避免整列重排与焦点丢失。
  */
 import {
@@ -163,10 +163,8 @@ export function createWeekView({ onSelectDay }) {
     if (best) {
       bestButton.dataset.eventTime = String(best.eventTime.getTime());
       bestButton.dataset.tier = best.tier;
-      bestButton.textContent = best.score >= 50
-        ? `本周最佳 · ${best.weekday} ${best.score} 分 · ${best.band}`
-        : `本周最高 ${best.score} 分 · ${best.weekday}`;
-      bestButton.setAttribute("aria-label", `查看本周得分最高的一天：${best.date}，${best.score} 分，${best.band}`);
+      bestButton.textContent = `7 日最高 ${best.score} 分 · ${best.date}`;
+      bestButton.setAttribute("aria-label", `查看未来 7 日得分最高的一天：${best.date}，${best.score} 分，${best.band}${best.far ? "，远期预报仅供参考" : ""}`);
     }
     overviewEl.replaceChildren(...days.map((day) => {
       const bar = el("div", "week-bar");
