@@ -13,34 +13,34 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=4">
   <link rel="manifest" href="manifest.webmanifest?v=5">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
-  <link rel="stylesheet" href="css/style.css?v=62">
+  <link rel="stylesheet" href="css/style.css?v=63">
   <title>霞光预报</title>
   <!-- 模块版本统一由 import map 钉住；增删模块或发布时运行 npm run sync-modules（tests/release.test.mjs 校验） -->
   <script type="importmap">
     {
       "imports": {
-        "./js/api.mjs": "./js/api.mjs?v=24",
-        "./js/app.mjs": "./js/app.mjs?v=24",
-        "./js/core/format.mjs": "./js/core/format.mjs?v=24",
-        "./js/core/session.mjs": "./js/core/session.mjs?v=24",
-        "./js/core/storage.mjs": "./js/core/storage.mjs?v=24",
-        "./js/forecast.mjs": "./js/forecast.mjs?v=24",
-        "./js/frame-loop.mjs": "./js/frame-loop.mjs?v=24",
-        "./js/ui/dev-lab.mjs": "./js/ui/dev-lab.mjs?v=24",
-        "./js/ui/dom.mjs": "./js/ui/dom.mjs?v=24",
-        "./js/ui/drawer.mjs": "./js/ui/drawer.mjs?v=24",
-        "./js/ui/factors.mjs": "./js/ui/factors.mjs?v=24",
-        "./js/ui/hero.mjs": "./js/ui/hero.mjs?v=24",
-        "./js/ui/loaders.mjs": "./js/ui/loaders.mjs?v=24",
-        "./js/ui/moon.mjs": "./js/ui/moon.mjs?v=24",
-        "./js/ui/motion.mjs": "./js/ui/motion.mjs?v=24",
-        "./js/ui/paper-fx.mjs": "./js/ui/paper-fx.mjs?v=24",
-        "./js/ui/paper.mjs": "./js/ui/paper.mjs?v=24",
-        "./js/ui/places.mjs": "./js/ui/places.mjs?v=24",
-        "./js/ui/sky.mjs": "./js/ui/sky.mjs?v=24",
-        "./js/ui/week.mjs": "./js/ui/week.mjs?v=24",
-        "./js/ui/welcome.mjs": "./js/ui/welcome.mjs?v=24",
-        "./js/weather-fx.mjs": "./js/weather-fx.mjs?v=24"
+        "./js/api.mjs": "./js/api.mjs?v=25",
+        "./js/app.mjs": "./js/app.mjs?v=25",
+        "./js/core/format.mjs": "./js/core/format.mjs?v=25",
+        "./js/core/session.mjs": "./js/core/session.mjs?v=25",
+        "./js/core/storage.mjs": "./js/core/storage.mjs?v=25",
+        "./js/forecast.mjs": "./js/forecast.mjs?v=25",
+        "./js/frame-loop.mjs": "./js/frame-loop.mjs?v=25",
+        "./js/ui/dev-lab.mjs": "./js/ui/dev-lab.mjs?v=25",
+        "./js/ui/dom.mjs": "./js/ui/dom.mjs?v=25",
+        "./js/ui/drawer.mjs": "./js/ui/drawer.mjs?v=25",
+        "./js/ui/factors.mjs": "./js/ui/factors.mjs?v=25",
+        "./js/ui/hero.mjs": "./js/ui/hero.mjs?v=25",
+        "./js/ui/loaders.mjs": "./js/ui/loaders.mjs?v=25",
+        "./js/ui/moon.mjs": "./js/ui/moon.mjs?v=25",
+        "./js/ui/motion.mjs": "./js/ui/motion.mjs?v=25",
+        "./js/ui/paper-fx.mjs": "./js/ui/paper-fx.mjs?v=25",
+        "./js/ui/paper.mjs": "./js/ui/paper.mjs?v=25",
+        "./js/ui/places.mjs": "./js/ui/places.mjs?v=25",
+        "./js/ui/sky.mjs": "./js/ui/sky.mjs?v=25",
+        "./js/ui/week.mjs": "./js/ui/week.mjs?v=25",
+        "./js/ui/welcome.mjs": "./js/ui/welcome.mjs?v=25",
+        "./js/weather-fx.mjs": "./js/weather-fx.mjs?v=25"
       }
     }
   </script>
@@ -355,16 +355,17 @@
   <dialog class="paper-surface paper-sheet" id="places-dialog" aria-labelledby="places-title">
     <div class="drawer-handle" id="drawer-handle" aria-hidden="true"></div>
     <form method="dialog" class="dialog-head"><div><p>地点与收藏</p><h2 id="places-title">选择天空</h2></div><button class="icon-button dialog-close" value="cancel" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
-    <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span></button>
-    <label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="搜索城市" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" aria-hidden="true" hidden></span></label>
-    <p class="dialog-privacy" id="dialog-privacy">最近地点、收藏和预报保存在本机；天气与地名查询向第三方发送坐标，城市搜索发送关键词。不保存搜索历史。</p>
-    <p class="dialog-status" id="search-status" role="status"></p>
+    <label class="search-label" for="city-search">想看哪里的晨昏？</label>
+    <div class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" aria-hidden="true" hidden></span></div>
+    <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span><svg class="location-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+    <div class="dialog-status" id="search-status" role="status" aria-atomic="true"></div>
     <ul class="search-results" id="search-results"></ul>
-    <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><p id="favorites-empty">暂无收藏地点，点击卡片右上角星标即可珍藏</p></section>
+    <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><div id="favorites-empty"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m20 5 5 10 11 1-8 8 2 11-10-5-10 5 2-11-8-8 11-1Z"/></svg><div class="favorite-empty-copy"><strong>留住想看的天空</strong><p>暂无收藏地点，<br>点击手记卡片右上角星标即可珍藏。</p></div></div></section>
     <div id="dialog-favorite-feedback" class="favorite-feedback" hidden>
       <p id="dialog-favorite-message" role="status" aria-atomic="true"></p>
       <button id="dialog-undo-favorite" class="text-button" type="button">撤销</button>
     </div>
+    <footer class="places-footer"><p class="dialog-privacy" id="dialog-privacy">最近地点、收藏和预报保存在本机。天气与地名查询向第三方发送坐标，城市搜索发送关键词；不保存搜索历史。</p></footer>
   </dialog>
 
   <dialog class="paper-surface paper-sheet dev-lab-dialog" id="dev-lab-dialog" aria-labelledby="dev-lab-title">
@@ -465,6 +466,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=24"></script>
+  <script type="module" src="js/app.mjs?v=25"></script>
 </body>
 </html>

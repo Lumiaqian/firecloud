@@ -5,10 +5,20 @@
 import { reverseGeocode, searchCities } from "../api.mjs";
 import { FAVORITES_LIMIT, KEYS, normalizeFavorites, placeIdentity, samePlace } from "../core/storage.mjs";
 import { $, el } from "./dom.mjs";
-import { motionAllowed } from "./motion.mjs";
 
 const SEARCH_DEBOUNCE = 300;
 const UNDO_TIMEOUT = 7000;
+
+function placeIcon(path, className) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  if (className) svg.setAttribute("class", className);
+  const shape = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  shape.setAttribute("d", path);
+  svg.append(shape);
+  return svg;
+}
 
 export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }) {
   const els = {
@@ -28,9 +38,24 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
   const saveFavorites = () => storage.set(KEYS.favorites, favorites);
   const indexOfFavorite = (place) => favorites.findIndex((favorite) => samePlace(favorite, place));
 
+  function setSearchStatus(message, status, detail) {
+    if (status) els.searchStatus.dataset.status = status;
+    else els.searchStatus.removeAttribute("data-status");
+    if (status === "empty" || status === "error") {
+      const path = status === "empty"
+        ? "M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0ZM15 15l6 6M7 10h6"
+        : "M12 3 23 22H1L12 3ZM12 9v6m0 3v1";
+      const copy = el("div", "search-status-copy");
+      copy.append(el("strong", null, message), el("p", null, detail));
+      els.searchStatus.replaceChildren(placeIcon(path, "search-status-icon"), copy);
+    } else {
+      els.searchStatus.textContent = message;
+    }
+  }
+
   function setLocationStatus(message) {
     els.geoNotice.textContent = message;
-    els.searchStatus.textContent = message;
+    setSearchStatus(message);
   }
 
   function open() {
@@ -60,7 +85,7 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     clearTimeout(searchTimer);
     els.search.value = "";
     setSearchBusy(false);
-    els.searchStatus.textContent = "";
+    setSearchStatus("");
     els.searchResults.replaceChildren();
   }
 
@@ -89,22 +114,23 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     const query = els.search.value.trim();
     if (query.length < 2) {
       els.searchResults.replaceChildren();
-      els.searchStatus.textContent = "";
+      setSearchStatus("");
       setSearchBusy(false);
       return;
     }
     searchTimer = setTimeout(async () => {
       setSearchBusy(true);
-      els.searchStatus.textContent = "正在搜索…";
+      setSearchStatus("正在搜索…", "loading");
       try {
         const results = await searchCities(query);
         if (requestId !== searchRequestId) return;
         renderSearchResults(results);
-        els.searchStatus.textContent = results.length ? `找到 ${results.length} 处地点` : "未寻得匹配城市，建议尝试输入省市全称";
+        if (results.length) setSearchStatus(`找到 ${results.length} 处地点`);
+        else setSearchStatus("未寻得匹配城市", "empty", "试试输入省市全称，或使用设备定位。");
       } catch {
         if (requestId !== searchRequestId) return;
         els.searchResults.replaceChildren();
-        els.searchStatus.textContent = "城市检索网络未通，请稍后重试";
+        setSearchStatus("城市检索网络未通", "error", "请稍后重试。也可以选择已收藏的地点。");
       } finally {
         if (requestId === searchRequestId) setSearchBusy(false);
       }
@@ -143,6 +169,7 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     els.favorite.classList.toggle("is-active", active);
     els.favorite.setAttribute("aria-pressed", String(active));
     els.favorite.setAttribute("aria-label", active ? "取消收藏当前地点" : "收藏当前地点");
+    updateFavoriteSelection(place);
   }
 
   function favoritesChanged() {
@@ -245,52 +272,49 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     item.dataset.place = placeIdentity(place);
     const pick = el("button", "favorite-place");
     pick.type = "button";
-    pick.append(el("strong", "place-label", place.name));
+    const number = el("span", "favorite-number");
+    number.setAttribute("aria-hidden", "true");
+    const copy = el("span", "favorite-copy");
+    copy.append(el("strong", "place-label", place.name), el("small", null, place.detail || ""));
+    const current = el("span", "favorite-current", "当前");
+    current.setAttribute("aria-hidden", "true");
+    current.hidden = true;
+    pick.append(number, copy, current);
     pick.addEventListener("click", () => choose(place));
-    const remove = el("button", "delete-favorite", "×");
+    const remove = el("button", "delete-favorite");
     remove.type = "button";
     remove.setAttribute("aria-label", `移出收藏 ${place.name}`);
+    remove.append(placeIcon("m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 3Z"));
     remove.addEventListener("click", () => removeFavorite(place));
     item.append(pick, remove);
     return item;
   }
 
-  // 收藏列表按地点复用行节点，并用 FLIP 动画衔接增删与位移
+  function updateFavoriteSelection(place = getCurrentPlace()) {
+    const identity = place ? placeIdentity(place) : null;
+    for (const row of els.favoritesList.children) {
+      const current = row.dataset.place === identity;
+      const pick = row.querySelector(".favorite-place");
+      if (current) pick.setAttribute("aria-current", "location");
+      else pick.removeAttribute("aria-current");
+      row.querySelector(".favorite-current").hidden = !current;
+    }
+  }
+
+  // 复用保留的收藏行，增删与重新编号即时生效，不播放位移动画。
   function renderFavorites() {
     const list = els.favoritesList;
-    const oldRows = new Map([...list.children].filter((row) => !row.dataset.exiting).map((row) => [row.dataset.place, row]));
-    const positions = new Map([...oldRows].map(([key, row]) => [key, row.getBoundingClientRect()]));
-    const animate = els.dialog.open && motionAllowed();
-    const easing = getComputedStyle(document.documentElement).getPropertyValue("--ease-out").trim();
+    const oldRows = new Map([...list.children].map((row) => [row.dataset.place, row]));
     const rows = favorites.map((place) => oldRows.get(placeIdentity(place)) ?? favoriteRow(place));
     const retained = new Set(rows);
     for (const row of oldRows.values()) {
-      if (retained.has(row)) continue;
-      const rect = positions.get(row.dataset.place);
-      row.remove();
-      if (!animate) continue;
-      row.dataset.exiting = "true";
-      row.inert = true;
-      row.setAttribute("aria-hidden", "true");
-      row.style.cssText = `position:absolute;top:${rect.top - list.getBoundingClientRect().top}px;left:0;width:${rect.width}px;pointer-events:none`;
-      list.append(row);
-      row.animate([{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(-8px)" }],
-        { duration: 120, easing }).finished.then(() => row.remove(), () => row.remove());
+      if (!retained.has(row)) row.remove();
     }
     rows.forEach((row, index) => {
+      row.querySelector(".favorite-number").textContent = String(index + 1).padStart(2, "0");
       if (list.children[index] !== row) list.insertBefore(row, list.children[index] || null);
     });
-    for (const row of rows) {
-      const previous = positions.get(row.dataset.place);
-      row.getAnimations().forEach((animation) => animation.cancel());
-      if (!animate) continue;
-      const delta = previous ? previous.top - row.getBoundingClientRect().top : 4;
-      if (previous && Math.abs(delta) < 0.5) continue;
-      row.animate([
-        { transform: `translateY(${delta}px)`, opacity: previous ? 1 : 0 },
-        { transform: "translateY(0)", opacity: 1 }
-      ], { duration: 160, easing });
-    }
+    updateFavoriteSelection();
     els.favoritesEmpty.hidden = favorites.length > 0;
   }
 
