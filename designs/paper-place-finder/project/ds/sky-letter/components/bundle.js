@@ -214,6 +214,14 @@ let followTheme = true;
 let motionRequested = true;
 const timers = new Map();
 const scenes = [];
+const gustLayer = document.createElement('div');
+gustLayer.className = 'sl-atmo-gust-layer';
+gustLayer.setAttribute('aria-hidden', 'true');
+world.append(gustLayer);
+const gustParticles = new Map();
+let ambientWindTimer = null;
+let windBatch = 0;
+const maxGustParticles = 18;
 const labels = Object.fromEntries([...weather.options].map(option => [option.value, option.text]));
 function decoration(className, parent) {
   const element = document.createElement('i');
@@ -239,10 +247,6 @@ for (const weatherId of Object.keys(labels)) {
     } else if (weatherId === 'clear' || weatherId === 'partly') decoration('sl-atmo-sun', scene);
     if (['partly','overcast','rain','thunder','hail'].includes(weatherId)) decoration('sl-atmo-cloud', scene);
     if (weatherId === 'fog') decoration('sl-atmo-fog', scene);
-    if (weatherId === 'wind') {
-      decoration('sl-atmo-wind', scene);
-      decoration('sl-atmo-wind second', scene);
-    }
     if (weatherId === 'thunder' || weatherId === 'hail') decoration('sl-atmo-storm', scene);
     const particle = weatherId === 'snow' ? 'snow' : weatherId === 'hail' ? 'hail' : ['rain','thunder'].includes(weatherId) ? 'rain' : null;
     if (particle) {
@@ -256,9 +260,48 @@ for (const weatherId of Object.keys(labels)) {
     scenes.push(scene);
   }
 }
+function emitWind(strong) {
+  if (stage.dataset.motion !== 'true') return;
+  const batch = windBatch++;
+  const count = Math.min(strong ? 10 : 5, maxGustParticles - gustParticles.size);
+  const baseDuration = strong ? 2400 : 3000;
+  const distance = Math.max(stage.clientWidth, document.documentElement.clientWidth) + 240;
+  for (let i = 0; i < count; i++) {
+    const seed = batch * 17 + i * 13;
+    const duration = baseDuration + Math.random() * 350;
+    const leaf = i === 0 && batch % 3 === 2;
+    const carrier = decoration('sl-atmo-gust-particle', gustLayer);
+    const arc = decoration('sl-atmo-gust-arc', carrier);
+    const mark = decoration(leaf ? 'sl-atmo-gust-mark is-leaf' : 'sl-atmo-gust-mark', arc);
+    const bend = ((seed % 5) - 2) * (strong ? 17 : 11);
+    const delay = 120 + i * 50;
+    carrier.style.cssText = `top:${14 + seed % 66}%;--gust-duration:${duration}ms;--gust-delay:${delay}ms;--gust-end:${distance}px;--gust-y1:${bend - 16}px;--gust-y2:${-bend + 12}px;--gust-y3:${bend * .45}px;--gust-opacity:${leaf ? .36 : strong ? .25 : .17}`;
+    mark.style.cssText = `width:${leaf ? 15 : 28 + seed % 36}px;--gust-turn:${seed % 2 ? 360 : -360}deg;--gust-angle:${seed % 43 - 21}deg;--gust-spin:${1100 + seed % 7 * 190}ms;--gust-delay:${delay}ms`;
+    gustParticles.set(carrier, setTimeout(() => {
+      carrier.remove();
+      gustParticles.delete(carrier);
+    }, duration + delay + 50));
+  }
+}
+function syncAmbientWind(delay = 7200) {
+  if (stage.dataset.motion !== 'true' || weather.value !== 'wind' || ambientWindTimer !== null) return;
+  ambientWindTimer = setTimeout(() => {
+    ambientWindTimer = null;
+    if (stage.dataset.motion !== 'true' || weather.value !== 'wind') return;
+    emitWind(false);
+    syncAmbientWind();
+  }, delay);
+}
 function clearEffects() {
   for (const timer of timers.values()) clearTimeout(timer);
   timers.clear();
+  clearTimeout(ambientWindTimer);
+  ambientWindTimer = null;
+  for (const [particle, timer] of gustParticles) {
+    clearTimeout(timer);
+    particle.remove();
+  }
+  gustParticles.clear();
   for (const effect of ['gust', 'strike', 'warm']) delete stage.dataset[effect];
 }
 function render() {
@@ -269,6 +312,7 @@ function render() {
   motionButton.setAttribute('aria-pressed', String(motionRequested));
   motionButton.textContent = reduced.matches ? '系统减弱动效' : motionRequested ? '动效 开' : '动效 关';
   status.textContent = `${labels[weather.value]} · ${light.selectedOptions[0].text} · 非实时样例 · ${stage.dataset.motion === 'true' ? '650 ms 交叠' : '静态天气与月相保留'}`;
+  syncAmbientWind(160);
 }
 function parentTheme() {
   if (!followTheme) return;
@@ -286,7 +330,7 @@ new MutationObserver(parentTheme).observe(document.documentElement, { attributes
 function pulse(name, label, duration, event) {
   const keyboard = event.detail === 0;
   if (keyboard || stage.dataset.motion !== 'true') {
-    clearEffects();
+    if (stage.dataset.motion !== 'true') clearEffects();
     status.textContent = `${keyboard ? '键盘操作仅文字反馈' : '动效已关闭'} · 非实时样例 · 纸面数值保持不变`;
     return;
   }
@@ -297,7 +341,11 @@ function pulse(name, label, duration, event) {
 }
 document.querySelector('#weather-clip').addEventListener('click', event => pulse('strike', '夹端引雷', 650, event));
 document.querySelector('#weather-annotation').addEventListener('click', event => pulse('warm', '圈注暖光', 3600, event));
-document.querySelector('#weather-tape').addEventListener('click', event => pulse('gust', '天气批注纸缘唤风，锚点不动', 2200, event));
+document.querySelector('#weather-tape').addEventListener('click', event => {
+  const allowed = event.detail !== 0 && stage.dataset.motion === 'true';
+  pulse('gust', '淡铅笔风痕掠过天空，纸缘轻动', 3350, event);
+  if (allowed) emitWind(true);
+});
 for (const button of document.querySelectorAll('[data-day]')) button.addEventListener('click', () => {
   for (const other of document.querySelectorAll('[data-day]')) other.setAttribute('aria-pressed', String(other === button));
   document.querySelector('#forecast-note').textContent = `横笺选中 ${button.dataset.day === 'today' ? '03' : '05'} 日；主笺数值固定，不重算环境。`;

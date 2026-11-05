@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "scope": "File distribution and effective stylesheet dependency inventory; not visual or runtime acceptance.",
   "source": "designs/sky-letter-system/project",
-  "sourceHash": "3e5cea5575d4d566497674d0feaf5204ddfa99a7e25148beb26d0da221d58a17",
+  "sourceHash": "b380b06ea76672f19f69961c9ba2b9393c69dcf318b4f3cc2ef0f359ebc31d81",
   "installed": "designs/paper-place-finder/project/ds/sky-letter",
   "sourceFiles": {
     "Accessibility.md": "33ab526adbb5fcdec3ca51f5c92e265920eb6b8934e6e523b76a102c96857041",
     "Inventory.md": "37d81f5d95e39cee7952b7df20974dd10f535f375ffc83ad85b0ddfd07b71825",
-    "Motion.md": "a82aa7fc6c1e1c36b33c6b770a85d27af8d0f557cecfbd03162f257e46d24230",
-    "README.md": "cdd3ba31e4bbd9161a62e58cfd07bd927f047fb6905aaf030ecf908fee0eee7c",
+    "Motion.md": "159f72010adeb58a42ad0c53fdac80ccccb4af1502cf5d73d88f4df26d631568",
+    "README.md": "a67529f8fb007070dbdabf07d4fff8d577988d5dc3c526c6dffa574d1d8257b9",
     "_blobs/016c40d1def5678a1bc7b8c1d7ed4199.png": "016c40d1def5678a1bc7b8c1d7ed419922cd59bb42816677ed65be8ed3759f60",
     "_blobs/168794c2c6247d31fb4dd9639d64370c.png": "168794c2c6247d31fb4dd9639d64370cde0ac885536eabe7e0fb39a929f21429",
     "_blobs/178d1b87b97b62feeec6174ddbcff695.png": "178d1b87b97b62feeec6174ddbcff6950456fdfb25912183d6a2b7c4e82af3fb",
@@ -68,18 +68,18 @@
     "components/PlaceRow/preview.html": "6efe6a76aab729f24747f6765af2b6d78aa584ad0196f909ffbaa30a8a0219a4",
     "components/StatusNote/README.md": "527c064ae030bd9d790ba4dff96e022336c859c8a4e82dcb827b3b9a608b284c",
     "components/StatusNote/preview.html": "a3adfa47a51783b8439cd09ebde3a7d112397cc51d0a815c6c6104e4158bd4c2",
-    "components/WeatherStage/README.md": "73f69c24ac48bceb44d6cab11cd373ab986ada7bf77c75d05615775300848c4d",
+    "components/WeatherStage/README.md": "a0bab480fcb5837bdfad0ffe11ae1a7e79e4a558a3c6b1e27eaaf1119d113937",
     "components/WeatherStage/preview.html": "69cabdc89bf9ca00e4844fb2ca01432b61a28002d32cc6ad872cc89ddcaa6f37",
     "components/art/clip.png": "6b03c41165f044976faf1a60b98098b2d85c5505a52111c256dab9f56b126693",
     "components/art/mark.png": "e6a09a2b5261c577a08bbd7f0bef7e0b02c6b44dc4bb6890093cb9430034fd72",
     "components/art/rule.png": "9cedfb4c5bd7f60f6760530f51980cc8ed6493103c79f5f1e3abee9a45068103",
     "components/art/seal.png": "6cb74947f962f1e36340b5c851c818d4782678294083570a0921d812cafdf656",
-    "components/bundle.css": "e73ab7b4388e734ec54609d51c32e5e4854000c9c19be3137398671a122deb21",
-    "components/bundle.js": "ca445179b65ad24f6895eb78cce5f136130c1d097be9215d0e594e562752ac7f",
+    "components/bundle.css": "1f4ff237fc32ff90d99bc07d021906ab9d460c753be5d6db5b4468e9e1024e85",
+    "components/bundle.js": "2944bb6962df017eb7dcd81dd6a2e34c22b0bdb4dab360e0cf49eddb25e32244",
     "components/card-foundation.css": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712",
     "components/index.d.ts": "3ce95601c5f7a4056d8573b7fd1e7b724b6bfd1d8686352fab3139faf1fdd888",
-    "components/preview-layout.css": "f3e4809b9067e8ccf99e24b575b63e445a8c81ee6b8c879ab286a55e68d54c69",
-    "design-system.json": "1d25331a94a15482c6b9846636c56943d31bb44fdc5ed7338ce5b8ccbf227c86",
+    "components/preview-layout.css": "9a477c8805cb05cc077de1cd0c71cd34ef19fe3ec6c9793d6d05ea625779ac36",
+    "design-system.json": "a29241b0dd4a7ed95aefc5888cca3a4744e27b00638192d49130e2179a438311",
     "fonts/Xiaolai-Regular.woff2": "b01b7373b008c76f7ec6d7b19468d11f54e2ec40bc0df5713e79bb3d6a952303",
     "licenses/Xiaolai-OFL.txt": "0df7e09be4c2c850a48bd8beb9cd64b343aad49cd5d3f6cfb2ad2e3d28a56ca4",
     "manifest.json": "261caf33c009f0b408db9d14651fbde9cd764600c5cb0930d5e644f3c4f0c6b5",
@@ -112,7 +112,7 @@
       },
       {
         "path": "css/style.css",
-        "sha256": "cbad853ee4ee961e04f8a4846c60288d7838fb027ef27a50f02feeefc8dc48cc"
+        "sha256": "dadabce19a7519c5607aafbc134ebcec9361d4ad906e7329d30eb5b4d8691a53"
       }
     ]
   },
@@ -203,7 +203,7 @@
         "stylesheets": [
           {
             "path": "designs/paper-place-finder/project/ds/sky-letter/components/bundle.css",
-            "sha256": "e73ab7b4388e734ec54609d51c32e5e4854000c9c19be3137398671a122deb21"
+            "sha256": "1f4ff237fc32ff90d99bc07d021906ab9d460c753be5d6db5b4468e9e1024e85"
           },
           {
             "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
@@ -638,7 +638,7 @@
       {
         "file": "SkyMotionFlow.dc.html",
         "page": "motion-handoff",
-        "sha256": "ddf21b6a93bebc511a80f3f4cb766623a1c75cabadf7f1a4f254e10bbfe8eb04",
+        "sha256": "d34bd5fb481b5bbe3fcbe6673034d62c55beb6571a646c5222e1eed4715f26cb",
         "cardTypes": [
           "factors",
           "forecast",
@@ -664,7 +664,7 @@
       {
         "file": "SkyMotionFlowMobile.dc.html",
         "page": "motion-handoff",
-        "sha256": "b2a07ed4516f11922c7f42f7a16c49cf06134f81569c2cf8404b38bd4cc29c9e",
+        "sha256": "98389173e4bfbcc69cecb0f615732db28acd079957b8dbec54c1be72eba17a81",
         "cardTypes": [
           "factors",
           "forecast",

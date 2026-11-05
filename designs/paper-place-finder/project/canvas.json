@@ -677,11 +677,11 @@
   "designSystems": [
     {
       "artifact": "designs/sky-letter-system",
-      "copiedAt": "2026-11-05T07:00:05.948Z",
+      "copiedAt": "2026-11-05T08:13:22.436Z",
       "namespace": "sky-letter",
       "title": "天空画笺",
       "version": null,
-      "sourceHash": "3e5cea5575d4d566497674d0feaf5204ddfa99a7e25148beb26d0da221d58a17"
+      "sourceHash": "b380b06ea76672f19f69961c9ba2b9393c69dcf318b4f3cc2ef0f359ebc31d81"
     }
   ],
   "launch": {

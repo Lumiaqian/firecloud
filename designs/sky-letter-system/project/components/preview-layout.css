@@ -209,7 +209,8 @@
 .sl-atmo-sunset { right: 2%; top: 86px; }
 .sl-atmo-annotation { color: var(--ink-selected); font-family: inherit; border: 0; background: none; cursor: pointer; min-height: 44px; transition: filter 200ms ease; }
 .sl-atmo-tape-button::before { transform-origin: 8% center; transition: transform var(--duration-scene) cubic-bezier(.23,1,.32,1); }
-.sl-weather-stage[data-gust=true] .sl-atmo-tape-button::before { transform: rotate(-15deg); }
+.sl-weather-stage[data-weather=wind] .sl-atmo-tape-button::before { transform: rotate(-5deg); }
+.sl-weather-stage[data-gust=true] .sl-atmo-tape-button::before { transform: rotate(-9deg); }
 .sl-atmo-factors { margin: 12px auto 30px; }
 .sl-atmo-corner{position:absolute;right:1px;bottom:5px;width:49px;height:36px;background:linear-gradient(145deg,#dfd7c1,#fbf6e8 75%);clip-path:polygon(100% 0,100% 90%,0 100%);transform-origin:right top;transition:transform var(--duration-scene) cubic-bezier(.23,1,.32,1);pointer-events:none;z-index:2}
 .sl-atmo-edge{display:none;position:absolute;top:6px;left:27%;width:13px;height:6px;border:1px solid #a7c4d2;border-top:0;border-radius:0 0 50% 50%;pointer-events:none;animation:sl-atmo-contact 1.6s ease-out infinite}
@@ -218,7 +219,7 @@
 .sl-atmo-hailcontact{display:none;position:absolute;top:4px;left:67%;width:4px;height:4px;background:#c5d8df;pointer-events:none;animation:sl-atmo-bounce 1.8s linear infinite}
 .sl-weather-stage:is([data-weather=rain],[data-weather=thunder]) .sl-atmo-edge,.sl-weather-stage[data-weather=snow] .sl-atmo-snowcap,.sl-weather-stage[data-weather=hail] .sl-atmo-hailcontact{display:block}
 .sl-weather-stage[data-weather=wind] .sl-atmo-corner{animation:sl-atmo-loose-corner 4.5s cubic-bezier(.25,1,.4,1) infinite}
-.sl-weather-stage[data-gust=true] .sl-atmo-corner{animation:none;transform:translateY(-11px) rotate(-8deg)}
+.sl-weather-stage[data-gust=true] .sl-atmo-corner{animation:none;transform:translateY(-6px) rotate(-4deg)}
 .sl-atmo-bolt{position:absolute;right:37px;top:-165px;width:119px;height:185px;pointer-events:none;z-index:4;opacity:0;transition:opacity 160ms ease;fill:none;stroke:#f6e2ab;stroke-width:2}
 .sl-weather-stage[data-strike=true] .sl-atmo-bolt{opacity:.9}.sl-weather-stage[data-warm=true] .sl-atmo-annotation{filter:drop-shadow(0 0 9px #c7793b80)}
 .sl-atmo-forecast{position:relative;max-width:950px;margin:0 auto;padding:var(--space-16) var(--space-20);color:var(--ink);z-index:3}
@@ -239,7 +240,14 @@
 .sl-weather-scene[data-weather=fog] .sl-atmo-moon{opacity:.48;filter:blur(3px)}
 .sl-atmo-star{position:absolute;width:2px;height:2px;border-radius:var(--radius-disc);background:#f3eee0;animation:sl-atmo-star var(--duration-star) ease-in-out infinite alternate}
 .sl-weather-scene:is([data-weather=overcast],[data-weather=fog]) .sl-atmo-star{display:none}
-.sl-atmo-wind{position:absolute;top:190px;left:8%;width:100px;height:12px;border-top:1px solid #e5e9df80;border-radius:var(--radius-disc);animation:sl-atmo-wind 5s linear infinite}.sl-atmo-wind.second{top:470px;left:65%;animation-delay:-2.4s}
+.sl-atmo-gust-layer{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.sl-atmo-gust-particle{position:absolute;left:-120px;opacity:0;animation:sl-atmo-gust-path var(--gust-duration) linear var(--gust-delay) both;pointer-events:none}
+.sl-atmo-gust-arc{display:block;animation:sl-atmo-gust-arc var(--gust-duration) cubic-bezier(.77,0,.175,1) var(--gust-delay) both}
+.sl-atmo-gust-mark{display:block;height:6px;border-top:1px solid currentColor;border-radius:50%;color:#6c7468;transform-origin:center;animation:sl-atmo-gust-turn var(--gust-spin) linear var(--gust-delay) infinite both}
+.sl-atmo-gust-mark::after{content:'';position:absolute;left:18%;top:3px;width:46%;height:1px;background:currentColor;opacity:.4;transform:rotate(-5deg)}
+.sl-atmo-gust-mark.is-leaf{height:7px;border:0;border-radius:85% 5% 75% 10%;background:#7b8066}
+.sl-atmo-gust-mark.is-leaf::after{left:9%;top:3px;width:83%;color:#535d4b;transform:rotate(-18deg);opacity:.55}
+.sl-weather-stage[data-light=night] .sl-atmo-gust-mark{color:#d3d7c8}
 .sl-atmo-storm{position:absolute;top:30px;left:54%;width:33%;height:280px;border-radius:var(--radius-disc);background:radial-gradient(ellipse,#c2dce93b,transparent 70%);animation:sl-atmo-storm 8s ease-in-out infinite alternate}
 .sl-moon-phase{max-width:650px;margin:auto}.sl-moon-inner{position:relative;max-width:480px;margin:auto}.sl-moon-sky{position:absolute;inset:0;pointer-events:none}
 .sl-moon-phase[data-light=day]{background:linear-gradient(180deg,var(--weather-clear-day-top),var(--weather-clear-day-mid) 60%,var(--weather-clear-day-bottom))}
@@ -264,23 +272,25 @@
 @keyframes sl-atmo-snow{from{transform:translate(0,-30px)}to{transform:translate(65px,590px)}}
 @keyframes sl-atmo-cloud{from{transform:translateX(-12%)}to{transform:translateX(16%)}}
 @keyframes sl-atmo-contact{0%,60%,100%{opacity:0;transform:scale(.7)}15%{opacity:.65;transform:scale(1)}40%{opacity:0;transform:scale(1.5)}}
-@keyframes sl-atmo-loose-corner{0%,65%,100%{transform:translateY(0) rotate(0)}18%{transform:translateY(-7px) rotate(-4deg)}34%{transform:translateY(-2px) rotate(-1deg)}}
+@keyframes sl-atmo-loose-corner{0%,65%,100%{transform:translateY(0) rotate(0)}18%{transform:translateY(-3px) rotate(-2deg)}34%{transform:translateY(-1px) rotate(-.5deg)}}
 @keyframes sl-atmo-storm{from{opacity:.2}to{opacity:.65}}
 @keyframes sl-atmo-moon{from{opacity:.55}to{opacity:.85}}
 @keyframes sl-atmo-star{from{opacity:.3}to{opacity:.7}}
 @keyframes sl-moon-detail-breathe{from{opacity:.5}to{opacity:.8}}
 @keyframes sl-atmo-hail{from{transform:translate(0,-40px);opacity:0}15%{opacity:.7}to{transform:translate(-45px,640px);opacity:.2}}
 @keyframes sl-atmo-bounce{0%,65%,100%{transform:translate(0,0);opacity:0}12%{transform:translate(0,0);opacity:.8}25%{transform:translate(8px,-12px);opacity:.8}45%{transform:translate(17px,3px);opacity:0}}
-@keyframes sl-atmo-wind{0%{transform:translateX(-40px);opacity:0}30%{opacity:.6}100%{transform:translateX(160px);opacity:0}}
+@keyframes sl-atmo-gust-path{0%{transform:translate3d(0,0,0);opacity:0}14%{opacity:var(--gust-opacity)}78%{opacity:var(--gust-opacity)}100%{transform:translate3d(var(--gust-end),0,0);opacity:0}}
+@keyframes sl-atmo-gust-arc{0%{transform:translateY(0)}28%{transform:translateY(var(--gust-y1))}62%{transform:translateY(var(--gust-y2))}100%{transform:translateY(var(--gust-y3))}}
+@keyframes sl-atmo-gust-turn{from{transform:rotate(var(--gust-angle))}to{transform:rotate(calc(var(--gust-angle) + var(--gust-turn)))}}
 @media(min-width:701px) and (max-width:900px){.sl-atmo-hero{display:grid;grid-template-columns:minmax(0,440px) 270px;gap:24px 32px;min-height:0;padding-bottom:30px}.sl-atmo-heading{grid-column:1/-1;justify-self:start}.sl-atmo-score,.sl-atmo-sunset{position:relative;inset:auto}.sl-atmo-score{margin-top:70px}}
 @media(max-width:700px){.sl-atmo-hero{display:flex;flex-direction:column;gap:30px;min-height:0;padding-bottom:30px}.sl-atmo-heading{align-self:flex-start;margin-bottom:50px}.sl-atmo-score{position:relative;inset:auto}.sl-atmo-sunset{position:relative;inset:auto;align-self:flex-end}.sl-atmo-moon{left:auto;right:30px;top:210px;width:58px;height:58px}.sl-atmo-cloud{left:44%;top:235px;width:65%}.sl-atmo-sun{left:auto;right:42px;top:250px;width:42px;height:40px}.sl-atmo-controls{gap:var(--space-8);padding:var(--space-12)}.sl-weather-stage,.sl-moon-phase{padding:var(--space-20)}}
 @media(max-width:350px){.sl-weather-stage,.sl-moon-phase{padding:var(--space-12)}.sl-moon-figure,.sl-moon-below{width:108px;flex-basis:108px;height:108px}.sl-moon-study{gap:12px;margin-inline:0!important}.sl-moon-study h1{font-size:29px}.sl-moon-slip{padding:25px 21px}}
 @media(hover:hover) and (pointer:fine){.sl-atmo-controls button:hover,.sl-atmo-days button:hover,.sl-moon-phase button:hover{text-decoration:underline;text-underline-offset:6px}.sl-atmo-clip:hover{filter:drop-shadow(0 0 6px #d6ad62)}}
 .sl-weather-stage[data-motion=false] *,.sl-moon-phase[data-motion=false] *{animation:none!important;transition:none!important}
-.sl-weather-stage[data-motion=false] :is(.sl-atmo-rain,.sl-atmo-snow,.sl-atmo-hail,.sl-atmo-wind,.sl-atmo-bolt,.sl-atmo-storm){display:none!important}
+.sl-weather-stage[data-motion=false] :is(.sl-atmo-rain,.sl-atmo-snow,.sl-atmo-hail,.sl-atmo-gust-layer,.sl-atmo-bolt,.sl-atmo-storm){display:none!important}
 .sl-weather-stage[data-motion=false] .sl-atmo-corner{transform:none!important}.sl-weather-stage[data-motion=false] .sl-atmo-tape-button::before{transform:rotate(-8deg)!important}.sl-weather-stage[data-motion=false] .sl-atmo-edge{opacity:.55}
 .sl-weather-stage[data-motion=false] :is(.sl-atmo-annotation,.sl-atmo-clip){filter:none!important}
-@media(prefers-reduced-motion:reduce){.sl-weather-stage *,.sl-moon-phase *{animation:none!important;transition:none!important}.sl-weather-stage :is(.sl-atmo-rain,.sl-atmo-snow,.sl-atmo-hail,.sl-atmo-wind,.sl-atmo-bolt,.sl-atmo-storm){display:none!important}.sl-weather-stage .sl-atmo-corner{transform:none!important}.sl-weather-stage .sl-atmo-tape-button::before{transform:rotate(-8deg)!important}.sl-weather-stage .sl-atmo-edge{opacity:.55}}
+@media(prefers-reduced-motion:reduce){.sl-weather-stage *,.sl-moon-phase *{animation:none!important;transition:none!important}.sl-weather-stage :is(.sl-atmo-rain,.sl-atmo-snow,.sl-atmo-hail,.sl-atmo-gust-layer,.sl-atmo-bolt,.sl-atmo-storm){display:none!important}.sl-weather-stage .sl-atmo-corner{transform:none!important}.sl-weather-stage .sl-atmo-tape-button::before{transform:rotate(-8deg)!important}.sl-weather-stage .sl-atmo-edge{opacity:.55}}
 @media(prefers-reduced-motion:reduce){.sl-weather-stage :is(.sl-atmo-annotation,.sl-atmo-clip){filter:none!important}}
 @media(forced-colors:active){.sl-weather-stage,.sl-moon-phase{background:Canvas;color:CanvasText}.sl-atmo-controls,.sl-atmo-forecast,.sl-atmo-heading,.sl-atmo-score,.sl-atmo-sunset,.sl-moon-heading,.sl-moon-slip{color:CanvasText}.sl-weather-world,.sl-moon-sky,.sl-moon-halo,.sl-atmo-corner,.sl-atmo-bolt{display:none!important}.sl-atmo-controls :focus-visible,.sl-atmo-days button:focus-visible,.sl-contact-button:focus-visible,.sl-moon-phase button:focus-visible{outline:2px solid Highlight}.sl-atmo-days button[aria-pressed=true],.sl-atmo-controls button[aria-pressed=true]{text-decoration:underline solid}.sl-moon-disc{fill:Canvas;stroke:CanvasText}.sl-moon-lit,.sl-moon-craters{fill:CanvasText}.sl-moon-study{color:CanvasText!important}}
 

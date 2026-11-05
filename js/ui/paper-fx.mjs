@@ -8,7 +8,7 @@ import { motionAllowed, reducedMotion } from "./motion.mjs";
 const AMBIENT_GUST_INTERVAL = { strong: 32_000, breezy: 45_000 };
 const STRIKE_DURATION = 650;
 const WARM_DURATION = 3600;
-const GUST_DURATION = 2200;
+const MAX_WIND_PIECES = 18;
 
 function lightningPath(fromX, hitX, hitY) {
   const segments = [];
@@ -57,7 +57,6 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   const debris = [];
   let width = 0;
   let height = 0;
-  let gustTimer = null;
   let strikeTimer = null;
   let warmTimer = null;
   let ambientTimer = null;
@@ -145,32 +144,26 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   // ---------- 阵风 ----------
   function blowWind(intensity = "high") {
     if (!ambientMotionAllowed()) return false;
-    clearTimeout(gustTimer);
-    body.dataset.paperWind = intensity;
-    debris.length = 0;
-
+    const now = performance.now();
     const strong = intensity === "high";
-    for (let k = 0; k < (strong ? 14 : 7); k += 1) {
-      const roll = Math.random();
+    // Extend the live gust without discarding pieces already crossing the sky.
+    if (strong || !body.dataset.paperWind) body.dataset.paperWind = intensity;
+    const count = Math.min(strong ? 10 : 5, MAX_WIND_PIECES - debris.length);
+    for (let k = 0; k < count; k += 1) {
+      const leaf = Math.random() > 0.9;
       debris.push({
-        startX: -40 - k * 11,
-        startY: Math.random() * (height * 0.88) + height * 0.04,
-        startedAt: performance.now(),
-        duration: strong ? 1400 : 2300,
-        travel: strong ? 1450 : 1000,
-        size: Math.random() * 6 + 3,
-        angle: Math.random() * Math.PI * 2,
-        alpha: strong ? Math.random() * 0.22 + 0.6 : Math.random() * 0.18 + 0.4,
-        type: roll > 0.62 ? "leaf" : roll > 0.32 ? "petal" : "chaff"
+        startY: Math.random() * height * 0.88 + height * 0.04,
+        startedAt: now + 120 + k * 50,
+        duration: (strong ? 2400 : 3000) + Math.random() * 350,
+        size: leaf ? 4 + Math.random() * 3 : 8 + Math.random() * 16,
+        phase: Math.random() * Math.PI * 2,
+        sway: 8 + Math.random() * 16,
+        spin: (Math.random() - 0.5) * 2,
+        alpha: strong ? 0.38 : 0.24,
+        leaf
       });
     }
     wake();
-    gustTimer = setTimeout(() => {
-      gustTimer = null;
-      delete body.dataset.paperWind;
-      debris.length = 0;
-      wake();
-    }, GUST_DURATION);
     return true;
   }
 
@@ -191,9 +184,8 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   function clearEffects() {
     clearTimeout(strikeTimer);
     clearTimeout(warmTimer);
-    clearTimeout(gustTimer);
-    clearInterval(ambientTimer);
-    strikeTimer = warmTimer = gustTimer = ambientTimer = null;
+    clearTimeout(ambientTimer);
+    strikeTimer = warmTimer = ambientTimer = null;
     delete body.dataset.paperWind;
     els.clip?.classList.remove("is-lightning-struck");
     els.circle?.classList.remove("is-sun-warmed");
@@ -205,9 +197,13 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
 
   function startAmbientWind() {
     if (!ambientMotionAllowed() || !lastConditions || lastConditions.ambient === "calm") return;
-    ambientTimer = setInterval(() => {
+    const delay = AMBIENT_GUST_INTERVAL[lastConditions.ambient] * (0.8 + Math.random() * 0.4);
+    ambientTimer = setTimeout(() => {
+      ambientTimer = null;
+      if (!ambientMotionAllowed()) return;
       blowWind("gentle");
-    }, AMBIENT_GUST_INTERVAL[lastConditions.ambient]);
+      startAmbientWind();
+    }, delay);
   }
 
   // 只消费当前实况；预报日期与朝晚霞选择不改写纸面天气。
@@ -316,29 +312,36 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
     for (let index = debris.length - 1; index >= 0; index -= 1) {
       const piece = debris[index];
       const progress = (now - piece.startedAt) / piece.duration;
+      if (progress < 0) continue;
       if (progress >= 1) { debris.splice(index, 1); continue; }
-      piece.x = piece.startX + progress * piece.travel;
-      piece.y = piece.startY + 15 - progress * 55;
-      piece.angle = (-10 + progress * 100) * Math.PI / 180;
+      // A gentle acceleration through the middle, with a viewport-relative path.
+      const travel = progress - Math.sin(progress * Math.PI * 2) * 0.055;
+      const x = -40 + travel * (width + 80);
+      const y = piece.startY - progress * 36
+        + Math.sin(progress * Math.PI * 2 + piece.phase) * piece.sway;
+      const alpha = piece.alpha * Math.min(1, progress / 0.12, (1 - progress) / 0.22);
       ctx.save();
-      ctx.translate(piece.x, piece.y);
-      ctx.rotate(piece.angle);
-      if (piece.type === "chaff") {
-        ctx.fillStyle = `rgba(244, 236, 222, ${piece.alpha})`;
-        ctx.fillRect(-piece.size * 0.5, -piece.size * 0.3, piece.size, piece.size * 0.6);
-      } else {
-        ctx.fillStyle = piece.type === "petal"
-          ? `rgba(235, 172, 142, ${piece.alpha * 0.9})`
-          : `rgba(186, 126, 72, ${piece.alpha})`;
-        ctx.beginPath();
-        if (piece.type === "petal") ctx.arc(0, 0, piece.size * 0.42, 0, Math.PI * 2);
-        else ctx.ellipse(0, 0, piece.size * 0.7, piece.size * 0.35, 0, 0, Math.PI * 2);
+      ctx.translate(x, y);
+      ctx.rotate(piece.leaf ? piece.phase + progress * piece.spin
+        : Math.cos(progress * Math.PI * 2 + piece.phase) * 0.12);
+      ctx.beginPath();
+      if (piece.leaf) {
+        ctx.fillStyle = `rgba(175, 143, 99, ${alpha})`;
+        ctx.ellipse(0, 0, piece.size, piece.size * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
+      } else {
+        ctx.strokeStyle = body.dataset.light === "night"
+          ? `rgba(211, 196, 164, ${alpha})`
+          : `rgba(108, 112, 99, ${alpha})`;
+        ctx.lineWidth = 0.75;
+        ctx.moveTo(-piece.size, 0);
+        ctx.quadraticCurveTo(0, -2, piece.size, 0);
+        ctx.stroke();
       }
       ctx.restore();
-      if (piece.x > width + 60) debris.splice(index, 1);
     }
     ctx.restore();
+    if (!debris.length) delete body.dataset.paperWind;
   }
 
 

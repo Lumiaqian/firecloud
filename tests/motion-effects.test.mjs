@@ -76,7 +76,7 @@ function browserEnvironment(t) {
     globalAlpha: 1,
     setTransform() {}, clearRect() { fills.length = 0; },
     save() {}, restore() {}, beginPath() {}, arc() {}, ellipse() {},
-    moveTo() {}, lineTo() {}, stroke() {}, rect() {}, clip() {},
+    moveTo() {}, lineTo() {}, quadraticCurveTo() {}, stroke() {}, rect() {}, clip() {},
     translate() {}, rotate() {}, fillRect() {}, closePath() {},
     fill() { fills.push(this.fillStyle); }
   };
@@ -92,6 +92,23 @@ test("键盘只停主动纸面反馈，实况阵风继续且所有全局暂停�
   trackInputModality(env.body);
   const fx = createPaperFx(env.canvas, { body: env.body, loop: env.loop });
   bindPaperInteractions(fx);
+  let now = 0;
+  t.mock.method(performance, "now", () => now);
+  const positions = [];
+  t.mock.method(env.canvas.getContext("2d"), "translate", (x, y) => positions.push([x, y]));
+  fx.gust("gentle");
+  now = 2200;
+  env.loop.step();
+  assert.equal(env.body.dataset.paperWind, "gentle", "轻风不可在粒子退场前截断");
+  const crossing = positions.splice(0);
+  assert.ok(crossing.some(([x]) => x > 0 && x < 390), "手机上轻风仍在经过视口");
+  fx.gust("high");
+  env.loop.step();
+  assert.deepEqual(positions.splice(0), crossing, "追加阵风不能重置仍在飞行的粒子");
+  now = 7000;
+  env.loop.step();
+  assert.equal(env.body.dataset.paperWind, undefined);
+  assert.equal(env.tasks.size, 0, "最后一批粒子退场后停止绘制");
   env.document.dispatchEvent(new Event("keydown"));
   for (const id of ["paper-clip-action", "score-circle-action", "paper-tape-action"]) {
     env.ids.get(id).dispatchEvent(new Event("click"));
@@ -101,9 +118,8 @@ test("键盘只停主动纸面反馈，实况阵风继续且所有全局暂停�
     assert.equal(env.timeouts.size, 0);
   }
   fx.syncWeather({ weather: "clear", windSpeed: 10 });
-  assert.equal(env.intervals.size, 1);
-  const ambient = [...env.intervals.values()][0];
-  assert.equal(ambient.delay, 45_000);
+  const ambient = [...env.timeouts.values()][0];
+  env.timeouts.clear();
   ambient.callback();
   assert.equal(env.body.dataset.paperWind, "gentle");
   assert.equal(env.tasks.size, 1);
@@ -139,9 +155,10 @@ test("键盘只停主动纸面反馈，实况阵风继续且所有全局暂停�
     mode.resume();
     assert.equal(env.body.dataset.paperWind, undefined);
     assert.equal(env.tasks.size, 0);
-    assert.equal(env.intervals.size, 1);
     env.document.dispatchEvent(new Event("keydown"));
-    [...env.intervals.values()][0].callback();
+    const nextAmbient = [...env.timeouts.values()][0];
+    env.timeouts.clear();
+    nextAmbient.callback();
     assert.equal(env.body.dataset.paperWind, "gentle");
   }
 });
