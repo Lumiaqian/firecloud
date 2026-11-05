@@ -43,12 +43,53 @@
 - 所有组件预览标明「非实时样例」；不得把固定样例当成实际天气或天文历算结果。
 
 ### 使用这套系统
-- 当前设计基线为 A：分组旁批与七日横笺。有效桌面、手机、状态与天气场景共用这套规则；历史与备选不作为实现依据。生产首页、页面流程、反馈、天气动效与图标已按此基线接入；运行验收与设备限制见仓库 README。
-- 消费顺序：读取本文和对应组件 README，再加载 `tokens.css`、`components/bundle.css`；保留 art/ 素材、fonts/ 与 licenses/ 字体许可证。
-- 组件使用原生 HTML/CSS/JS，无 React 依赖。预览页由共享 `components/bundle.js` 中的 `window.SkyLetter.<Name>(document)` 初始化，仅控制本地样例状态，不提供生产数据适配器。画布复用令牌与 HTML 模式，不把这些初始化函数当作 React 组件。
-- 编辑令牌只影响引用该令牌的组件。既有画板接入 Theme 令牌目录不等于批量迁移全部内联样式；画布中的「设计系统接入」画板演示真正引用。
-- 画布安装副本位于 `project/ds/sky-letter/`。系统修改后需显式更新副本；不会跨项目自动同步。不要分别编辑源系统和安装副本。
-- 顺序固定：先更新设计系统及相关桌面、手机、状态稿，审阅后再同步生产。代码试做不自动成为设计基线。
+- 当前设计基线为 A：分组旁批与七日横笺。有效桌面、手机、状态与天气场景使用同一纸笺契约；历史页 `archive`、`weather`（98 历史天气散页）与 `alternatives` 不作为实现依据，也不随当前样式迁移。
+- 消费顺序：读取本文和对应组件 README，再加载 `tokens.css`、`components/card-foundation.css` 与消费者自己的布局 / 资产映射。组件预览加载 `components/bundle.css`，由其首行导入 foundation 并映射预览原点素材；保留字体及其许可证。
+- 组件为原生 HTML/CSS/JS 模式。`window.SkyLetter.<Name>(document)` 只初始化本地样例，既不是 React 组件，也不提供生产数据适配器。纸笺视觉由 foundation 定义，业务状态、天气运行时和整页定位由消费者负责。
+- 源系统位于 `designs/sky-letter-system/project/`；画布安装副本位于 `project/ds/sky-letter/`，生产快照为 `css/sky-letter-cards.css`。两者应从源文件同步，不能另存一套卡片值或在末尾叠加覆盖来宣称一致。
+- 本轮文档和代码变更不代表运行验收。组件、画布和生产的具体运行证据由仓库验收记录说明；没有执行的视口、浏览器、真实数据和辅助技术检查，不声称已验证。
+
+### 共享纸笺契约
+`components/card-foundation.css` 是纸面、字体、尺寸、内部排版、分项括注与七日笔迹的唯一手写定义；源预览的 `.sl-fc-*` 是同一选择器中的适配入口，不是第二份视觉规则。页面 CSS 只负责纸笺位置、外边距、环境、业务状态与交互反馈。
+
+预览布局和上传素材映射写在 `components/preview-layout.css`。运行仓库 `npm run design:sync` 将它与 foundation 合成为 `components/bundle.css`，再分发安装副本与生产样式；不手改生成的 bundle。这样编辑器内联注入样式时也不会把相对 CSS 导入解析到错误目录。
+
+| 根标记 | 用途与内部部分 |
+| --- | --- |
+| `data-sl-card="score"` | `score-art`、`score-heading`、`score-label`、`score-value`、`grade`、`advice`、`record-meta`。静态样例中 label/value 直接属于纸笺；真实圈注按钮用 `score-control` 包含 label/value，foundation 对其内部坐标作等价换算，不能把按钮嵌在另一个按钮内。 |
+| `data-sl-card="time"` | `event-label`、`event-time`、`event-state`、`azimuth`、`window`、`window-label`、`window-range`、`peak`、`clip`。窗口可有纯布局包装，不改变时间类型与字号。 |
+| `data-sl-card="factors"` | `factor-groups`；每组 `factor-group-header` 包含 `factor-group-heading`（或 `factor-group-title`）与说明；`factor-list` / `factor-row` / `factor-name` / `factor-reading` / `factor-value` / `unit` / `delta`；末尾 `factor-margin` / `factor-cap` / `factor-details`；`wind`。 |
+| `data-sl-card="forecast"` | `day` 与 `day-date` / `day-score` / `day-grade` / `day-time` / `day-mark`；横滚区域是消费者的外层容器，不裁掉焦点。 |
+| `data-sl-card="status"` | 无记录时的纸面、标题 h1/h2 与说明。`loading-caption` / `sl-fc-loading-caption` 保持单独小字样式。 |
+| `data-sl-card="sheet"` | 590px 观测纸面和 padding；原生 dialog、滚动区、遮罩、焦点和贴底定位由消费者提供。 |
+| `data-sl-card="context"` | 仅复用纸面和手写字体的上下文摘记；不冒充主评分、时间或状态卡片，不继承它们的几何。 |
+
+`score-value` 指完整数字行，数字本身继承字号，不增加第二个放大元素。评分纸仅圈注 / 等级交互；黄铜夹固定在时间纸，风接触固定在天气批注纸。静态参考不添加无行为按钮；装饰夹可用 `span[data-sl-part="clip"][aria-hidden="true"]`。
+
+天气分项的 `data-major="true"` 标在实际主扣分 row，`data-effect="up"` 表示有利项。日期 button 用 `aria-pressed`，导航链接用 `aria-current="page"`；不可操作的静态样本可用 `data-current="true"`，但不能代替真实可访问状态。最高日用 `data-best="true"`，缺测按钮需真实 disabled，且保留原因文字。
+
+宽屏主评分 480px、时间 300px；701–900px 为 440px / 270px；700px 及以下评分占容器、时间 286px 且不超过 94%，评分在前、时间靠右。云层 / 空气 700px 及以下改为上下两组。七日整张横笺桌面最小 900px，手机 915px，仅在外层区域横滚。sheet 在 600px 及以下贴底；这不改变首页 700px 的断点。
+
+### 消费者资产映射
+foundation 不内置 URL。以下 `--sl-asset-*` 变量必须为完整 `url(...)`；画布和预览用本项目可解析的上传地址，生产 CSS 以自身位置解析本地文件。不要把编辑器上传地址复制进生产。
+
+| 变量后缀（前缀 `--sl-asset-`） | 原素材文件 |
+| --- | --- |
+| `paper-mask` | `supporting-paper-mask.svg` |
+| `paper-grain` | `paper-grain-wide.png` |
+| `time-marks` | `home-time-marks.png` |
+| `pencil` / `brace` / `leader` | `supporting-pencil.png` / `supporting-brace.png` / `supporting-leader.png` |
+| `focus` / `clip` | `outlook-focus.png` / `clip.png` |
+
+源预览的精确上传 URL 由 `bundle.css` 开头映射。生产 `css/style.css` 的映射以 `../assets/paper/<文件名>` 解析；评分图仍是 DOM `<img src>`，各消费者解析自己的 `score-annotations.png` 路径。`--paper-weather-wash` 是可选的天气背景层，只作用于纸面伪元素，不能替换纸张、裁剪文字或漂移整张纸。
+
+### 预览明确边界
+- PaperNote：常规、封顶和必要云层缺失三个冻结样例；没有实时倒计时或算法。缺测保留已知事件时刻，但不伪造窗口 / 峰值。
+- FactorGrid：冻结分项、原生 details；可选资料缺失写「— / 缺测」并说明模型默认值，不当作实测。没有实时数据重算。
+- ForecastStrip：选择固定七日 / 最高日并更新摘要；不驱动本卡之外的纸笺，最高日是固定样例，不是通用推荐器。
+- StatusNote：八种本地状态；刷新 / 重试只进入等待状态，不自动成功，不联网、不读写缓存。有记录时不重建双纸；无记录才使用独立状态纸。
+- ObservationSheet：原生 dialog 的打开 / 关闭 / 焦点恢复；横线不是拖拽手柄，无手势、软键盘或权限模拟。
+- WeatherStage：九种天气、四种天色的本地插画与时间夹 / 评分圈注 / 天气纸缘反馈；日期按钮只改选中态。没有真实天文位置、雨风强度控制、右划手势或完整七日联动，不替代生产天气引擎。
 
 
 ---
@@ -57,10 +98,10 @@
 
 Every path named below is under `project/` in this design system: read `project/api/tokens.md`, not `api/tokens.md`.
 
-`components/bundle.js` defines `window.SkyLetter` (10 components); `components/bundle.css` is its stylesheet; `tokens.css` is every token as a CSS variable plus `@font-face` for the fonts. `components/bundle.css` reads its variables from `tokens.css`. Build any UI by mounting these components; never hand-build a control or draw an icon the system provides.
+`components/bundle.js` defines native `window.SkyLetter` preview initializers (10 references), not mountable framework components. `components/bundle.css` imports `components/card-foundation.css`; `tokens.css` provides variables and font loading.
 
-- **Standalone page:** inline `tokens.css` and `components/bundle.css` in a `<style>`, then `components/bundle.js` as a classic script (a file containing `</style`, `</script` or `<!--` breaks an inline element: write the sequence `<\/style`, `<\/script` or `\x3C!--` in your copy, or load that file by URL).
-- **Design canvas:** bring `tokens.css`, `components/bundle.css`, `components/bundle.js` and `components/index.d.ts` (for the editor’s props panel) onto the canvas in full, as the canvas type’s design-system components reference says (a server-side copy first where it offers one); in each artboard that uses this system, right after the `support.js` line, load `tokens.css` first, then the stylesheet, then the script; mount with `<x-import component-from-global-scope="SkyLetter.<Comp>" …>`.
+- **Standalone / production:** load tokens and the byte-identical card foundation by URL, assign the documented asset variables for that consumer, and provide native markup and business controllers. Copying CSS without resolving assets is not a completed integration.
+- **Design canvas:** install the source system under `project/ds/sky-letter/`, load tokens and `components/card-foundation.css`, map assets to the canvas origin, and use the native `data-sl-card` / `data-sl-part` contract. Do not mount the document initializers through `x-import`.
 - **Slides deck, or any surface that cannot run the bundle:** tokens and fonts — the values are on `api/tokens.md`; the deck takes `tokens.json` by file path for its colour pickers, and fonts as “Fonts” below says.
 
 Fonts: `tokens.css` loads each font from its file, by path.

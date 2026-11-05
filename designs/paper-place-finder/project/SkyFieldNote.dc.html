@@ -5,30 +5,25 @@
 <title>天气手记 · 评分笺重绘</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="ds/sky-letter/tokens.css">
+<link rel="stylesheet" href="ds/sky-letter/components/card-foundation.css">
 </head>
 <body>
 <x-dc>
 <helmet>
 <style>
 body{margin:0}
-.field-paper{isolation:isolate;filter:drop-shadow(1px 7px 10px #10232b24)}
-.field-paper::before{content:"";position:absolute;inset:0;z-index:-1;background:#f7f6ef url('/_blob/a3a5f3b700b02619f6dafa51f92ed274') center/100% 100% no-repeat;clip-path:path("M 26 8 C 115 3 174 9 249 6 C 339 3 415 7 497 6 C 534 5 551 13 550 36 C 547 102 552 166 549 227 C 546 292 552 347 548 408 C 546 439 534 452 509 452 C 430 450 361 457 287 453 C 213 449 137 456 65 452 C 26 451 9 442 9 415 C 11 348 6 293 9 229 C 11 162 6 96 9 40 C 9 19 13 10 26 8 Z")}
+:root{--sl-asset-paper-mask:url("/_blob/839b3299bb39dc8954afdaae34a320f0");--sl-asset-paper-grain:url("/_blob/6c40ba3d833c507b0afc53bacaae4405");--sl-asset-time-marks:url("/_blob/016c40d1def5678a1bc7b8c1d7ed4199");--sl-asset-pencil:url("/_blob/ca21bc89b8a03234da940fcb9db94854");--sl-asset-brace:url("/_blob/86c74f425173b6e3371430f19441c477");--sl-asset-leader:url("/_blob/168794c2c6247d31fb4dd9639d64370c");--sl-asset-focus:url("/_blob/866c37972149fbf785c2705c9d2d3678");--sl-asset-clip:url("/_blob/6b03c41165f044976faf1a60b98098b2")}
 </style>
 </helmet>
 <div style="width:960px;height:700px;display:grid;place-items:center;box-sizing:border-box;background:{{backdrop}};font-family:var(--font-hand);font-weight:400;color:var(--ink);">
-<article class="field-paper" aria-label="晚霞预测评分设计样例，非实时预报" style="position:relative;width:560px;height:464px;box-sizing:border-box;">
-<header style="position:absolute;top:36px;left:64px;right:45px;display:flex;justify-content:space-between;align-items:baseline;gap:24px;font-size:15px;line-height:24px;">
-<span>晚霞预测</span><span style="font-size:13px;color:var(--ink-muted);"><time datetime="2026-11-03">11 月 03 日</time> · 杭州</span>
-</header>
-<p style="position:absolute;left:101px;top:113px;margin:0;font-size:14px;line-height:22px;color:var(--ink-muted);">霞光指数 <span style="font-size:12px;">0–99</span></p>
-<div style="position:absolute;left:83px;top:140px;display:flex;align-items:baseline;gap:6px;">
-<span style="font-size:124px;line-height:1;letter-spacing:-6px;color:var(--ink-score);">77</span><span style="font-size:14px;color:var(--ink-muted);">分</span>
-</div>
-<h1 style="position:absolute;left:342px;top:113px;margin:0;font-weight:400;font-size:30px;line-height:40px;transform:rotate(-4deg);transform-origin:left bottom;">值得追</h1>
-<p style="position:absolute;left:88px;top:318px;margin:0;font-size:20px;line-height:34px;">中高云适宜，<br>留意西侧低云。</p>
-<footer style="position:absolute;left:64px;right:45px;bottom:29px;display:flex;justify-content:space-between;gap:16px;font-size:12px;line-height:18px;color:var(--ink-muted);">
-<span>更新 15:30 · UTC+8</span><span>非实时样例</span>
-</footer>
+<article data-sl-card="score" aria-label="晚霞预测评分设计样例，非实时预报">
+<img data-sl-part="score-art" src="/_blob/a3a5f3b700b02619f6dafa51f92ed274" alt="">
+<p data-sl-part="score-heading">晚霞预测 · 11 月 03 日 · 杭州</p>
+<p data-sl-part="score-label">霞光指数 0–99</p>
+<div data-sl-part="score-value">77</div>
+<h1 data-sl-part="grade">值得追</h1>
+<p data-sl-part="advice">中高云适宜，<br>留意西侧低云。</p>
+<footer data-sl-part="record-meta"><span>更新 15:30 · UTC+8</span><span>非实时样例</span></footer>
 </article>
 </div>
 </x-dc>

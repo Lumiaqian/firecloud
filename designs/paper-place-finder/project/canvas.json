@@ -676,11 +676,12 @@
   },
   "designSystems": [
     {
-      "artifact": "/Users/lumiaqian/tools/firecloud/designs/sky-letter-system",
-      "copiedAt": "2026-11-05T06:20:45.701Z",
+      "artifact": "designs/sky-letter-system",
+      "copiedAt": "2026-11-05T07:00:05.948Z",
       "namespace": "sky-letter",
       "title": "天空画笺",
-      "version": null
+      "version": null,
+      "sourceHash": "3e5cea5575d4d566497674d0feaf5204ddfa99a7e25148beb26d0da221d58a17"
     }
   ],
   "launch": {

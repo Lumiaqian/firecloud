@@ -1,6 +1,14 @@
-/* Selected A, applied to page-specific reading hierarchies.
-   Only paper, typography and annotation change; prototype state remains in each board. */
-:root body .paper::before{
+/* Selected A{
+  clip-path:none;
+  background-color:#fdfaf3;
+  background-image:url('/_blob/6c40ba3d833c507b0afc53bacaae4405');
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  background-blend-mode:multiply;
+  mask:url('/_blob/839b3299bb39dc8954afdaae34a320f0') center/100% 100% no-repeat;
+} applied to page-specific reading hierarchies.
+   Only paper{
   clip-path:none;
   background-color:#fdfaf3;
   background-image:url('/_blob/6c40ba3d833c507b0afc53bacaae4405');
@@ -10,28 +18,52 @@
   background-blend-mode:multiply;
   mask:url('/_blob/839b3299bb39dc8954afdaae34a320f0') center/100% 100% no-repeat;
 }
-:root body [data-light=night] .paper::before{background-color:#e7e4d6}
-:root body .paper{filter:drop-shadow(1px 6px 7px #43352b16)}
-:root body .rule::before,:root body .calibration::before{
+:root body .rule::before{
+  background:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd') left center/100% 100% no-repeat;
+  height:3px;
+}:root body .calibration::before{
   background:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd') left center/100% 100% no-repeat;
   height:3px;
 }
-:root body button[aria-pressed=true]::after,:root body .ink-action::after,:root body .primary::after,
-:root body .sheet-return::after,:root body .sheet-return span::after{
+:root body button[aria-pressed=true]::after{
+  background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');
+  background-repeat:no-repeat;
+}:root body .ink-action::after{
+  background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');
+  background-repeat:no-repeat;
+}:root body .primary::after{
   background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');
   background-repeat:no-repeat;
 }
-:root body .head h1,:root body .sheet-title,:root body .paper-head h1{
+:root body .sheet-return::after{
+  background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');
+  background-repeat:no-repeat;
+}:root body .sheet-return span::after{
+  background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');
+  background-repeat:no-repeat;
+}
+:root body .head h1{
+  width:fit-content;
+  padding-bottom:12px;
+  background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/90% 10px no-repeat;
+}:root body .sheet-title{
+  width:fit-content;
+  padding-bottom:12px;
+  background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/90% 10px no-repeat;
+}:root body .paper-head h1{
   width:fit-content;
   padding-bottom:12px;
   background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/90% 10px no-repeat;
 }
-:root body .search-field,:root body .mini-search input{border-bottom:0;background:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd') left bottom/100% 3px no-repeat}
-:root body .search-field:focus-within,:root body .mini-search input:focus,:root body .mini-search input[data-focused=true]{box-shadow:none;background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');background-size:100% 5px}
-/* A drawer is a working sheet, with the current location written in its margin. */
+:root body .search-field{border-bottom:0;background:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd') left bottom/100% 3px no-repeat}:root body .mini-search input{border-bottom:0;background:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd') left bottom/100% 3px no-repeat}
+:root body .search-field:focus-within{box-shadow:none;background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');background-size:100% 5px}:root body .mini-search input:focus{box-shadow:none;background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');background-size:100% 5px}:root body .mini-search input[data-focused=true]{box-shadow:none;background-image:url('/_blob/ca21bc89b8a03234da940fcb9db94854');background-size:100% 5px}
+/* A drawer is a working sheet{padding-top:37px} with the current location written in its margin. */
 :root body .sheet{padding-top:37px}
 :root body .sheet .eyebrow{letter-spacing:1px}
-:root body .favorites-head h2,:root body .mini-list h3{
+:root body .favorites-head h2{
+  width:fit-content;padding-bottom:8px;
+  background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/100% 7px no-repeat;
+}:root body .mini-list h3{
   width:fit-content;padding-bottom:8px;
   background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/100% 7px no-repeat;
 }
@@ -46,13 +78,25 @@
 :root body .notice{padding:13px 0 13px 20px;background:url('/_blob/86c74f425173b6e3371430f19441c477') left center/11px 90% no-repeat}
 :root body .feedback{background-color:transparent}
 :root body .feedback p{padding-left:16px;background:url('/_blob/86c74f425173b6e3371430f19441c477') left center/8px 90% no-repeat}
-:root body .drag-handle,:root body .handle{background-image:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd')}
-/* Compact forecast remnants retain a circled score, never a stamp or selection slab. */
+:root body .drag-handle{background-image:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd')}:root body .handle{background-image:url('/_blob/48df054d9f1dbf8c6f38c170830d25dd')}
+/* Compact forecast remnants retain a circled score{transform:none} never a stamp or selection slab. */
 :root body .context-paper{transform:none}
 :root body .context-paper:has(.context-grade){display:grid;grid-template-columns:1.15fr 1fr;gap:9px 15px;padding:30px 26px 25px;margin-top:94px}
 :root body .context-paper:has(.context-grade)>p:first-of-type{grid-column:1/-1}
 :root body .context-paper:has(.context-grade) .context-score{font-size:79px;width:136px;height:125px}
-:root body .context-paper .context-score,:root body .forecast-score,:root body .handoff .new-score,:root body .sky-score strong{
+:root body .context-paper .context-score{
+  display:inline-grid;place-items:center;flex-shrink:0;
+  background:url('/_blob/866c37972149fbf785c2705c9d2d3678') center/100% 100% no-repeat;
+  color:#98422c;letter-spacing:-2px;
+}:root body .forecast-score{
+  display:inline-grid;place-items:center;flex-shrink:0;
+  background:url('/_blob/866c37972149fbf785c2705c9d2d3678') center/100% 100% no-repeat;
+  color:#98422c;letter-spacing:-2px;
+}:root body .handoff .new-score{
+  display:inline-grid;place-items:center;flex-shrink:0;
+  background:url('/_blob/866c37972149fbf785c2705c9d2d3678') center/100% 100% no-repeat;
+  color:#98422c;letter-spacing:-2px;
+}:root body .sky-score strong{
   display:inline-grid;place-items:center;flex-shrink:0;
   background:url('/_blob/866c37972149fbf785c2705c9d2d3678') center/100% 100% no-repeat;
   color:#98422c;letter-spacing:-2px;
@@ -81,33 +125,20 @@
 :root body .forecast-score{font-size:45px;width:88px;height:77px}
 :root body .forecast-row{justify-content:flex-start;gap:20px}
 :root body .forecast-row>span{padding-bottom:12px;background:url('/_blob/168794c2c6247d31fb4dd9639d64370c') left bottom/65px 18px no-repeat}
-/* City handoff: one score annotation, one timing note, one grouped cloud record. */
+/* City handoff: one score annotation{gap:30px} one timing note{gap:30px} one grouped cloud record. */
 :root body .stack{gap:30px}
 :root body .score-slip{padding:31px 32px 28px;transform:none;container-type:inline-size}
-:root body .score-slip .score-line{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);align-items:center;gap:18px;min-height:172px;margin-top:12px}
-:root body .score-slip .score{display:grid;place-items:center;font-size:100px;height:166px;background:url('/_blob/866c37972149fbf785c2705c9d2d3678') center/100% 100% no-repeat}
-:root body .score-slip .grade{position:relative;font-size:28px;padding-bottom:32px;transform:rotate(-4deg)}
-:root body .score-slip .grade::after{content:'';position:absolute;left:-12px;bottom:-5px;width:112px;height:46px;background:url('/_blob/168794c2c6247d31fb4dd9639d64370c') center/contain no-repeat;pointer-events:none}
 :root body .score-slip .annotation{padding-left:20px;background:url('/_blob/86c74f425173b6e3371430f19441c477') left center/10px 100% no-repeat;font-size:15px;line-height:1.7}
 :root body .time-slip{transform:none;padding:31px 34px;gap:26px}
-:root body .time-slip .time{font-size:43px;padding-bottom:10px;background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/100% 8px no-repeat}
 :root body .factors{margin-top:18px;padding-left:21px;background:url('/_blob/86c74f425173b6e3371430f19441c477') left center/11px 100% no-repeat}
 :root body .factor-row{padding:8px 0}
 :root body .fold{margin-top:23px}
 :root body .days{margin:8px 0 0}
 :root body .days li{min-height:40px}
-/* Recovered notes are explicitly old records, not fresh forecasts. */
-:root body .retained{transform:none;padding:36px 38px 30px;max-width:690px}
+/* Recovered notes are explicitly old records{transform:none;padding:36px 38px 30px;max-width:690px} not fresh forecasts. */
+:root body .retained{transform:none}
 :root body .retained-data{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:start;margin:24px 0}
 :root body .retained-data>div:first-child{position:relative}
-:root body .retained-score{display:grid;place-items:center;width:212px;max-width:100%;height:181px;font-size:105px;color:#98422c;background:url('/_blob/866c37972149fbf785c2705c9d2d3678') center/100% 100% no-repeat}
-:root body .retained-grade{position:relative;width:fit-content;margin:12px 0 0 40px;padding-left:35px;transform:rotate(-4deg)}
-:root body .retained-grade::before{content:'';position:absolute;left:-13px;bottom:2px;width:43px;height:40px;background:url('/_blob/168794c2c6247d31fb4dd9639d64370c') center/contain no-repeat;transform:rotate(26deg)}
-:root body .retained-time{padding-top:12px}
-:root body .retained-time strong{font-size:52px;padding-bottom:13px;margin-bottom:7px;background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/100% 9px no-repeat}
-:root body .retained-verdict{padding-left:19px;background:url('/_blob/86c74f425173b6e3371430f19441c477') left bottom/9px 67% no-repeat}
-:root body .retained-meta{padding-left:19px;margin-top:23px}
-:root body .retained-meta>span:first-child{color:#98422c;padding-bottom:7px;background:url('/_blob/ca21bc89b8a03234da940fcb9db94854') left bottom/100% 6px no-repeat}
 :root body .status-note{transform:none;padding:29px 30px;margin-top:36px}
 :root body .status-note h2{padding-left:17px;background:url('/_blob/86c74f425173b6e3371430f19441c477') left center/8px 90% no-repeat}
 /* State-study devices retain their fixed phone viewport and interaction space. */
@@ -148,20 +179,10 @@
   :root body .forecast-row>span{padding-bottom:15px;background-size:45px 15px}
   :root body .stack{gap:25px}
   :root body .score-slip{padding:27px 25px 24px}
-  :root body .score-slip .score-line{gap:11px;min-height:139px;margin-top:14px}
-  :root body .score-slip .score{font-size:78px;height:136px;letter-spacing:-4px}
-  :root body .score-slip .grade{font-size:24px;padding-bottom:30px}
-  :root body .score-slip .grade::after{width:85px;height:39px;left:-8px}
   :root body .score-slip .annotation{font-size:14px}
   :root body .time-slip{padding:26px 25px;gap:20px}
-  :root body .time-slip .time{font-size:36px}
-  :root body .retained{padding:29px 25px 26px}
   :root body .retained-data{grid-template-columns:1fr;gap:21px;margin:21px 0}
-  :root body .retained-score{font-size:91px;width:190px;height:162px}
-  :root body .retained-grade{font-size:24px;margin-left:34px}
-  :root body .retained-time{margin:0 0 0 auto;max-width:100%;padding-top:5px;text-align:right}
-  :root body .retained-time strong{font-size:45px}
-  :root body .retained-meta{gap:6px 12px;padding-left:0}
+  :root body .retained-time{margin:0 0 0 auto}
   :root body .status-note{padding:27px 24px;max-width:97%;margin-top:29px}
   :root body .board{width:100%;height:auto;min-height:100vh;padding:24px 16px;overflow:auto}
   :root body .board-head{flex-wrap:wrap;gap:9px}
@@ -174,14 +195,11 @@
   :root body .forecast-context{padding:13px 12px;flex-basis:176px}
   :root body .forecast-score{font-size:29px;width:53px;height:50px}
   :root body .forecast-row{gap:6px}
-  :root body .score-slip .score{font-size:68px}
-  :root body .score-slip .grade{font-size:21px}
   :root body .welcome-copy h1{font-size:42px}
 }
 @media(forced-colors:active){
-  :root body .paper::before{background:Canvas;mask:none}
-  :root body .context-score,:root body .forecast-score,:root body .score,:root body .retained-score,:root body .sky-score strong,:root body .new-score{background:none;color:CanvasText}
-  :root body .favorite-pick[aria-current=location] strong,:root body button[aria-pressed=true]{text-decoration:underline}
-  :root body .search-field,:root body .mini-search input{border-bottom:1px solid CanvasText}
-  :root body button:focus-visible,:root body a:focus-visible,:root body input:focus-visible{outline:2px solid Highlight}
+  :root body .context-score{background:none;color:CanvasText}:root body .forecast-score{background:none;color:CanvasText}:root body .sky-score strong{background:none;color:CanvasText}:root body .new-score{background:none;color:CanvasText}
+  :root body .favorite-pick[aria-current=location] strong{text-decoration:underline}:root body button[aria-pressed=true]{text-decoration:underline}
+  :root body .search-field{border-bottom:1px solid CanvasText}:root body .mini-search input{border-bottom:1px solid CanvasText}
+  :root body button:focus-visible{outline:2px solid Highlight}:root body a:focus-visible{outline:2px solid Highlight}:root body input:focus-visible{outline:2px solid Highlight}
 }

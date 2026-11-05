@@ -29,7 +29,7 @@ npm run dev
 ```sh
 npm ci
 npx playwright install chromium
-npm run verify        # 语法检查与单元测试
+npm run verify        # 语法、设计分发一致性检查与单元测试
 npm run build         # 生成静态站点 dist/
 npm run test:browser  # 验收已构建产物，自动启动并关闭测试服务器
 ```
@@ -59,7 +59,18 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory dist
 
 新增或删除模块后运行 `npm run sync-modules`，同步 import map 和预缓存列表。发布代码更新时运行 `npm run sync-modules -- --bump`，更新模块与应用壳缓存版本；修改 CSS 时还需更新 `index.html` 中对应样式表的版本号。
 
-`css/sky-letter-tokens.css` 是设计系统生成令牌的生产副本，不含 `@font-face`；生产字片由 `css/fonts.css` 声明。颜色修改先更新设计系统，再同步生产副本，不分别维护两套数值。修改界面文案后，用 `uv run --with 'fonttools[woff]==4.61.1' scripts/build-fonts.py` 重新生成字片；脚本校验字符覆盖与原字体一致。
+设计源以 `designs/sky-letter-system/project/` 为准，基线为上述桌面、手机稿。修改源系统后先让设计系统编辑器更新其生成文件（`tokens.css`、`api/`、`manifest.json`），不要手改生成文件，再执行：
+
+```sh
+npm run design:sync   # 显式分发，不在 build 时悄悄覆盖
+npm run design:check  # 只读；有漂移则失败，不写回文件
+```
+
+同步命令按字节更新画布 `ds/sky-letter/` 安装副本，移除该副本中源系统已删除的文件，更新安装记录 `copiedAt`；将共享卡片基础样式分发到 `css/sky-letter-cards.css`，将令牌分发到 `css/sky-letter-tokens.css`（只去掉 `@font-face`）。生产分片字体 `css/fonts.css` 不被覆盖。
+
+`scripts/design-consistency.json` 记录实际源文件哈希、有效画板及其加载的样式依赖，不代表视觉或运行验收。有效范围排除 `archive`、`weather`、`alternatives` 页面；历史稿不改。画布 CSS 上传后，要更新所有消费者的链接，并用 `data-design-source="原文件.css"` 标出本地来源；检查会比对真正加载的上传字节，旧上传不能靠刷新清单通过。含共享卡片的画板必须加载安装副本的 `components/card-foundation.css`。修改生产样式或画板后也需重新同步清单，`verify` 和部署流水线执行只读检查。
+
+修改界面文案后，用 `uv run --with 'fonttools[woff]==4.61.1' scripts/build-fonts.py` 重新生成字片；脚本校验字符覆盖与原字体一致，再运行 `npm run design:sync` 更新依赖清单。
 
 推送到 `main` 后，GitHub Actions 执行检查、构建及浏览器验收，再将 `dist/` 部署到 GitHub Pages。构建会重建 `dist/`；发布资源白名单维护在 `scripts/build-site.mjs`。
 

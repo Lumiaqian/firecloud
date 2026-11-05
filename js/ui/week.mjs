@@ -55,6 +55,12 @@ export function createWeekView({ onSelectDay }) {
     const band = el("span", "day-grade");
     const time = el("time", "day-time");
     const mark = el("span", "day-mark");
+    button.dataset.slPart = "day";
+    date.dataset.slPart = "day-date";
+    score.dataset.slPart = "day-score";
+    band.dataset.slPart = "day-grade";
+    time.dataset.slPart = "day-time";
+    mark.dataset.slPart = "day-mark";
     button.append(date, score, band, time, mark);
     strip.append(button);
     return { button, date, score, band, time, mark, value: null, timestamp: null, label: "", far: index >= FAR_DAY_INDEX };
@@ -115,7 +121,7 @@ export function createWeekView({ onSelectDay }) {
           : `${active ? "当前" : ""}${active && isBest ? " · " : ""}${isBest ? "七日最高" : ""}${day.far ? `${active || isBest ? " · " : ""}远期` : ""}`;
         day.mark.textContent = mark;
         day.button.classList.toggle("is-active-day", active);
-        day.button.classList.toggle("is-best-day", isBest);
+        day.button.dataset.best = String(isBest);
         day.button.setAttribute("aria-pressed", String(active));
         day.button.setAttribute("aria-label", `${day.label}${active ? "，当前所选" : ""}${isBest ? "，七日最高" : ""}${day.far ? "，远期预报仅供参考" : ""}`);
       }

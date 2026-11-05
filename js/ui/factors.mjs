@@ -26,6 +26,12 @@ function createFactor() {
   const number = el("span", "factor-number");
   const unit = el("span", "factor-unit measure-unit");
   const delta = el("span", "factor-delta");
+  row.dataset.slPart = "factor-row";
+  label.dataset.slPart = "factor-name";
+  reading.dataset.slPart = "factor-reading";
+  value.dataset.slPart = "factor-value";
+  unit.dataset.slPart = "unit";
+  delta.dataset.slPart = "delta";
   value.append(number, unit);
   reading.append(value, delta);
   row.append(label, reading);

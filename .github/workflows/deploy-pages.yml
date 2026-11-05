@@ -31,7 +31,7 @@ jobs:
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Verify static app
+      - name: Verify app and design distribution
         run: npm run verify
       - name: Package production site
         run: npm run build

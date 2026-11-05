@@ -1,0 +1,1262 @@
+{
+  "schemaVersion": 1,
+  "scope": "File distribution and effective stylesheet dependency inventory; not visual or runtime acceptance.",
+  "source": "designs/sky-letter-system/project",
+  "sourceHash": "3e5cea5575d4d566497674d0feaf5204ddfa99a7e25148beb26d0da221d58a17",
+  "installed": "designs/paper-place-finder/project/ds/sky-letter",
+  "sourceFiles": {
+    "Accessibility.md": "33ab526adbb5fcdec3ca51f5c92e265920eb6b8934e6e523b76a102c96857041",
+    "Inventory.md": "37d81f5d95e39cee7952b7df20974dd10f535f375ffc83ad85b0ddfd07b71825",
+    "Motion.md": "a82aa7fc6c1e1c36b33c6b770a85d27af8d0f557cecfbd03162f257e46d24230",
+    "README.md": "cdd3ba31e4bbd9161a62e58cfd07bd927f047fb6905aaf030ecf908fee0eee7c",
+    "_blobs/016c40d1def5678a1bc7b8c1d7ed4199.png": "016c40d1def5678a1bc7b8c1d7ed419922cd59bb42816677ed65be8ed3759f60",
+    "_blobs/168794c2c6247d31fb4dd9639d64370c.png": "168794c2c6247d31fb4dd9639d64370cde0ac885536eabe7e0fb39a929f21429",
+    "_blobs/178d1b87b97b62feeec6174ddbcff695.png": "178d1b87b97b62feeec6174ddbcff6950456fdfb25912183d6a2b7c4e82af3fb",
+    "_blobs/2924ac7d1ccd50493d39bb6d8d5af7cb.png": "2924ac7d1ccd50493d39bb6d8d5af7cb62a8648efd39a7e76ec30ccd76b8276c",
+    "_blobs/3b6594a53f83ba7e57b595cb906fe3b5.png": "3b6594a53f83ba7e57b595cb906fe3b5ad86376b62a3fb5ff43f8177e135a96f",
+    "_blobs/48df054d9f1dbf8c6f38c170830d25dd.png": "48df054d9f1dbf8c6f38c170830d25ddb871c5277e346c170801fd9c0794b01c",
+    "_blobs/607e97c4b8eaad1e1b8f1fb49cc9b8a1.png": "607e97c4b8eaad1e1b8f1fb49cc9b8a114276ed01425f4f2fdab458725c79d84",
+    "_blobs/66f29cace70397b855bce9dc827cd270.png": "66f29cace70397b855bce9dc827cd270a3a0dc365b3195c045a0fc3a3111007e",
+    "_blobs/6b03c41165f044976faf1a60b98098b2.png": "6b03c41165f044976faf1a60b98098b2d85c5505a52111c256dab9f56b126693",
+    "_blobs/6c40ba3d833c507b0afc53bacaae4405.png": "6c40ba3d833c507b0afc53bacaae440504558406125bb31e94274c58f36d99f7",
+    "_blobs/6cb74947f962f1e36340b5c851c818d4.png": "6cb74947f962f1e36340b5c851c818d4782678294083570a0921d812cafdf656",
+    "_blobs/72e5e2401eb7a152a6a5708897c7ac40.png": "72e5e2401eb7a152a6a5708897c7ac40ab378ad6724f50bb99a600276feef170",
+    "_blobs/839b3299bb39dc8954afdaae34a320f0.svg": "839b3299bb39dc8954afdaae34a320f09d72e3ba0a30218e48297cc281af7efc",
+    "_blobs/85712d98fe5c97592b888ef332c464b3.png": "85712d98fe5c97592b888ef332c464b3bf7f89f62afe43429cba74f79e397d20",
+    "_blobs/866c37972149fbf785c2705c9d2d3678.png": "866c37972149fbf785c2705c9d2d367819ff87fb8f05a9cc7c2c29dcb482c413",
+    "_blobs/86c74f425173b6e3371430f19441c477.png": "86c74f425173b6e3371430f19441c4778704336939889ad4e30220125a49c39c",
+    "_blobs/93526b97b3817aaf4e70e161903e7f62.png": "93526b97b3817aaf4e70e161903e7f6221d84edac14d9e1d16e8399d0b08f28b",
+    "_blobs/9cedfb4c5bd7f60f6760530f51980cc8.png": "9cedfb4c5bd7f60f6760530f51980cc8ed6493103c79f5f1e3abee9a45068103",
+    "_blobs/a3a5f3b700b02619f6dafa51f92ed274.png": "a3a5f3b700b02619f6dafa51f92ed27463936f891f3c0bdf146d928c7fe4d8a3",
+    "_blobs/a401bce329abe104d75de91228df9d24.png": "a401bce329abe104d75de91228df9d2476b8ff97705b18bbcaf00ca9f224b917",
+    "_blobs/ca21bc89b8a03234da940fcb9db94854.png": "ca21bc89b8a03234da940fcb9db9485407bf853b08691639bebc18ae4e0cc412",
+    "_blobs/ca37740f0ece33c998a845c0bf26fc09.png": "ca37740f0ece33c998a845c0bf26fc09eba8f48de81ffd84cb4c196c72d53b02",
+    "_blobs/d2dcee84a7890db56431a172e2309a3b.png": "d2dcee84a7890db56431a172e2309a3bd438ccae1c41b3d4db8356f31be73851",
+    "_blobs/e6a09a2b5261c577a08bbd7f0bef7e0b.png": "e6a09a2b5261c577a08bbd7f0bef7e0b02c6b44dc4bb6890093cb9430034fd72",
+    "_blobs/index.json": "6f952b9f6c1a67a054cec1e528ba3e6e0506aad45a5ac94634ad04061865136c",
+    "api/assets/Logos.md": "882df76e4c5727bff9b018adee6ba1bc781d07586b902fec7a7d3c7c230fd5dd",
+    "api/assets/Paper.md": "a047767dd672614afce2434676b6b32f40da39c2593a2f15a4eaba006905497b",
+    "api/components/CitySearch.md": "a8370be98f9e0b953777e267f5ed15519962471f7d8a1bc323e9b3fef83638c7",
+    "api/components/FactorGrid.md": "e2a9f65ad7eb336f45f619d7a779062591ebc3d4d3128d2de80449bfe384ec03",
+    "api/components/ForecastStrip.md": "2aec5fdfb6e1426bfa946c2bd679b50366232ff3817908f32ff784ab2f9b0a96",
+    "api/components/InkActions.md": "148dacf288a192e64bcbcb64ab199bd6aa78e616465d31a7bb1ff2cb605088b8",
+    "api/components/MoonPhase.md": "bc2d239b212f4b2ecc44dc13a737208126a823bde3492ea98994e7849410b19d",
+    "api/components/ObservationSheet.md": "091d899e4a2bdc27acacbca27219cb564509373a6c0157a71ff2808b85b4ca23",
+    "api/components/PaperNote.md": "a6bd053b006096c795d71f44db5dde65e7254f2da8fe9a3248a99bede3eb231a",
+    "api/components/PlaceRow.md": "eb6f87f5cdf126f351bc0efbdcdd0cef075daf72791551978b514047fe072719",
+    "api/components/StatusNote.md": "98ae272fb3be4bfca574052797df136e864069257fc11a5b920ef5137a35f0f2",
+    "api/components/WeatherStage.md": "cf6cf1b3ba85d90347a90c29d346c2c72e67f1053906036e6aae5d2c50313e3c",
+    "api/tokens.md": "517f4b4788f125057948c19f31561aee7248fecd7a1f8425a29ddeeecda9b53a",
+    "assets/Logos/README.md": "0bc95dbde8cab60732bcb3a4a2e2aee2afd0137be0d468e5029d43d77f767b50",
+    "assets/Paper/README.md": "a6c4a44aecc733bf7add6c034c09aca36b326c14a79b76bda0eb85051a795294",
+    "components/CitySearch/README.md": "748227c2150005283fbd8261191c3b59882db51f2edd932c61b1cbcefb85d212",
+    "components/CitySearch/preview.html": "3e5708ae46024715f2431cb1d658cb1e9593bf37a92d9f864a1c41c2c8d20449",
+    "components/Cover/preview.html": "8590492ef2abac8eb6c81e8b503a6efbc2c5fdd546efb36de0074e6a4923cf15",
+    "components/FactorGrid/README.md": "e7cca304ff560a8d5f0189c3e90d5d9444b3385d3632d02f01f79ee7534c57fd",
+    "components/FactorGrid/preview.html": "18ec365d361e8040ade84dd94d299a9fbaa411cf052ac6cf7b4fb29d693c52a2",
+    "components/ForecastStrip/README.md": "041a99080cb936c29be6cdb85a22e3fb84b2f226cc4ec490ecbc4e9aaa327d90",
+    "components/ForecastStrip/preview.html": "2cd9f4115647ad1add42d8ab36907d4c702be8b8871fea6550a762ff20692357",
+    "components/InkActions/README.md": "8d5e5999e3e13ef8d13a258ccadf72330694e7f0d5c6d3deca701d6b21dea0e0",
+    "components/InkActions/preview.html": "60b6db98b5fc4e51c0dec915912f31f28857e52164d771b05560160d89885584",
+    "components/MoonPhase/README.md": "98360468c10d7429cbda1e3e73e1587ec9ad86df6764537b2241bf1e504560f6",
+    "components/MoonPhase/preview.html": "7914f8b9c8cf26ffad0be15fee705e81b38ee34b5a1ad7fb0c08f060cba5462f",
+    "components/ObservationSheet/README.md": "8aeecbd9b2f381c2543bc16eef0df31066f522df9ae9b6d5a4314ab2b970bb94",
+    "components/ObservationSheet/preview.html": "17eaacb57be051940b914918a368743111fc6c9a2c719afcb8aeb2f0a985c3cc",
+    "components/PaperNote/README.md": "42987aa6fd029ef148677641d770d669c6c237a54f30c0a906c8f24d6c264f5f",
+    "components/PaperNote/preview.html": "bb2c6b8cb1f5a29f840e72399348f801181efa3a7cd83603afa6b5a928b27c75",
+    "components/PlaceRow/README.md": "8e6ed6f2d65da77711c16c3c5ebf55bd7ad3b087dcfde4e8eb80bd38fb555d4a",
+    "components/PlaceRow/preview.html": "6efe6a76aab729f24747f6765af2b6d78aa584ad0196f909ffbaa30a8a0219a4",
+    "components/StatusNote/README.md": "527c064ae030bd9d790ba4dff96e022336c859c8a4e82dcb827b3b9a608b284c",
+    "components/StatusNote/preview.html": "a3adfa47a51783b8439cd09ebde3a7d112397cc51d0a815c6c6104e4158bd4c2",
+    "components/WeatherStage/README.md": "73f69c24ac48bceb44d6cab11cd373ab986ada7bf77c75d05615775300848c4d",
+    "components/WeatherStage/preview.html": "69cabdc89bf9ca00e4844fb2ca01432b61a28002d32cc6ad872cc89ddcaa6f37",
+    "components/art/clip.png": "6b03c41165f044976faf1a60b98098b2d85c5505a52111c256dab9f56b126693",
+    "components/art/mark.png": "e6a09a2b5261c577a08bbd7f0bef7e0b02c6b44dc4bb6890093cb9430034fd72",
+    "components/art/rule.png": "9cedfb4c5bd7f60f6760530f51980cc8ed6493103c79f5f1e3abee9a45068103",
+    "components/art/seal.png": "6cb74947f962f1e36340b5c851c818d4782678294083570a0921d812cafdf656",
+    "components/bundle.css": "e73ab7b4388e734ec54609d51c32e5e4854000c9c19be3137398671a122deb21",
+    "components/bundle.js": "ca445179b65ad24f6895eb78cce5f136130c1d097be9215d0e594e562752ac7f",
+    "components/card-foundation.css": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712",
+    "components/index.d.ts": "3ce95601c5f7a4056d8573b7fd1e7b724b6bfd1d8686352fab3139faf1fdd888",
+    "components/preview-layout.css": "f3e4809b9067e8ccf99e24b575b63e445a8c81ee6b8c879ab286a55e68d54c69",
+    "design-system.json": "1d25331a94a15482c6b9846636c56943d31bb44fdc5ed7338ce5b8ccbf227c86",
+    "fonts/Xiaolai-Regular.woff2": "b01b7373b008c76f7ec6d7b19468d11f54e2ec40bc0df5713e79bb3d6a952303",
+    "licenses/Xiaolai-OFL.txt": "0df7e09be4c2c850a48bd8beb9cd64b343aad49cd5d3f6cfb2ad2e3d28a56ca4",
+    "manifest.json": "261caf33c009f0b408db9d14651fbde9cd764600c5cb0930d5e644f3c4f0c6b5",
+    "tokens.css": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6",
+    "tokens.json": "a2f5307ce09314f64d08010f7febf5f798ce21f1b9f57729e05ec14308193c60"
+  },
+  "production": {
+    "tokens": {
+      "path": "css/sky-letter-tokens.css",
+      "sha256": "5756e06ba2365ff913daa732f926209c865fe5a71efc99ad04706f7b331070f5",
+      "transform": "Remove @font-face only"
+    },
+    "cards": {
+      "path": "css/sky-letter-cards.css",
+      "source": "designs/sky-letter-system/project/components/card-foundation.css",
+      "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+    },
+    "stylesheets": [
+      {
+        "path": "css/fonts.css",
+        "sha256": "95f2bb7453035aa76745c671de5ba62621d1e90d81c49bc8f77c65f27045287c"
+      },
+      {
+        "path": "css/sky-letter-cards.css",
+        "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+      },
+      {
+        "path": "css/sky-letter-tokens.css",
+        "sha256": "5756e06ba2365ff913daa732f926209c865fe5a71efc99ad04706f7b331070f5"
+      },
+      {
+        "path": "css/style.css",
+        "sha256": "cbad853ee4ee961e04f8a4846c60288d7838fb027ef27a50f02feeefc8dc48cc"
+      }
+    ]
+  },
+  "canvas": {
+    "path": "designs/paper-place-finder/project/canvas.json",
+    "excludedPages": [
+      "alternatives",
+      "archive",
+      "weather"
+    ],
+    "activeBoards": [
+      {
+        "file": "LogoStudies.dc.html",
+        "page": "design-system",
+        "sha256": "2dcc3f24fc2be29a47ac0632e53890b96388286f0bdff7f9250ed94167a550ca",
+        "cardTypes": [],
+        "stylesheets": []
+      },
+      {
+        "file": "SkyBrowserIdentity.dc.html",
+        "page": "design-system",
+        "sha256": "0d66aa76456d19bdfd754befb8dc15053208ffc72f0f9d9567af96c1224cf988",
+        "cardTypes": [],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyCached.dc.html",
+        "page": "current",
+        "sha256": "1178b1fd54329979387bf9a1192eb5350da2cd35a7f4c88725b41f0d83e4a4a1",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyCachedMobile.dc.html",
+        "page": "current",
+        "sha256": "47f62fafddc95ce67894a4255eca8889ec9d22d827ec4d66d5105b5d041fad9c",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyDesignSystem.dc.html",
+        "page": "design-system",
+        "sha256": "ec81a87f28074ae85f72fa5d11ede878eac7de09d0cebee3030caa8768d46ebb",
+        "cardTypes": [],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/bundle.css",
+            "sha256": "e73ab7b4388e734ec54609d51c32e5e4854000c9c19be3137398671a122deb21"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyDrawerStates.dc.html",
+        "page": "flows",
+        "sha256": "f6b9a6f5aaff913b62c577373379784bfe7c46dd70cb8ff81abb5ef0ec68cb5e",
+        "cardTypes": [
+          "context",
+          "forecast",
+          "sheet"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyEmptyMobile.dc.html",
+        "page": "feedback",
+        "sha256": "6f205df34f8f7e4f1930ff0cb547b3cabcd1d23664aa0165d464f0e06f8e6354",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyFavoritesFull.dc.html",
+        "page": "flows",
+        "sha256": "c884257c48c7c2ec6f2faa97655054116dbfb046fa8611e35e830d10f9b0c077",
+        "cardTypes": [
+          "context",
+          "sheet"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyFavoritesFullMobile.dc.html",
+        "page": "flows",
+        "sha256": "d9c3f168611b5fcc452e7994d863df36f312623147220c7d35bd5d4e561d173c",
+        "cardTypes": [
+          "context",
+          "sheet"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyFeedback.dc.html",
+        "page": "feedback",
+        "sha256": "51491d938d92bf77a0c8d6710edecaef594d56ad68bdf501c64ffaeb264c61ff",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyFeedbackMobile.dc.html",
+        "page": "feedback",
+        "sha256": "81bd8a5803353c8dd3eb376d62e53225d066cab9559f02972d668ba7bdc97341",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyFieldNote.dc.html",
+        "page": "design-system",
+        "sha256": "e136e3fc13de1066554a0609cdbef33fe4261fc8309bc396e09554e8a4d28cde",
+        "cardTypes": [
+          "score"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyForecastEdges.dc.html",
+        "page": "forecast-modes",
+        "sha256": "502d2f78211b22b0b1a23fa3c108dbd0e1dd0b0d51661d65948018f3353c82ab",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyForecastEdgesMobile.dc.html",
+        "page": "forecast-modes",
+        "sha256": "1476137b2bae8a3cb5ca5807bb63744aba77a04162becf1dad47be686b002b3c",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyLetterMobile.dc.html",
+        "page": "current",
+        "sha256": "f07b193afb96787063302ea2be50e9ff911318e3cd528f2f1160ae803d5a4c9c",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyLetterNight.dc.html",
+        "page": "scenarios",
+        "sha256": "8b108e6f9aeda6d9f3afa396b94f051e8164bee86aadd35be9991f0821f449c2",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyLetterStudy.dc.html",
+        "page": "current",
+        "sha256": "4c89324aa1f17ddf1d5d139341323a5358f5e9f0dce8d0b7cdf7cc7bec75a4ab",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyLoadingMobile.dc.html",
+        "page": "feedback",
+        "sha256": "b61de29de02bb3a3764bf86ae8f9bfda6f2b62a7b34c4462e18d47e51f3a8de0",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyMissingMobile.dc.html",
+        "page": "feedback",
+        "sha256": "fd3e3c7785be115783444f61b7daa6198abbbb5123750f67cc1eb81b660710e0",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyMoon.dc.html",
+        "page": "screens",
+        "sha256": "a9e970101d56477fee21ecca4d9008a7e64298944773303a5ab07fa7bbfa809a",
+        "cardTypes": [
+          "context"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyMoonMobile.dc.html",
+        "page": "screens",
+        "sha256": "3d341f79619d7b59a400b1cb940ff02419f5e1987e776148ca427401105a40e1",
+        "cardTypes": [
+          "context"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyMoonWaningMobile.dc.html",
+        "page": "flows",
+        "sha256": "f7cfac6a7a5a9f02528aefe31d5f8064c35bdca83da605ef6e536b371d5f0fa2",
+        "cardTypes": [
+          "context"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyMotionFlow.dc.html",
+        "page": "motion-handoff",
+        "sha256": "ddf21b6a93bebc511a80f3f4cb766623a1c75cabadf7f1a4f254e10bbfe8eb04",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyMotionFlowMobile.dc.html",
+        "page": "motion-handoff",
+        "sha256": "b2a07ed4516f11922c7f42f7a16c49cf06134f81569c2cf8404b38bd4cc29c9e",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyNotesHorizontal.dc.html",
+        "page": "design-system",
+        "sha256": "c27a3ac054c399b0375b5daf35236f5c8a34a1d566428d0fb8128b6dfd5e8321",
+        "cardTypes": [
+          "factors",
+          "forecast"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/06e711958913e25cd7342d75a0aee806.bin",
+            "sha256": "06e711958913e25cd7342d75a0aee8069fb6b14b158a2d1dd554ff9e54041acc",
+            "source": "designs/paper-place-finder/project/supporting-card-studies.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyPlaceFlow.dc.html",
+        "page": "flows",
+        "sha256": "daee94e10db19f35563f8ea378a901d4c90b91eab16833f9d58679123cf819ad",
+        "cardTypes": [
+          "context",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyPlaceFlowMobile.dc.html",
+        "page": "flows",
+        "sha256": "d743b1ce0c6a2840a356dd50dccba4ef757948f12574241d245930f3c72b0ffe",
+        "cardTypes": [
+          "context",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyPlaces.dc.html",
+        "page": "screens",
+        "sha256": "4dc2e0000102489a0e54607423df425ea86cb840e620df07a2b63d2b1de3caff",
+        "cardTypes": [
+          "context",
+          "sheet"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyPlacesMobile.dc.html",
+        "page": "screens",
+        "sha256": "c1d1545832fbc909a19aca574be533ebe6e1de9a9dfb8db2ebe14879b9b86eec",
+        "cardTypes": [
+          "context",
+          "sheet"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyRefreshingMobile.dc.html",
+        "page": "feedback",
+        "sha256": "5ddc2ac749858d551bb6af075115fec0925fc28f8ac6794b3ed0cedccea6cc8f",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyScenesDay.dc.html",
+        "page": "scenarios",
+        "sha256": "3af69e1773f45d06b1bbe54247497548f4cc7a1a9715472edcf2eca1b8c4164d",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyScenesLightWind.dc.html",
+        "page": "scenarios",
+        "sha256": "cbcc46fff6c303453de52eeb840c1a568c5cfd1951c2265805676b9e4dfab307",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyScenesMoon.dc.html",
+        "page": "scenarios",
+        "sha256": "b5e496338d33368c8e15a661137d81572d07297e377a940aa883070b47ef02b6",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyScenesNight.dc.html",
+        "page": "scenarios",
+        "sha256": "5e730ebaf1c98162e5045b8d2800860560eaa8568a2f2d1998f6365d137e75da",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyScenesNightWet.dc.html",
+        "page": "scenarios",
+        "sha256": "1ca6a1a36d2ca71c617cc30901761e8e3d66a456ea059ec8e14aa06c067bf717",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyScenesPrecip.dc.html",
+        "page": "scenarios",
+        "sha256": "252463357dcf655d9b841fabca19937d7983720dc1fa109af46b13b663fc6e3e",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/assets/68d802e61dc7c673bf76096fcbb573b8.bin",
+            "sha256": "68d802e61dc7c673bf76096fcbb573b838739b248eaf62af9fbdab7a3bc65ba3",
+            "source": "designs/paper-place-finder/project/scene-motion-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyStaleMobile.dc.html",
+        "page": "feedback",
+        "sha256": "516de225239bb9ba8b89cf3e2651cf675b08840da520cbe6852c428fd00ddc55",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkySunDisc.dc.html",
+        "page": "forecast-modes",
+        "sha256": "23667f8eca01d89bf8472883cee3d07b8c28648e914f820d334578c4b9c007e1",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkySunDiscMobile.dc.html",
+        "page": "forecast-modes",
+        "sha256": "c8539f1812ee9442f19e23220d5723e227d911f98f929f2007d22f7cfd770a04",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkySunrise.dc.html",
+        "page": "forecast-modes",
+        "sha256": "b4c98ea8b422fde232056a83f2ccee85d8bb9942455451031c2323b1cdcdc7f5",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkySunriseMobile.dc.html",
+        "page": "forecast-modes",
+        "sha256": "8d33cc02868597ed2dc40f64e0a21646dffefd2fb09c87a2b8487a4e66a88402",
+        "cardTypes": [
+          "factors",
+          "forecast",
+          "score",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/54bf2d3aac3714bdd95d9502cf943875.bin",
+            "sha256": "54bf2d3aac3714bdd95d9502cf94387503726ff2aeaf46544b1061d48ec6a5e7",
+            "source": "designs/paper-place-finder/project/home-card-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkySwitchFailedMobile.dc.html",
+        "page": "feedback",
+        "sha256": "fb27e2b64a9643d13afb6bf072c1d55dbe4afb80bd84238324ced7249febe997",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkySwitchingMobile.dc.html",
+        "page": "feedback",
+        "sha256": "33af8cd4ef4865df852ed267c8c4a9b77a27bec7e04430455799ca272c864845",
+        "cardTypes": [
+          "score",
+          "status",
+          "time"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/16975b69e61a3131ccc58a0e398569dc.bin",
+            "sha256": "16975b69e61a3131ccc58a0e398569dcbbd9bcea8575c9677606ea8034b072f7",
+            "source": "designs/paper-place-finder/project/forecast-feedback-composition.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyWelcome.dc.html",
+        "page": "screens",
+        "sha256": "12e9e36541ab26848719866574e34fd19a24717c06865db0f13d75276ecb344a",
+        "cardTypes": [
+          "context"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "SkyWelcomeMobile.dc.html",
+        "page": "screens",
+        "sha256": "8561ff2b459c43186d559493389e71b5f3c225a76d0a348f292e3fd40fed958e",
+        "cardTypes": [
+          "context"
+        ],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/assets/d32cd08d00a4ae8984e01cb14688dec1.bin",
+            "sha256": "d32cd08d00a4ae8984e01cb14688dec148584f1c1f770b4bcc0a16c8f23582f5",
+            "source": "designs/paper-place-finder/project/pages-flows-ink.css"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
+            "sha256": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712"
+          },
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      },
+      {
+        "file": "XiaolaiPlaces.dc.html",
+        "page": "design-system",
+        "sha256": "360066c75ddf689376f756342a9c5581bbd30d7491372c604bd2ff2b98142b5b",
+        "cardTypes": [],
+        "stylesheets": [
+          {
+            "path": "designs/paper-place-finder/project/ds/sky-letter/tokens.css",
+            "sha256": "7236538e1295dda5febf7fac66d3e6301f3bf9e0f5c5dd2a841050c93713eee6"
+          }
+        ]
+      }
+    ]
+  }
+}

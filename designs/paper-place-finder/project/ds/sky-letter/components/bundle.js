@@ -297,7 +297,7 @@ function pulse(name, label, duration, event) {
 }
 document.querySelector('#weather-clip').addEventListener('click', event => pulse('strike', '夹端引雷', 650, event));
 document.querySelector('#weather-annotation').addEventListener('click', event => pulse('warm', '圈注暖光', 3600, event));
-document.querySelector('#weather-tape').addEventListener('click', event => pulse('gust', '胶带唤风，锚点不动', 2200, event));
+document.querySelector('#weather-tape').addEventListener('click', event => pulse('gust', '天气批注纸缘唤风，锚点不动', 2200, event));
 for (const button of document.querySelectorAll('[data-day]')) button.addEventListener('click', () => {
   for (const other of document.querySelectorAll('[data-day]')) other.setAttribute('aria-pressed', String(other === button));
   document.querySelector('#forecast-note').textContent = `横笺选中 ${button.dataset.day === 'today' ? '03' : '05'} 日；主笺数值固定，不重算环境。`;

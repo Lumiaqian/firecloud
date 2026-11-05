@@ -17,33 +17,34 @@
   <link rel="preload" href="assets/fonts/Xiaolai-core.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/sky-letter-tokens.css?v=4">
   <link rel="stylesheet" href="css/fonts.css?v=1">
-  <link rel="stylesheet" href="css/style.css?v=75">
+  <link rel="stylesheet" href="css/sky-letter-cards.css?v=1">
+  <link rel="stylesheet" href="css/style.css?v=76">
   <title>霞光预报</title>
   <!-- 模块版本统一由 import map 钉住；增删模块或发布时运行 npm run sync-modules -->
   <script type="importmap">
     {
       "imports": {
-        "./js/api.mjs": "./js/api.mjs?v=37",
-        "./js/app.mjs": "./js/app.mjs?v=37",
-        "./js/core/format.mjs": "./js/core/format.mjs?v=37",
-        "./js/core/session.mjs": "./js/core/session.mjs?v=37",
-        "./js/core/storage.mjs": "./js/core/storage.mjs?v=37",
-        "./js/forecast.mjs": "./js/forecast.mjs?v=37",
-        "./js/frame-loop.mjs": "./js/frame-loop.mjs?v=37",
-        "./js/ui/dom.mjs": "./js/ui/dom.mjs?v=37",
-        "./js/ui/drawer.mjs": "./js/ui/drawer.mjs?v=37",
-        "./js/ui/factors.mjs": "./js/ui/factors.mjs?v=37",
-        "./js/ui/hero.mjs": "./js/ui/hero.mjs?v=37",
-        "./js/ui/loaders.mjs": "./js/ui/loaders.mjs?v=37",
-        "./js/ui/moon.mjs": "./js/ui/moon.mjs?v=37",
-        "./js/ui/motion.mjs": "./js/ui/motion.mjs?v=37",
-        "./js/ui/paper-fx.mjs": "./js/ui/paper-fx.mjs?v=37",
-        "./js/ui/paper.mjs": "./js/ui/paper.mjs?v=37",
-        "./js/ui/places.mjs": "./js/ui/places.mjs?v=37",
-        "./js/ui/sky.mjs": "./js/ui/sky.mjs?v=37",
-        "./js/ui/week.mjs": "./js/ui/week.mjs?v=37",
-        "./js/ui/welcome.mjs": "./js/ui/welcome.mjs?v=37",
-        "./js/weather-fx.mjs": "./js/weather-fx.mjs?v=37"
+        "./js/api.mjs": "./js/api.mjs?v=38",
+        "./js/app.mjs": "./js/app.mjs?v=38",
+        "./js/core/format.mjs": "./js/core/format.mjs?v=38",
+        "./js/core/session.mjs": "./js/core/session.mjs?v=38",
+        "./js/core/storage.mjs": "./js/core/storage.mjs?v=38",
+        "./js/forecast.mjs": "./js/forecast.mjs?v=38",
+        "./js/frame-loop.mjs": "./js/frame-loop.mjs?v=38",
+        "./js/ui/dom.mjs": "./js/ui/dom.mjs?v=38",
+        "./js/ui/drawer.mjs": "./js/ui/drawer.mjs?v=38",
+        "./js/ui/factors.mjs": "./js/ui/factors.mjs?v=38",
+        "./js/ui/hero.mjs": "./js/ui/hero.mjs?v=38",
+        "./js/ui/loaders.mjs": "./js/ui/loaders.mjs?v=38",
+        "./js/ui/moon.mjs": "./js/ui/moon.mjs?v=38",
+        "./js/ui/motion.mjs": "./js/ui/motion.mjs?v=38",
+        "./js/ui/paper-fx.mjs": "./js/ui/paper-fx.mjs?v=38",
+        "./js/ui/paper.mjs": "./js/ui/paper.mjs?v=38",
+        "./js/ui/places.mjs": "./js/ui/places.mjs?v=38",
+        "./js/ui/sky.mjs": "./js/ui/sky.mjs?v=38",
+        "./js/ui/week.mjs": "./js/ui/week.mjs?v=38",
+        "./js/ui/welcome.mjs": "./js/ui/welcome.mjs?v=38",
+        "./js/weather-fx.mjs": "./js/weather-fx.mjs?v=38"
       }
     }
   </script>
@@ -154,7 +155,7 @@
       </div>
     </section>
 
-    <section class="panel loading state-paper" id="panel-loading" hidden role="status" aria-live="polite">
+    <section class="panel loading state-paper" data-sl-card="status" id="panel-loading" hidden role="status" aria-live="polite">
       <div class="loader-stage" id="loader-stage" aria-hidden="true"></div>
       <h1>正在读取天空</h1>
       <p id="loading-text">连接气象数据…</p>
@@ -193,32 +194,32 @@
       <!-- 状态在城市下原位更新，不改变评分与时间两笺的位置。 -->
       <article class="hero-master-card" id="hero-master-card" aria-labelledby="index-label">
         <div class="hero-journal-grid">
-          <section class="hero-score-col" data-weather-surface aria-label="所选预报判断">
-            <img class="score-annotations" src="assets/paper/score-annotations.png" alt="" aria-hidden="true">
-            <p class="journal-entry-tag" id="entry-tag">晨昏观测手记</p>
-            <button id="score-circle-action" class="score-circle-action" type="button" aria-label="轻触评分圈注">
-              <span class="score-label-row"><span id="index-label">霞光指数</span><small>0–99</small></span>
-              <span class="score-number-display"><strong id="score">—</strong><small>分</small></span>
+          <section class="hero-score-col" data-sl-card="score" data-weather-surface aria-label="所选预报判断">
+            <img class="score-annotations" data-sl-part="score-art" src="assets/paper/score-annotations.png" alt="" aria-hidden="true">
+            <p class="journal-entry-tag" data-sl-part="score-heading" id="entry-tag">晨昏观测手记</p>
+            <button id="score-circle-action" class="score-circle-action" data-sl-part="score-control" type="button" aria-label="轻触评分圈注">
+              <span class="score-label-row" data-sl-part="score-label"><span id="index-label">霞光指数</span><small>0–99</small></span>
+              <span class="score-number-display" data-sl-part="score-value"><strong id="score">—</strong><small>分</small></span>
             </button>
-            <h1 class="hero-grade-line" id="band">—</h1>
-            <p class="hero-verdict-quote" id="verdict">—</p>
-            <div class="data-meta">
+            <h1 class="hero-grade-line" data-sl-part="grade" id="band">—</h1>
+            <p class="hero-verdict-quote" data-sl-part="advice" id="verdict">—</p>
+            <div class="data-meta" data-sl-part="record-meta">
               <span id="data-source">预报数据</span>
               <span id="record-timezone"></span>
               <span id="event-date" hidden>—</span>
             </div>
           </section>
-          <aside class="hero-meta-col" data-weather-surface aria-label="所选事件时间与窗口">
-            <button class="paper-clip-action" id="paper-clip-action" type="button" aria-label="轻触纸夹"></button>
-            <p class="hero-event-label" id="hero-event-label">日落</p>
-            <p class="hero-event-time" id="event-time" tabindex="-1">—</p>
-            <p class="hero-countdown-tape" id="countdown">—</p>
-            <p id="hero-time-sub" class="hero-time-sub">—</p>
-            <div class="hero-window">
+          <aside class="hero-meta-col" data-sl-card="time" data-weather-surface aria-label="所选事件时间与窗口">
+            <button class="paper-clip-action" data-sl-part="clip" id="paper-clip-action" type="button" aria-label="轻触纸夹"></button>
+            <p class="hero-event-label" data-sl-part="event-label" id="hero-event-label">日落</p>
+            <p class="hero-event-time" data-sl-part="event-time" id="event-time" tabindex="-1">—</p>
+            <p class="hero-countdown-tape" data-sl-part="event-state" id="countdown">—</p>
+            <p id="hero-time-sub" class="hero-time-sub" data-sl-part="azimuth">—</p>
+            <div class="hero-window" data-sl-part="window">
               <p class="hero-window-text">
-                <span id="window-label">观赏窗口</span>
-                <strong id="window-range">—</strong>
-                <span id="window-peak">—</span>
+                <span id="window-label" data-sl-part="window-label">观赏窗口</span>
+                <strong id="window-range" data-sl-part="window-range">—</strong>
+                <span id="window-peak" data-sl-part="peak">—</span>
               </p>
             </div>
           </aside>
@@ -238,15 +239,15 @@
 
       <section class="section-block factors-block" aria-labelledby="factors-title">
         <div class="section-head"><div><h2 id="factors-title">天气批注</h2></div><p id="factors-base">—</p></div>
-        <div class="factor-sheet" data-weather-surface>
-          <button class="paper-tape-action" id="paper-tape-action" type="button" aria-label="轻触纸笺边角"></button>
-          <div class="factor-groups" id="factors">
-            <section class="factor-group" aria-labelledby="cloud-factors-title"><header class="factor-group-heading"><h3 id="cloud-factors-title">云层</h3><span>观测值 / 影响分</span></header><ul class="factor-list" id="cloud-factors"></ul></section>
-            <section class="factor-group" aria-labelledby="air-factors-title"><header class="factor-group-heading"><h3 id="air-factors-title">空气</h3><span>观测值 / 影响分</span></header><ul class="factor-list" id="air-factors"></ul></section>
+        <div class="factor-sheet" data-sl-card="factors" data-weather-surface>
+          <button class="paper-tape-action" data-sl-part="wind" id="paper-tape-action" type="button" aria-label="轻触纸笺边角"></button>
+          <div class="factor-groups" data-sl-part="factor-groups" id="factors">
+            <section class="factor-group" aria-labelledby="cloud-factors-title"><header class="factor-group-heading" data-sl-part="factor-group-header"><h3 id="cloud-factors-title" data-sl-part="factor-group-heading">云层</h3><span>观测值 / 影响分</span></header><ul class="factor-list" data-sl-part="factor-list" id="cloud-factors"></ul></section>
+            <section class="factor-group" aria-labelledby="air-factors-title"><header class="factor-group-heading" data-sl-part="factor-group-header"><h3 id="air-factors-title" data-sl-part="factor-group-heading">空气</h3><span>观测值 / 影响分</span></header><ul class="factor-list" data-sl-part="factor-list" id="air-factors"></ul></section>
           </div>
-          <p class="factor-margin" id="factors-attention"></p>
-          <p class="factor-cap" id="factors-cap" hidden></p>
-          <details class="factor-details">
+          <p class="factor-margin" data-sl-part="factor-margin" id="factors-attention"></p>
+          <p class="factor-cap" data-sl-part="factor-cap" id="factors-cap" hidden></p>
+          <details class="factor-details" data-sl-part="factor-details">
             <summary>理想区间与计分</summary>
             <p>分项按原始值计分，显示保留一位小数；封顶规则优先。缺测项沿用模型默认值计分，不代表实测为零。</p>
             <div id="factors-details-content"></div>
@@ -257,13 +258,13 @@
       <section class="section-block week-block" aria-labelledby="week-title">
         <div class="section-head"><div><h2 id="week-title">未来七日</h2></div><p><button class="week-best" id="week-best" type="button" hidden></button></p></div>
         <div class="horizontal-scroll-region" data-scroll-region role="region" aria-label="未来七日，可横向浏览" tabindex="0">
-          <div class="week-strip" id="week" data-weather-surface role="group" aria-label="七日预报"></div>
+          <div class="week-strip" data-sl-card="forecast" id="week" data-weather-surface role="group" aria-label="七日预报"></div>
         </div>
         <p class="week-foot"><span><span id="week-time-label">时刻为日落时间</span> · 第 5–7 日仅供参考</span><span class="week-swipe-hint" aria-hidden="true">向左翻看 →</span></p>
       </section>
     </section>
 
-    <section class="panel error state-paper" id="panel-error" hidden role="alert">
+    <section class="panel error state-paper" data-sl-card="status" id="panel-error" hidden role="alert">
       <svg class="error-symbol" viewBox="0 0 112 58" fill="none" aria-hidden="true"><path d="M8 42 Q28 39 51 42 T105 41 M20 33 Q12 18 27 17 Q36 0 55 15 Q78 8 81 28 Q97 32 89 38" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       <h1 id="error-title" tabindex="-1">天空暂时失联</h1>
       <p id="error-text">暂无可用预测，请稍后重试。</p>
@@ -338,6 +339,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=37"></script>
+  <script type="module" src="js/app.mjs?v=38"></script>
 </body>
 </html>

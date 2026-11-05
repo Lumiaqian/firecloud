@@ -12,4 +12,4 @@ ForecastStrip 是无折痕的连续七日横笺，用日期按钮、圈注最高
 ## 本地预览边界
 原生 HTML/CSS/JS 设计参考，非 API / 持久化生产组件。所有数据为「非实时样例」，取自批准源稿渲染输出；预览只选择固定数据，既不重算评分也不请求天气。最高日为源样例固定周四，不提供通用推荐算法。
 
-样式在 bundle.css；使用 paper、ink、font-hand 及原始 pencil / outlook-focus 图片，不使用折痕色带。摘要 polite 通知，操作后保留焦点；页脚至少 12px。
+纸面、七日内部排版和笔迹由 `components/card-foundation.css` 唯一定义，`bundle.css` 只保留横滚容器、标题、摘要与样例控件。使用 paper、ink、font-hand 及原始 pencil / outlook-focus 图片，不使用折痕色带。摘要 polite 通知，操作后保留焦点；页脚至少 12px。真实按钮用 `aria-pressed`，导航样例用 `aria-current="page"`，静态不可操作样本用 `data-current="true"`；后者不能代替真实控件语义。本轮未运行横滚、焦点、读屏或视口验收。

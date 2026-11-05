@@ -1466,9 +1466,7 @@ body[data-light="night"][data-weather="snow"] .sky-moon {
 
 .welcome-journal-folio, .specimen-card { filter: drop-shadow(1px 6px 7px #43352b16); }
 /* ---------- Compact first read and unavailable forecast papers ---------- */
-.loading, .error { flex: 0 1 auto; width: min(560px, 100%); margin: 75px auto 70px; padding: 30px 35px 26px; color: var(--ink); text-align: left; }
-.loading h1, .error h1 { width: fit-content; margin: 12px 0 17px; padding-bottom: 10px; background: url("../assets/paper/supporting-pencil.png") left bottom / 220px 11px no-repeat; color: var(--ink); font-size: 32px; font-weight: 400; line-height: 1.5; }
-.loading > p:not(.loading-caption), .error > p { max-width: 100%; margin: 0; padding-left: 25px; background: url("../assets/paper/supporting-brace.png") left center / 13px 94% no-repeat; color: var(--ink-muted); font-size: 17px; line-height: 1.75; }
+.loading, .error { flex: 0 1 auto; margin: 75px auto 70px; }
 .loading .loading-caption { margin: 24px 0 0; padding: 0; color: var(--ink-muted); font-size: 12px; line-height: 1.6; }
 .loading-search { margin-top: 14px; font-size: 14px; }
 .loading-search:focus-visible { text-decoration-color: var(--ink); }
@@ -1493,9 +1491,7 @@ body[data-light="night"][data-weather="snow"] .sky-moon {
 }
 @media (max-width: 600px) {
   .welcome-eyebrow { font-size: 12px; }
-  .loading, .error { margin: 34px auto 45px; padding: 26px 24px; }
-  .loading h1, .error h1 { margin-top: 8px; font-size: 27px; }
-  .loading > p:not(.loading-caption), .error > p { font-size: 16px; }
+  .loading, .error { margin: 34px auto 45px; }
   .error-actions { gap: 8px 18px; }
 }
 @media (hover: hover) and (pointer: fine) {
@@ -1519,7 +1515,7 @@ body[data-light="night"][data-weather="snow"] .sky-moon {
 
 /* ---------- Sky Letter: four independent papers and real forecast states ---------- */
 .ready { position: relative; min-width: 0; margin-top: 42px; padding: 0 0 40px; color: var(--ink); }
-.ready p { line-height: 1.7; }
+.ready p:not([data-sl-part]) { line-height: 1.7; }
 .forecast-context { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 6px 24px; margin-bottom: 30px; color: var(--sky-ink); }
 .home-location { min-width: 0; max-width: 100%; }
 .home-region { margin: 2px 0 0; font-size: 13px; }
@@ -1534,39 +1530,28 @@ body[data-light="night"][data-weather="snow"] .sky-moon {
 .event-tabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 1px; height: 7px; background: var(--sky-accent); mask: url("../assets/paper/supporting-pencil.png") center / 100% 100% no-repeat; pointer-events: none; }
 .event-tabs button:disabled { cursor: default; color: var(--ink-muted); }
 
-/* Only paper backgrounds are masked; content, focus and edge actions stay unclipped. */
-:is(.hero-score-col, .hero-meta-col, .factor-sheet, .week-strip, .state-paper) { position: relative; isolation: isolate; min-width: 0; color: var(--ink); filter: drop-shadow(1px 5px 6px #43352b12); }
-:is(.hero-score-col, .hero-meta-col, .factor-sheet, .week-strip, .state-paper)::before { content: ""; position: absolute; inset: 0; z-index: -1; background-color: var(--paper); background-image: var(--paper-weather-wash, linear-gradient(transparent, transparent)), url("../assets/paper/paper-grain-wide.png"); background-position: center; background-size: 100% 100%; background-repeat: no-repeat; background-blend-mode: multiply; mask: url("../assets/paper/supporting-paper-mask.svg") center / 100% 100% no-repeat; pointer-events: none; }
+/* Card material and geometry live in the design system; this file owns page placement. */
+:root {
+  --sl-asset-paper-mask: url("../assets/paper/supporting-paper-mask.svg");
+  --sl-asset-paper-grain: url("../assets/paper/paper-grain-wide.png");
+  --sl-asset-time-marks: url("../assets/paper/home-time-marks.png");
+  --sl-asset-pencil: url("../assets/paper/supporting-pencil.png");
+  --sl-asset-brace: url("../assets/paper/supporting-brace.png");
+  --sl-asset-leader: url("../assets/paper/supporting-leader.png");
+  --sl-asset-focus: url("../assets/paper/outlook-focus.png");
+  --sl-asset-clip: url("../assets/paper/clip.png");
+}
 .hero-master-card { position: relative; min-width: 0; margin: 0 0 24px; padding: 0; }
 .hero-journal-grid { display: grid; grid-template-columns: minmax(0, 480px) 300px; align-items: start; justify-content: space-between; gap: 44px; }
-.hero-score-col { container-type: inline-size; width: 480px; max-width: 100%; margin-top: 70px; padding: 0 0 26px; }
-.score-annotations { position: absolute; inset: 0 0 auto; width: 100%; height: auto; max-height: 100%; object-fit: cover; object-position: top; pointer-events: none; mix-blend-mode: multiply; z-index: -1; mask-image: url("../assets/paper/supporting-paper-mask.svg"), linear-gradient(#000 65%, transparent 98%); mask-size: 100% 100%; mask-repeat: no-repeat; mask-composite: intersect; }
-.journal-entry-tag { position: absolute; left: 11.4%; top: 6.4cqw; max-width: 80%; margin: 0; font-size: 14px; line-height: 22px; color: var(--ink); }
-.score-circle-action { position: absolute; left: 11%; top: 17cqw; width: 40%; height: 34cqw; min-height: 44px; min-width: 44px; margin: 0; padding: 0; border: 0; background: none; color: var(--paper-score-color, var(--ink-score)); text-align: left; cursor: pointer; touch-action: manipulation; }
-.score-label-row { position: absolute; left: 17.5%; top: 3cqw; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; font-size: 12px; line-height: 20px; color: var(--ink-muted); }
-.score-label-row small { font-size: 12px; white-space: nowrap; }
-.score-number-display { position: absolute; left: 10%; top: 8cqw; display: flex; align-items: baseline; gap: 5px; font-size: clamp(76px, 22cqw, 124px); line-height: 1; letter-spacing: -5px; }
-.score-number-display small { font-size: 14px; letter-spacing: 0; color: var(--ink-muted); }
-.hero-grade-line { position: absolute; left: 61%; top: 20cqw; width: 31%; margin: 0; font-size: clamp(16px, 5.35cqw, 30px); line-height: 1.35; transform: rotate(-4deg); transform-origin: left bottom; }
-.hero-verdict-quote { margin: 0 9% 0 16%; padding-top: 57cqw; font-size: 16px; line-height: 1.7; text-wrap: pretty; }
-.data-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 20px 9% 0 11.4%; color: var(--ink-muted); font-size: 12px; line-height: 1.5; }
+.hero-score-col { margin-top: 70px; }
 body[data-tier="epic"] .hero-score-col { --paper-score-color: var(--ink-epic); }
 body[data-tier="great"] .hero-score-col { --paper-score-color: var(--ink-score); }
 body[data-tier="good"] .hero-score-col { --paper-score-color: var(--ink-good); }
 body[data-tier="fair"] .hero-score-col { --paper-score-color: var(--ink-fair); }
 body[data-tier="dull"] .hero-score-col { --paper-score-color: var(--ink-dull); }
-.hero-meta-col { width: 300px; max-width: 100%; min-height: 396px; padding: 32px 34px 34px; }
-.hero-meta-col::before { background-image: var(--paper-weather-wash, linear-gradient(transparent, transparent)), url("../assets/paper/home-time-marks.png"), url("../assets/paper/paper-grain-wide.png"); background-size: 100% 100%; background-blend-mode: multiply; }
-.hero-event-label { margin: 0; color: var(--ink-muted); font-size: 14px; }
-.hero-event-time { margin: 10px 0 22px; max-width: 100%; color: var(--ink); font-size: 58px; line-height: 1.2 !important; letter-spacing: -2px; }
 .hero-event-time:focus { outline: none; }
 .hero-event-time:focus-visible { text-decoration: underline dashed var(--ink); text-decoration-thickness: 1.5px; text-underline-offset: 8px; }
-.hero-countdown-tape { margin: 0; font-size: 14px; }
-.hero-time-sub { margin: 7px 0 0; color: var(--ink-muted); font-size: 12px; }
-.hero-window { margin: 30px 0 0 10px; padding-left: 9px; }
 .hero-window-text { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin: 0; color: var(--ink-muted); font-size: 13px; }
-#window-range { color: var(--ink); font-size: 20px; line-height: 1.5; }
-#window-peak { margin-top: 4px; font-size: 13px; }
 .hero-lunar-badge { position: absolute; left: 480px; right: 300px; bottom: 62px; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; margin: 0 16px; padding: 4px 0; border: 0; background: none; color: var(--sky-ink); font-size: 13px; line-height: 1.65; text-align: left; cursor: pointer; }
 body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none; }
 .lunar-badge-icon { display: inline-flex; width: 22px; height: 22px; flex-shrink: 0; }
@@ -1575,10 +1560,6 @@ body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none
 .hero-companion-pill { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 3px 8px; min-width: 44px; min-height: 44px; max-width: 100%; margin: 0; padding: 8px 0; border: 0; background: none; color: var(--sky-ink); font-size: 14px; line-height: 1.65; text-align: left; cursor: pointer; }
 .companion-arrow { font-size: 12px; white-space: nowrap; }
 .paper-fx-status { width: fit-content; max-width: 100%; margin: -8px 0 24px auto; padding: 13px 0; color: var(--sky-ink); font-size: 13px; line-height: 1.7; }
-.paper-clip-action, .paper-tape-action { position: absolute; z-index: 2; min-width: 44px; min-height: 44px; padding: 0; border: 0; background-color: transparent; cursor: pointer; touch-action: manipulation; }
-.paper-clip-action { right: 18px; top: -18px; width: 44px; height: 58px; background: url("../assets/paper/clip.png") center / 26px 53px no-repeat; }
-.paper-tape-action { left: 32px; top: -18px; width: 86px; height: 44px; }
-.paper-tape-action::before { content: ""; position: absolute; inset: 10px 0; background: var(--tape); mask: url("../assets/paper/supporting-paper-mask.svg") center / 100% 100% no-repeat; transform: rotate(-8deg); pointer-events: none; }
 
 /* One reserved metadata row: refresh never moves or replaces the forecast papers. */
 .forecast-note { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; min-height: 44px; min-width: 0; font-size: 13px; line-height: 20px; }
@@ -1601,29 +1582,7 @@ body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none
 .factors-block { width: 100%; margin: 0; }
 .factors-block > .section-head { margin: 16px 8px 24px; color: var(--sky-ink); }
 .factors-block > .section-head p { color: inherit; }
-.factor-sheet { width: 97%; margin: 0 0 0 auto; padding: 40px 43px 28px; }
-.factor-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 60px; }
-.factor-group-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-left: 25px; margin-bottom: 14px; }
-.factor-group-heading h3 { margin: 0; padding: 0 4px 9px; background: url("../assets/paper/supporting-pencil.png") left bottom / 100% 13px no-repeat; font-size: 23px; transform: rotate(-3deg); }
-.factor-group-heading > span { color: var(--ink-muted); font-size: 12px; }
-.factor-list { display: block; margin: 0; padding: 0 0 0 25px; background: url("../assets/paper/supporting-brace.png") left center / 17px 96% no-repeat; list-style: none; }
-.factor-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 14px; padding: 11px 0; }
-.factor-label { color: var(--ink); font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
-.factor-reading { display: grid; grid-template-columns: auto 44px; align-items: baseline; gap: 14px; }
-.factor-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 4px; min-width: 0; width: fit-content; color: var(--ink); font-size: 24px; line-height: 1.4; }
-.measure-unit { color: var(--ink-muted); font-size: 12px; line-height: 1.4; white-space: nowrap; }
-.factor-delta { color: var(--ink-muted); font-size: 14px; line-height: 1.65; text-align: right; white-space: nowrap; transform: rotate(-3deg); }
-.factor-row[data-effect="up"] .factor-delta { color: var(--ink-helpful); }
-.factor-row[data-major="true"] .factor-value { padding-bottom: 4px; background: url("../assets/paper/supporting-pencil.png") center bottom / 100% 9px no-repeat; }
-.factor-margin { display: flex; align-items: center; gap: 12px; margin: 14px 0 0 4px; color: var(--ink-accent); font-size: 17px; line-height: 1.6; }
-.factor-margin::before { content: ""; width: 86px; height: 51px; flex-shrink: 0; background: url("../assets/paper/supporting-leader.png") center / contain no-repeat; transform: rotate(15deg); }
-.factor-cap { margin: 16px 0 0; color: var(--ink-selected); font-size: 13px; line-height: 1.7; }
-.factor-details { position: relative; margin-top: 22px; color: var(--ink-muted); font-size: 13px; line-height: 1.7; }
-.factor-details summary { display: flex; align-items: center; min-height: 44px; width: fit-content; max-width: 100%; padding: 12px 0; list-style: none; cursor: pointer; }
-.factor-details summary::-webkit-details-marker { display: none; }
-.factor-details summary::before { content: "＋"; flex-shrink: 0; width: 23px; }
-.factor-details[open] summary::before { content: "−"; }
-.factor-details p { margin: 0; padding: 6px 0 12px; max-width: 660px; }
+.factor-sheet { margin: 0 0 0 auto; }
 .factor-details .factor-reason { padding: 5px 0; }
 .factor-range { display: block; color: var(--ink); }
 .factor-note { display: block; font-size: 13px; line-height: 1.7; }
@@ -1634,19 +1593,6 @@ body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none
 .week-block .section-head h2 { font-size: 25px; }
 .week-best { min-width: 44px; min-height: 44px; padding: 8px 4px; border: 0; background: none; color: var(--sky-accent); font-size: 13px; line-height: 1.65; cursor: pointer; }
 .horizontal-scroll-region { position: relative; max-width: 100%; overflow-x: auto; padding: 12px 5px 15px; scroll-snap-type: x proximity; scroll-padding-inline: 8px; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-.week-strip { display: grid; grid-template-columns: repeat(7, minmax(118px, 1fr)); min-width: 900px; padding: 28px 20px 24px; }
-.day-card { position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; min-height: 206px; padding: 4px 0; border: 0; border-radius: 0; background: none; color: var(--ink); font: inherit; text-align: center; scroll-snap-align: start; cursor: pointer; }
-.day-card:last-child { scroll-snap-align: end; }
-.day-date { font-size: 14px; line-height: 1.5; white-space: nowrap; }
-.day-score { position: relative; isolation: isolate; display: grid; place-items: center; height: 76px; margin: 8px 0 2px; padding: 0 8px; font-size: 42px; line-height: 1.1; }
-.day-grade { font-size: 16px; line-height: 1.65; }
-.day-time { color: var(--ink-muted); font-size: 13px; line-height: 1.65; }
-.day-mark { min-height: 36px; max-width: 112px; color: var(--ink-muted); font-size: 12px; line-height: 1.5; }
-.day-card.is-best-day .day-score::before { content: ""; position: absolute; inset: 0 -20px; z-index: -1; background: url("../assets/paper/outlook-focus.png") center / 104px 72px no-repeat; pointer-events: none; }
-.day-card[aria-pressed="true"], .day-card[aria-pressed="true"] .day-mark { color: var(--ink-selected); }
-.day-card[aria-pressed="true"] .day-score::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 52px; height: 10px; transform: translateX(-50%); background: url("../assets/paper/supporting-pencil.png") center / contain no-repeat; pointer-events: none; }
-.day-card:disabled { opacity: 1; color: var(--ink-muted); cursor: default; }
-.day-card:disabled .day-grade { font-size: 12px; }
 .day-card:active:not(:disabled) .day-score { opacity: .65; }
 .week-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 20px; margin: 7px 0 0; padding: 10px 0; color: var(--sky-ink); font-size: 12px; line-height: 1.65; }
 .week-swipe-hint { display: none; }
@@ -1661,10 +1607,8 @@ body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none
 }
 @media (max-width: 900px) {
   .hero-journal-grid { grid-template-columns: minmax(0, 440px) 270px; gap: 32px; }
-  .hero-score-col { width: 440px; margin-top: 130px; }
-  .hero-meta-col { width: 270px; padding-inline: 29px; }
+  .hero-score-col { margin-top: 130px; }
   .hero-lunar-badge { left: auto; right: 0; bottom: 50px; max-width: 40%; margin: 0; }
-  .factor-sheet { width: 100%; }
 }
 @media (max-width: 700px) {
   .ready { margin-top: 26px; padding-bottom: 32px; }
@@ -1678,43 +1622,24 @@ body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none
   .event-tabs button { min-width: 44px; padding: 7px 3px; font-size: 17px; }
   .hero-master-card { margin-top: 0; margin-bottom: 20px; }
   .hero-journal-grid { display: flex; flex-direction: column; align-items: flex-start; gap: 30px; }
-  .hero-score-col { width: 100%; margin: 0; padding-bottom: 23px; }
-  .journal-entry-tag { font-size: 13px; }
-  .score-number-display { font-size: clamp(68px, 23cqw, 99px); }
-  .hero-verdict-quote { margin-right: 8%; font-size: 16px; line-height: 1.65; }
-  .data-meta { margin-top: 18px; }
-  .hero-meta-col { align-self: flex-end; width: 286px; max-width: 94%; min-height: 380px; padding: 28px 31px 32px; }
-  .hero-event-time { font-size: 54px; }
-  .hero-window { margin-top: 27px; padding-left: 8px; }
+  .hero-score-col { margin: 0; }
+  .hero-meta-col { align-self: flex-end; }
   .hero-lunar-badge { position: static; max-width: 100%; margin-top: 14px; }
   .hero-comment { justify-content: flex-start; padding: 0; }
   .forecast-note { justify-content: space-between; gap: 8px; min-height: 64px; font-size: 12px; }
   .freshness-copy { flex-direction: column; gap: 0; }
   .freshness-message { display: flex; flex-direction: column; }
   .freshness-actions { gap: 4px; }
-  .factor-sheet { padding: 29px 24px 24px; }
   .factors-block > .section-head { margin: 22px 0 24px; }
   .section-head h2 { font-size: 23px; white-space: nowrap; }
-  .factor-groups { grid-template-columns: 1fr; gap: 32px; }
-  .factor-group-heading { padding-left: 20px; }
-  .factor-list { padding-left: 20px; }
-  .factor-row { gap: 8px; }
-  .factor-label { font-size: 14px; }
-  .factor-reading { grid-template-columns: auto 35px; gap: 8px; }
-  .factor-value { font-size: 22px; }
-  .factor-delta { font-size: 13px; }
-  .factor-margin { gap: 7px; font-size: 15px; }
-  .factor-margin::before { width: 45px; height: 42px; }
   .week-block { margin-top: 35px; }
   .week-block > .section-head { margin-left: 0; gap: 8px; }
   .week-block .section-head h2 { font-size: 23px; }
   .horizontal-scroll-region { margin-inline: -8px; max-width: calc(100% + 16px); padding-inline: 8px; }
-  .week-strip { grid-template-columns: repeat(7, 125px); min-width: 915px; }
 }
 @media (max-width: 370px) {
   .app-shell { width: calc(100% - 36px); }
   .home-city { font-size: 34px; }
-  .factor-sheet { padding-inline: 18px; }
   .event-tabs { gap: 4px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1727,7 +1652,7 @@ body[data-input="keyboard"] :is(.ready, .favorite-feedback) * { transition: none
   .score-annotations { display: none; }
   .ready :is(button, summary):focus-visible, .brand:focus-visible, .top-actions .icon-button:focus-visible, .horizontal-scroll-region:focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
   .day-card[aria-pressed="true"] .day-score, .event-tabs button[aria-pressed="true"], .factor-row[data-major="true"] .factor-value { text-decoration: underline; }
-  .day-card.is-best-day .day-mark { text-decoration: underline double; }
+  .day-card[data-best="true"] .day-mark { text-decoration: underline double; }
   :is(.factor-list, .factor-group-heading h3, .factor-value) { background-image: none !important; }
   .factor-margin::before, .day-score::before, .day-score::after { display: none; }
 }

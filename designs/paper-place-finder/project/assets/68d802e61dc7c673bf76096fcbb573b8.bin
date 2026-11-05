@@ -1,0 +1,81 @@
+/* Selected A across the weather atlas and interaction studies.
+   The named handset container{color:#36372f} not the 1740px atlas viewport{color:#36372f} owns phone layout. */
+.weather-root[data-light] .observation-heading{color:#36372f}
+.scenario-frame .prototype-link{display:inline-flex;align-items:center;min-height:44px;min-width:44px;color:inherit;text-decoration:none}
+.scenario-frame .prototype-link:focus-visible{outline:none;text-decoration:underline dashed;text-decoration-thickness:1.5px;text-underline-offset:7px}
+.scenario-frame .tools a{padding:5px;font-size:14px}
+.scenario-frame .tabs a{position:relative;font-size:18px;padding:8px 6px}
+.scenario-frame .tabs a[aria-current=page]::after{content:'';position:absolute;left:3px;right:3px;bottom:2px;height:7px;background:url('/_blob/e6a09a2b5261c577a08bbd7f0bef7e0b') center/100% 100%;pointer-events:none}
+.scenario-frame .comment a{font-size:16px}
+@media(hover:hover){.scenario-frame .prototype-link:hover{text-decoration:underline;text-underline-offset:5px}}
+@container handset (max-width:600px){
+ .scenario-frame .weather-root{padding:24px 20px 32px}
+ .scenario-frame .weather-root .hero{display:flex;flex-direction:column;align-items:stretch;gap:0;min-height:0;margin-top:26px;padding-bottom:0}
+ .scenario-frame .weather-root .forecast-context{gap:5px 8px;margin-bottom:28px}
+ .scenario-frame .weather-root .forecast-context .city{font-size:36px}
+ .scenario-frame .weather-root .forecast-context .tabs{position:static;margin:0;gap:6px}
+ .scenario-frame .weather-root .forecast-context .tabs a{font-size:17px;padding:7px 3px}
+ .scenario-frame .weather-root .sky-caption{position:static;margin:0;font-size:12px;letter-spacing:0;transform:none}
+ .scenario-frame .weather-root .freshness-row{justify-content:space-between;gap:8px;font-size:12px;margin-top:3px}
+ .scenario-frame .weather-root[data-light=night] .freshness-row{padding-right:76px}
+ .scenario-frame .weather-root .freshness-copy{flex-direction:column;gap:0}
+ .scenario-frame .weather-root .score-note{position:relative;inset:auto;margin:0 0 30px;align-self:flex-start;transform:none}
+ .scenario-frame .weather-root .sun-note{position:relative;inset:auto;align-self:flex-end;margin:0;transform:none}
+ .scenario-frame .weather-root .moon-link{position:static;align-self:flex-start;margin:14px 0 0;font-size:13px}
+ .scenario-frame .weather-root .comment{padding:0;justify-content:flex-start}
+ .scenario-frame .weather-root .observation{margin-top:0}
+ .scenario-frame .weather-root .observation-heading{align-items:baseline;flex-wrap:wrap;gap:10px;margin-top:22px}
+ .scenario-frame .weather-root .observation-heading h2{font-size:23px;white-space:nowrap}
+ .scenario-frame .weather-root .observation-heading>span{font-size:12px;line-height:1.6;max-width:none;text-align:left}
+ .scenario-frame .weather-root .outlook{margin-top:35px}
+ .scenario-frame .weather-root .outlook-heading{margin-left:0;gap:8px}
+ .scenario-frame .weather-root .week-scroll{margin:0 -8px}
+ .scenario-frame .weather-root .moon-body{top:220px;right:34px;left:auto}
+ .scenario-frame .weather-root .scene-sun{top:265px;right:36px;left:auto}
+}
+/* Motion remains live: the score annotation replaces the former stamp gesture. */
+.motion-study[data-night]{--note-paper:#fdfaf3}
+.motion-study[data-night=true]{--note-paper:#e7e4d6}
+.motion-study[data-night] .hero{display:grid;grid-template-columns:minmax(0,480px) minmax(24px,1fr) 300px;gap:30px 0;min-height:0;margin-top:26px;padding-bottom:0}
+.motion-study[data-night] .forecast-context{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px;align-items:start}
+.motion-study[data-night] .forecast-context .city{grid-column:1;grid-row:1;font-size:36px;line-height:1.15;justify-self:start}
+.motion-study[data-night] .dateline{grid-column:1;grid-row:2;font-size:13px;margin:0}
+.motion-study[data-night] .tabs{grid-column:2;grid-row:1/3;display:flex;gap:12px;align-self:center}
+.motion-study[data-night] .tabs a{font-size:17px;padding:7px 3px}
+.motion-study[data-night] .tabs a[aria-current=page]{text-decoration:underline;text-underline-offset:7px}
+.motion-study[data-night] .sky-caption{grid-column:1/-1;font-size:13px;margin:0;line-height:1.7}
+.motion-study[data-night] .freshness-row{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;min-height:44px;font-size:13px;line-height:1.65}
+.motion-study[data-night] .gesture{position:relative;inset:auto;grid-column:2;grid-row:2;align-self:end;justify-self:center;width:100%;max-width:240px;height:110px;margin-bottom:24px}
+.motion-study[data-night] .score-note{position:relative;inset:auto;grid-column:1;grid-row:2;align-self:start;margin-top:70px;transform:none}
+.motion-study[data-night] .score-warm{padding:0;font-size:inherit;text-align:left;min-height:44px;line-height:inherit;color:#a23f25;transition:filter 160ms ease}
+.motion-study[data-night] .score-warm::after{display:none}
+.motion-study[data-night] .score-warm:focus-visible{outline:1px dashed #9b3c29;outline-offset:4px}
+.motion-study[data-warm=true] .score-warm{filter:drop-shadow(0 0 9px #c7793b80)}
+.motion-study[data-night] .sun-note{position:relative;inset:auto;grid-column:3;grid-row:2;align-self:start;transform:none}
+.motion-study[data-night] .study-factors{position:relative;margin:0 0 0 auto}
+.motion-study[data-night] .factor-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:16px 8px 24px}
+.motion-study[data-night] .factor-top h2{font-size:27px}
+.motion-study[data-night] .paper-hint{margin-top:22px}
+.motion-study[data-night] .outlook{margin-top:44px}
+@media(min-width:701px) and (max-width:1100px){
+ .motion-study[data-night] .hero{grid-template-columns:minmax(0,1fr) 24px 270px}
+ .motion-study[data-night] .gesture{grid-column:1/-1;grid-row:3;justify-self:end;height:70px;margin:0}
+}
+@media(max-width:700px){
+ .motion-study[data-night] .hero{display:flex;flex-direction:column;align-items:stretch;gap:0;min-height:0;margin-top:26px;padding-bottom:0}
+ .motion-study[data-night] .forecast-context{gap:5px 8px;margin-bottom:28px}
+ .motion-study[data-night] .tabs{gap:6px}
+ .motion-study[data-night] .sky-caption{font-size:12px}
+ .motion-study[data-night] .freshness-row{font-size:12px;margin-top:3px}
+ .motion-study[data-night] .gesture{position:relative;inset:auto;align-self:flex-end;width:75%;height:85px;margin:14px 0 0;order:3}
+ .motion-study[data-night] .score-note{position:relative;inset:auto;margin:0 0 30px;align-self:flex-start}
+ .motion-study[data-night] .sun-note{position:relative;inset:auto;align-self:flex-end;margin:0}
+ .motion-study[data-night] .hero{margin-bottom:24px}
+ .motion-study[data-night] .study-factors{margin:0}
+ .motion-study[data-night] .factor-top{flex-wrap:wrap;gap:10px;margin-top:22px}
+ .motion-study[data-night] .factor-top h2{font-size:23px}
+ .motion-study[data-night] .outlook{margin-top:35px}
+}
+@media(forced-colors:active){
+ .motion-study[data-night] .score-warm{color:ButtonText}
+}

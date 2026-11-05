@@ -2,9 +2,9 @@
 
 ## 来源与原值
 
-- `designs/paper-place-finder/project/SkyPlaces.dc.html` 第 12、30–34 行：桌面纸笺宽 `590px`，内边距 `33px 38px 31px`，标题 `34px / 1.3`，不规则纸边 polygon 与 `drop-shadow(2px 13px 12px #45372b26)`。
-- `designs/paper-place-finder/project/SkyPlacesMobile.dc.html` 第 12、29–33 行：移动抽屉上沿纸边 polygon、内边距 `20px 25px 0`、标题 `29px / 1.3`、`38 × 4px` 的原稿分隔线横标及 `0 -5px 12px #45372b20` 投影；内容区 `min-height:0`、独立纵向滚动与 overscroll containment。
-- `components/bundle.css` 为共享样式；`--paper`、`--ink`、`--ink-muted`、`--ink-accent`、`--target-min` 等由系统提供。纸边是来源 polygon，不增加重边框或圆角卡片。
+- `SkyPlaces.dc.html` / `SkyPlacesMobile.dc.html`：桌面 590px 观测纸、手机贴底抽屉、手写标题和独立滚动区。
+- 纸面改为与首页相同的 `supporting-paper-mask.svg`、`paper-grain-wide.png` 与轻投影，不保留旧 polygon 纸边和独立重投影。
+- `components/card-foundation.css` 提供 `[data-sl-card="sheet"]` / `.sl-observation-dialog` 的纸面和 padding；`bundle.css` 只保留原生 dialog、遮罩、贴底定位与滚动语义。600px 及以下抽屉宽度 100%、padding `20px 25px 0`，不是首页卡片的 700px 断点。
 
 ## 使用与避免
 
@@ -22,4 +22,4 @@
 
 ## 本地预览边界
 
-`preview.html` 使用静态观测说明演示容器，不是 API 或持久化生产组件。原生 dialog 的模态、关闭和焦点恢复是真实行为；没有业务保存、网络、设备定位或浏览器键盘模拟。运行时预载 token 与共享 CSS，由共享 SkyLetter 预览初始化函数绑定本地事件。
+`preview.html` 使用静态观测说明演示容器，不是 API 或持久化生产组件。代码绑定原生 dialog 打开 / 关闭 / 焦点恢复；没有业务保存、网络、设备定位、拖拽手势或浏览器键盘模拟。本轮未执行浏览器或真实软键盘验收，不能据此宣称所有平台焦点 / 视口行为已验证。运行时预载 token 与共享 CSS，由共享 SkyLetter 预览初始化函数绑定本地事件。
