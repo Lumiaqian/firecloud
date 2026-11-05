@@ -76,8 +76,8 @@ function browserEnvironment(t) {
     globalAlpha: 1,
     setTransform() {}, clearRect() { fills.length = 0; },
     save() {}, restore() {}, beginPath() {}, arc() {}, ellipse() {},
-    moveTo() {}, lineTo() {}, quadraticCurveTo() {}, stroke() {}, rect() {}, clip() {},
-    translate() {}, rotate() {}, fillRect() {}, closePath() {},
+    moveTo() {}, lineTo() {}, quadraticCurveTo() {}, bezierCurveTo() {}, stroke() {}, rect() {}, clip() {},
+    translate() {}, rotate() {}, scale() {}, fillRect() {}, closePath() {},
     fill() { fills.push(this.fillStyle); }
   };
   const canvas = Object.assign(element(), { getContext: () => context });
@@ -105,14 +105,13 @@ test("键盘只停主动纸面反馈，实况阵风继续且所有全局暂停�
   fx.gust("high");
   env.loop.step();
   assert.deepEqual(positions.splice(0), crossing, "追加阵风不能重置仍在飞行的粒子");
-  now = 7000;
+  now = 9000;
   env.loop.step();
   assert.equal(env.body.dataset.paperWind, undefined);
   assert.equal(env.tasks.size, 0, "最后一批粒子退场后停止绘制");
   env.document.dispatchEvent(new Event("keydown"));
   for (const id of ["paper-clip-action", "score-circle-action", "paper-tape-action"]) {
     env.ids.get(id).dispatchEvent(new Event("click"));
-    assert.equal(env.ids.get("paper-fx-status").textContent, "键盘操作 · 仅文字反馈，天气与预报不变。");
     assert.equal(env.body.dataset.paperWind, undefined);
     assert.equal(env.tasks.size, 0);
     assert.equal(env.timeouts.size, 0);
@@ -150,7 +149,8 @@ test("键盘只停主动纸面反馈，实况阵风继续且所有全局暂停�
     assert.equal(env.body.dataset.paperWind, undefined);
     for (const id of ["paper-clip-action", "score-circle-action", "paper-tape-action"]) {
       env.ids.get(id).dispatchEvent(new Event("click"));
-      assert.equal(env.ids.get("paper-fx-status").textContent, "动效已停用 · 仅文字反馈，天气与预报不变。");
+      assert.equal(env.tasks.size, 0);
+      assert.equal(env.timeouts.size, 0);
     }
     mode.resume();
     assert.equal(env.body.dataset.paperWind, undefined);

@@ -1559,7 +1559,6 @@ body:not([data-light="night"]) :is(.sky-moon, .hero-lunar-badge) { display: none
 .hero-comment { display: flex; justify-content: flex-end; min-height: 44px; padding: 0 22px 8px; }
 .hero-companion-pill { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 3px 8px; min-width: 44px; min-height: 44px; max-width: 100%; margin: 0; padding: 8px 0; border: 0; background: none; color: var(--sky-ink); font-size: 14px; line-height: 1.65; text-align: left; cursor: pointer; }
 .companion-arrow { font-size: 12px; white-space: nowrap; }
-.paper-fx-status { width: fit-content; max-width: 100%; margin: -8px 0 24px auto; padding: 13px 0; color: var(--sky-ink); font-size: 13px; line-height: 1.7; }
 
 /* One reserved metadata row: refresh never moves or replaces the forecast papers. */
 .forecast-note { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; min-height: 44px; min-width: 0; font-size: 13px; line-height: 20px; }
@@ -2100,7 +2099,9 @@ dialog#lunar-dialog::backdrop { background: linear-gradient(180deg,var(--sky-top
 .is-rain-damp .paper-edge-contact i { animation:paper-edge-drop 1.6s ease-out infinite; }
 .is-rain-damp .paper-edge-contact i + i { animation-delay:-.7s; }
 .is-hail-contact .paper-edge-contact i { width:4px; height:4px; background:#c5d8df; border:0; border-radius:1px; animation:paper-edge-hail 1.8s linear infinite; }
-.paper-free-edge { position:absolute; right:1.4%; bottom:1.5%; z-index:1; width:38px; height:13px; pointer-events:none; opacity:0; background:var(--paper) url('../assets/paper/paper-grain-wide.png') right bottom/380px auto; mask:url('../assets/paper/supporting-paper-mask.svg') center/100% 100% no-repeat; transform-origin:right top; transition:transform var(--duration-scene) cubic-bezier(.23,1,.32,1),opacity var(--duration-scene) linear; }
+.paper-free-edge { position:absolute; right:1.4%; bottom:1.5%; z-index:1; width:36px; height:18px; pointer-events:none; opacity:0; border-radius:80% 24% 74% 35% / 65% 35% 70% 35%; background:linear-gradient(166deg,transparent 34%,#75664b24 46%,#d6cbb34d 52%,transparent 74%),var(--paper) url('../assets/paper/paper-grain-wide.png') right bottom/380px auto; background-blend-mode:multiply; box-shadow:0 2px 3px #43352b20; transform-origin:right bottom; transform:scaleY(.35) rotate(-2deg); transition:transform var(--duration-scene) cubic-bezier(.23,1,.32,1),opacity var(--duration-scene) linear; transition-delay:240ms; }
+.hero-meta-col .paper-free-edge { transition-delay:160ms; }
+.factor-sheet .paper-free-edge { transition-delay:320ms; }
 body[data-weather="wind"] .paper-free-edge { opacity:1; animation:paper-free-corner 4.5s cubic-bezier(.25,1,.4,1) infinite; }
 body[data-paper-wind] .paper-free-edge { opacity:1; transform:translateY(-3px) rotate(-2deg); animation:none; }
 body[data-paper-wind="high"] .paper-free-edge { transform:translateY(-6px) rotate(-4deg); }
@@ -2115,7 +2116,7 @@ body[data-paper-wind="high"] #paper-tape-action::before { transform: rotate(-9de
 #paper-tape-action.is-sun-translucent { opacity:.62; }
 @keyframes paper-edge-drop { 0%,60%,100%{opacity:0;transform:scale(.7)}15%{opacity:.65;transform:scale(1)}40%{opacity:0;transform:scale(1.5)} }
 @keyframes paper-edge-hail { 0%,65%,100%{opacity:0;transform:translate(0,0)}12%{opacity:.8;transform:translate(0,0)}25%{opacity:.8;transform:translate(8px,-12px)}45%{opacity:0;transform:translate(17px,3px)} }
-@keyframes paper-free-corner { 0%,65%,100%{transform:none}18%{transform:translateY(-11px) rotate(-8deg)}34%{transform:translateY(-3px) rotate(-2deg)} }
+@keyframes paper-free-corner { 0%,65%,100%{transform:scaleY(.35) rotate(-2deg);opacity:0}18%{transform:translateY(-6px) rotate(-4deg);opacity:1}34%{transform:translateY(-2px) rotate(-1deg);opacity:.5} }
 @keyframes paper-tape-tail { 0%,65%,100%{transform:rotate(-8deg)}18%{transform:rotate(-15deg)}34%{transform:rotate(-9deg)} }
 /* Effective motion flag is set by motion.mjs; system reduction always wins. */
 body[data-motion="false"],body[data-motion="false"] *,body[data-motion="false"] *::before,body[data-motion="false"] *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }

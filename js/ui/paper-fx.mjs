@@ -1,5 +1,5 @@
 /**
- * 纸缘特效：手动夹端受光、评分圈注暖光、阵风碎屑与实况纸缘接触。
+ * 纸缘特效：手动夹端受光、评分圈注暖光、分层铅笔阵风与实况纸缘接触。
  * 四张纸面分别承接天气；透明的主卡分组与纸上文字不参与运动。
  * 粒子画在前景画布上，系统减弱动态实时清理所有未完成反馈。
  */
@@ -9,6 +9,8 @@ const AMBIENT_GUST_INTERVAL = { strong: 32_000, breezy: 45_000 };
 const STRIKE_DURATION = 650;
 const WARM_DURATION = 3600;
 const MAX_WIND_PIECES = 18;
+const WIND_DELAYS = [120, 300, 390, 780, 920, 1000, 1400];
+const GENTLE_WIND_DELAYS = [120, 300, 780, 1400];
 
 function lightningPath(fromX, hitX, hitY) {
   const segments = [];
@@ -36,6 +38,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   const ctx = canvas.getContext("2d");
   const els = {
     sheets: [...document.querySelectorAll("[data-weather-surface]")].map((element) => ({ element, rect: element.getBoundingClientRect() })),
+    skyText: [...document.querySelectorAll(".topbar, .forecast-context, .section-head h2, .section-head > p, .hero-companion-pill")].map((element) => ({ element, rect: element.getBoundingClientRect() })),
     clip: document.getElementById("paper-clip-action"),
     circle: document.getElementById("score-circle-action"),
     tape: document.getElementById("paper-tape-action")
@@ -67,6 +70,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   function measureSheets() {
     for (const sheet of els.sheets) sheet.rect = sheet.element.getBoundingClientRect();
     measureFrame = null;
+    for (const area of els.skyText) area.rect = area.element.getBoundingClientRect();
   }
 
   function queueMeasure() {
@@ -148,19 +152,37 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
     const strong = intensity === "high";
     // Extend the live gust without discarding pieces already crossing the sky.
     if (strong || !body.dataset.paperWind) body.dataset.paperWind = intensity;
-    const count = Math.min(strong ? 10 : 5, MAX_WIND_PIECES - debris.length);
+    measureSheets();
+    // Prefer open sky bands, including when the trigger is below the fold.
+    let openY = height * 0.5;
+    let widest = -1;
+    for (let band = 0; band < 9; band += 1) {
+      const y = height * (0.18 + band * 0.08);
+      let room = width;
+      for (const { rect } of els.sheets) {
+        if (y + 28 > rect.top && y - 28 < rect.bottom) {
+          room -= Math.max(0, Math.min(width, rect.right) - Math.max(0, rect.left));
+        }
+      }
+      if (room > widest) { widest = room; openY = y; }
+    }
+    const count = Math.min(strong ? 7 : 4, MAX_WIND_PIECES - debris.length);
     for (let k = 0; k < count; k += 1) {
-      const leaf = Math.random() > 0.9;
+      const kind = k === 1 || (strong && k === 2) ? "ribbon"
+        : k === 4 && strong ? "leaf" : "wisp";
+      const near = k % 2 === 1;
+      const size = kind === "ribbon" ? Math.min(230, Math.max(110, width * 0.17))
+        : kind === "leaf" ? 12 : 22 + Math.random() * 24;
       debris.push({
-        startY: Math.random() * height * 0.88 + height * 0.04,
-        startedAt: now + 120 + k * 50,
-        duration: (strong ? 2400 : 3000) + Math.random() * 350,
-        size: leaf ? 4 + Math.random() * 3 : 8 + Math.random() * 16,
+        kind, size,
+        startY: kind === "ribbon" ? openY + (k === 1 ? -18 : 24)
+          : Math.max(35, Math.min(height - 35, openY + (Math.random() - 0.5) * height * 0.6)),
+        startedAt: now + (strong ? WIND_DELAYS[k] : GENTLE_WIND_DELAYS[k]),
+        duration: near ? 2800 : 3600,
         phase: Math.random() * Math.PI * 2,
-        sway: 8 + Math.random() * 16,
+        sway: near ? 20 : 10,
         spin: (Math.random() - 0.5) * 2,
-        alpha: strong ? 0.38 : 0.24,
-        leaf
+        alpha: (kind === "ribbon" ? 0.58 : 0.42) * (strong ? 1 : 0.7) * (near ? 1 : 0.75)
       });
     }
     wake();
@@ -308,6 +330,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     for (const { rect } of els.sheets) ctx.rect(rect.left, rect.top, rect.width, rect.height);
+    for (const { rect } of els.skyText) ctx.rect(rect.left, rect.top, rect.width, rect.height);
     ctx.clip("evenodd");
     for (let index = debris.length - 1; index >= 0; index -= 1) {
       const piece = debris[index];
@@ -316,26 +339,63 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
       if (progress >= 1) { debris.splice(index, 1); continue; }
       // A gentle acceleration through the middle, with a viewport-relative path.
       const travel = progress - Math.sin(progress * Math.PI * 2) * 0.055;
-      const x = -40 + travel * (width + 80);
+      const x = -piece.size + travel * (width + piece.size * 2);
       const y = piece.startY - progress * 36
         + Math.sin(progress * Math.PI * 2 + piece.phase) * piece.sway;
       const alpha = piece.alpha * Math.min(1, progress / 0.12, (1 - progress) / 0.22);
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(piece.leaf ? piece.phase + progress * piece.spin
-        : Math.cos(progress * Math.PI * 2 + piece.phase) * 0.12);
+      ctx.rotate(piece.kind === "leaf" ? piece.phase + progress * piece.spin
+        : Math.cos(progress * Math.PI * 2 + piece.phase) * 0.08);
+      const ink = body.dataset.light === "night" ? "211, 196, 164" : "89, 108, 101";
+      ctx.strokeStyle = `rgba(${ink}, ${alpha})`;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      if (piece.leaf) {
-        ctx.fillStyle = `rgba(175, 143, 99, ${alpha})`;
-        ctx.ellipse(0, 0, piece.size, piece.size * 0.3, 0, 0, Math.PI * 2);
+      if (piece.kind === "leaf") {
+        // A tapered outline, central vein and alternating veins, not a solid oval.
+        ctx.scale(1, 0.25 + Math.abs(Math.cos(progress * Math.PI * 3)) * 0.75);
+        ctx.fillStyle = `rgba(153, 151, 111, ${alpha * 0.55})`;
+        ctx.lineWidth = 0.8;
+        ctx.moveTo(-12, 0);
+        ctx.bezierCurveTo(-3, -9, 9, -7, 14, -1);
+        ctx.bezierCurveTo(6, 7, -6, 8, -12, 0);
         ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-15, 1);
+        ctx.quadraticCurveTo(0, -2, 12, -1);
+        ctx.moveTo(-5, 0); ctx.lineTo(-2, -4);
+        ctx.moveTo(0, 0); ctx.lineTo(4, 4);
+        ctx.moveTo(5, -1); ctx.lineTo(8, -4);
+        ctx.stroke();
+      } else if (piece.kind === "ribbon") {
+        const length = piece.size;
+        ctx.lineWidth = 1.15;
+        ctx.moveTo(-length * 0.5, 3);
+        ctx.bezierCurveTo(-length * 0.24, -24, length * 0.12, 22, length * 0.34, -2);
+        ctx.bezierCurveTo(length * 0.56, -28, length * 0.28, -36, length * 0.25, -18);
+        ctx.bezierCurveTo(length * 0.23, -8, length * 0.37, -9, length * 0.37, -18);
+        ctx.stroke();
+        // Broken companion strokes and a faint displaced pencil pass.
+        ctx.strokeStyle = `rgba(${ink}, ${alpha * 0.48})`;
+        ctx.lineWidth = 0.65;
+        ctx.beginPath();
+        ctx.moveTo(-length * 0.43, 10);
+        ctx.bezierCurveTo(-length * 0.19, -9, length * 0.03, 24, length * 0.21, 11);
+        ctx.moveTo(length * 0.26, 8);
+        ctx.quadraticCurveTo(length * 0.4, 0, length * 0.44, -7);
+        ctx.moveTo(-length * 0.31, -5);
+        ctx.quadraticCurveTo(-length * 0.07, -13, length * 0.11, 2);
+        ctx.stroke();
       } else {
-        ctx.strokeStyle = body.dataset.light === "night"
-          ? `rgba(211, 196, 164, ${alpha})`
-          : `rgba(108, 112, 99, ${alpha})`;
-        ctx.lineWidth = 0.75;
-        ctx.moveTo(-piece.size, 0);
-        ctx.quadraticCurveTo(0, -2, piece.size, 0);
+        ctx.lineWidth = 0.8;
+        ctx.moveTo(-piece.size * 0.5, 0);
+        ctx.quadraticCurveTo(0, -7, piece.size * 0.5, -2);
+        ctx.stroke();
+        ctx.lineWidth = 0.45;
+        ctx.beginPath();
+        ctx.moveTo(-piece.size * 0.3, 4);
+        ctx.quadraticCurveTo(0, 0, piece.size * 0.16, 3);
         ctx.stroke();
       }
       ctx.restore();

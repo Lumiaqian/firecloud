@@ -1,6 +1,6 @@
 /**
  * 纸缘反馈：夹端局部受光、评分圈注暖光、胶带与天空右划起风。
- * 天气与预报文字始终留在原处；横笺滚动不参与天空手势。
+ * 天气与预报文字始终留在原处；装饰反馈仅读屏播报，不显示演示说明或占据版面。
  */
 import { $ } from "./dom.mjs";
 import { triggerHaptic } from "./motion.mjs";
@@ -14,7 +14,6 @@ export function bindPaperInteractions(paperFx) {
   const announce = (message, played) => {
     const status = $("paper-fx-status");
     if (status) {
-      status.hidden = false;
       status.textContent = played ? message : document.body.dataset.input === "keyboard"
         ? "键盘操作 · 仅文字反馈，天气与预报不变。"
         : "动效已停用 · 仅文字反馈，天气与预报不变。";

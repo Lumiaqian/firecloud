@@ -260,27 +260,81 @@ for (const weatherId of Object.keys(labels)) {
     scenes.push(scene);
   }
 }
+const windDrawings = {
+  band: '<svg class="sl-atmo-gust-drawing" viewBox="0 0 250 60" aria-hidden="true"><path class="sl-atmo-gust-stroke" d="M4 39 C43 20 89 43 137 28 S201 14 223 24 C244 34 239 48 226 43 C219 40 223 34 229 35"/><path class="sl-atmo-gust-stroke is-side" d="M28 48 C68 34 104 49 148 36 S190 28 204 30"/><path class="sl-atmo-gust-stroke is-side" d="M61 23 C97 32 127 17 161 13 S188 13 196 17"/><path class="sl-atmo-gust-stroke is-retrace" d="M10 40 C44 24 86 44 120 34 M148 26 C176 15 199 17 211 22 M226 25 C238 32 239 40 232 43"/></svg>',
+  wisp: '<svg class="sl-atmo-gust-drawing" viewBox="0 0 120 36" aria-hidden="true"><path class="sl-atmo-gust-stroke" d="M3 24 C26 7 54 28 79 15 S105 8 111 14 C117 22 108 27 104 21"/><path class="sl-atmo-gust-stroke is-side" d="M22 30 C41 20 65 30 86 22"/><path class="sl-atmo-gust-stroke is-retrace" d="M7 24 Q22 15 36 18 M77 17 Q91 9 100 10"/></svg>',
+  leaf: '<svg class="sl-atmo-gust-leaf-drawing" viewBox="0 0 32 20" aria-hidden="true"><path class="sl-atmo-leaf-body" d="M3 15 C4 6 16 1 29 3 C27 14 14 20 3 15Z"/><path class="sl-atmo-leaf-vein" d="M1 18 Q13 10 28 3 M9 13 L9 9 M14 10 L15 6 M19 7 L22 6 M11 12 L17 14 M18 8 L23 10"/></svg>'
+};
+function windBandLane() {
+  const bounds = stage.getBoundingClientRect();
+  const obstacles = [...stage.querySelectorAll('.sl-atmo-controls, .sl-atmo-heading, [data-sl-card], .sl-atmo-forecast')].map(element => {
+    const rect = element.getBoundingClientRect();
+    return { top: rect.top - bounds.top, bottom: rect.bottom - bounds.top, left: rect.left - bounds.left, right: rect.right - bounds.left };
+  });
+  const papers = [...stage.querySelectorAll('.sl-atmo-score, .sl-atmo-sunset')].map(element => element.getBoundingClientRect());
+  const firstPaperTop = Math.min(...papers.map(rect => rect.top - bounds.top));
+  const candidates = [firstPaperTop - 32, ...obstacles.flatMap(rect => [rect.top - 32, rect.bottom + 32])];
+  let best = null;
+  for (const center of candidates) {
+    if (center < 32 || center > firstPaperTop - 24) continue;
+    const blocked = obstacles.filter(rect => rect.top < center + 31 && rect.bottom > center - 31).sort((a, b) => a.left - b.left);
+    let left = 10;
+    const gaps = [];
+    for (const rect of blocked) {
+      if (rect.left - left > 0) gaps.push({ left, width: rect.left - left - 10 });
+      left = Math.max(left, rect.right + 10);
+    }
+    if (left < stage.clientWidth - 10) gaps.push({ left, width: stage.clientWidth - left - 10 });
+    for (const gap of gaps) {
+      if (gap.width < 100) continue;
+      const score = gap.width - center * .05;
+      if (!best || score > best.score) best = { ...gap, center, score };
+    }
+  }
+  return best;
+}
 function emitWind(strong) {
   if (stage.dataset.motion !== 'true') return;
   const batch = windBatch++;
-  const count = Math.min(strong ? 10 : 5, maxGustParticles - gustParticles.size);
-  const baseDuration = strong ? 2400 : 3000;
-  const distance = Math.max(stage.clientWidth, document.documentElement.clientWidth) + 240;
-  for (let i = 0; i < count; i++) {
+  const plan = [
+    { kind: 'wisp', delay: 0, far: true, top: 20, width: 105 },
+    { kind: 'band', delay: 300, far: false, top: 34, width: 230 },
+    ...(strong ? [{ kind: 'band', delay: 390, far: true, top: 61, width: 190 }] : []),
+    { kind: 'wisp', delay: 780, far: false, top: 50, width: 92 },
+    ...(strong ? [{ kind: 'wisp', delay: 1000, far: true, top: 73, width: 115 }] : []),
+    ...(batch % 3 === 2 ? [{ kind: 'leaf', delay: 920, far: false, top: 43, width: 27 }] : []),
+    { kind: 'wisp', delay: 1400, far: true, top: 28, width: 78 }
+  ];
+  const distance = Math.max(stage.clientWidth, document.documentElement.clientWidth) + 540;
+  const bandLane = windBandLane();
+  for (const [i, item] of plan.entries()) {
+    if (gustParticles.size >= maxGustParticles) break;
     const seed = batch * 17 + i * 13;
-    const duration = baseDuration + Math.random() * 350;
-    const leaf = i === 0 && batch % 3 === 2;
-    const carrier = decoration('sl-atmo-gust-particle', gustLayer);
+    const duration = item.far ? 3600 : 2800;
+    if (item.kind === 'band' && !bandLane) continue;
+    const carrier = decoration(`sl-atmo-gust-particle is-${item.far ? 'far' : 'near'}`, gustLayer);
     const arc = decoration('sl-atmo-gust-arc', carrier);
-    const mark = decoration(leaf ? 'sl-atmo-gust-mark is-leaf' : 'sl-atmo-gust-mark', arc);
-    const bend = ((seed % 5) - 2) * (strong ? 17 : 11);
-    const delay = 120 + i * 50;
-    carrier.style.cssText = `top:${14 + seed % 66}%;--gust-duration:${duration}ms;--gust-delay:${delay}ms;--gust-end:${distance}px;--gust-y1:${bend - 16}px;--gust-y2:${-bend + 12}px;--gust-y3:${bend * .45}px;--gust-opacity:${leaf ? .36 : strong ? .25 : .17}`;
-    mark.style.cssText = `width:${leaf ? 15 : 28 + seed % 36}px;--gust-turn:${seed % 2 ? 360 : -360}deg;--gust-angle:${seed % 43 - 21}deg;--gust-spin:${1100 + seed % 7 * 190}ms;--gust-delay:${delay}ms`;
+    const mark = decoration(`sl-atmo-gust-mark sl-atmo-gust-${item.kind}`, arc);
+    const isBand = item.kind === 'band';
+    const bend = isBand ? (seed % 3 - 1) * 2 : ((seed % 5) - 2) * (item.far ? 10 : 17);
+    const top = isBand ? `${bandLane.center - item.width * .12 + (item.far ? 4 : -4)}px` : `${item.top + batch % 3 * 3}%`;
+    const left = isBand ? bandLane.left - item.width : -115;
+    const end = isBand ? bandLane.width + item.width * 2 : distance;
+    carrier.style.cssText = `left:${left}px;top:${top};--gust-duration:${duration}ms;--gust-delay:${item.delay}ms;--gust-end:${end}px;--gust-y1:${isBand ? bend : bend - 16}px;--gust-y2:${isBand ? -bend : -bend + 12}px;--gust-y3:${bend * .45}px;--gust-opacity:${item.far ? .34 : .52}`;
+    mark.style.cssText = `--gust-size:${item.width}px;--gust-angle:${isBand ? seed % 3 - 1 : seed % 13 - 6}deg;--gust-turn:${(seed % 2 ? 1 : -1) * (isBand ? 2 : 16)}deg;--gust-spin:${item.kind === 'leaf' ? 1400 : duration}ms`;
+    mark.innerHTML = windDrawings[item.kind];
     gustParticles.set(carrier, setTimeout(() => {
       carrier.remove();
       gustParticles.delete(carrier);
-    }, duration + delay + 50));
+    }, duration + item.delay + 50));
+  }
+  if (!strong) {
+    clearTimeout(timers.get('breeze'));
+    stage.dataset.breeze = 'true';
+    timers.set('breeze', setTimeout(() => {
+      delete stage.dataset.breeze;
+      timers.delete('breeze');
+    }, 5000));
   }
 }
 function syncAmbientWind(delay = 7200) {
@@ -302,7 +356,7 @@ function clearEffects() {
     particle.remove();
   }
   gustParticles.clear();
-  for (const effect of ['gust', 'strike', 'warm']) delete stage.dataset[effect];
+  for (const effect of ['gust', 'breeze', 'strike', 'warm']) delete stage.dataset[effect];
 }
 function render() {
   stage.dataset.weather = weather.value;
@@ -343,7 +397,7 @@ document.querySelector('#weather-clip').addEventListener('click', event => pulse
 document.querySelector('#weather-annotation').addEventListener('click', event => pulse('warm', '圈注暖光', 3600, event));
 document.querySelector('#weather-tape').addEventListener('click', event => {
   const allowed = event.detail !== 0 && stage.dataset.motion === 'true';
-  pulse('gust', '淡铅笔风痕掠过天空，纸缘轻动', 3350, event);
+  pulse('gust', '分层手绘阵风掠过天空，纸缘迟半拍轻动', 5000, event);
   if (allowed) emitWind(true);
 });
 for (const button of document.querySelectorAll('[data-day]')) button.addEventListener('click', () => {

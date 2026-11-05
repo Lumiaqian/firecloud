@@ -182,10 +182,10 @@
     "Paper"
   ],
   "lastChange": {
-    "at": "2026-11-05T08:12:18Z",
+    "at": "2026-11-05T08:46:24Z",
     "by": "Codex",
     "via": "Codex",
-    "note": "WeatherStage阵风预览及规范对齐生产强10/轻5与上限18；明确WeatherStage限额追加、MotionFlow活动轮不追加的不同重复触发策略及画板右划边界，正文稳定与退出清理不变。"
+    "note": "WeatherStage主风带改按控制区、标题与纸笺实际rect选择双纸上方最宽天空通道，限制纵向弯折并按通道宽度行进，避免主笔迹藏于纸后；风丝保留纸后行程。分层节奏、18载体上限与36×18透镜纸角不变。"
   },
   "layout": "files",
   "libraries": [],
