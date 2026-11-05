@@ -5,7 +5,7 @@ const MIDNIGHT = Date.parse("2026-10-24T00:00:00+08:00");
 
 // Match the requested hourly/current fields, as tests/api.test.mjs does, rather
 // than bypassing the real API adapter or session with production test hooks.
-function forecastResponse(url) {
+function forecastResponse(url, current) {
   const values = {
     cloud_cover_low: 10, cloud_cover_mid: 30, cloud_cover_high: 40,
     relative_humidity_2m: 55, visibility: 20_000, precipitation: 0,
@@ -27,7 +27,8 @@ function forecastResponse(url) {
         time: NOW.getTime() / 1000, weather_code: 2, temperature_2m: 22,
         is_day: 1, cloud_cover: 40, precipitation: 0, snowfall: 0,
         wind_speed_10m: 8, wind_direction_10m: 135, wind_gusts_10m: 12,
-        pressure_msl: 1015
+        pressure_msl: 1015,
+        ...current
       }
     } : {})
   };
@@ -43,7 +44,7 @@ export const test = base.extend({
     expect(errors, "No uncaught browser exceptions").toEqual([]);
   }, { auto: true }],
   weatherApi: async ({ context }, use) => {
-    const api = { fail: false, forecasts: 0 };
+    const api = { fail: false, forecasts: 0, current: {} };
     await context.route(/^https:\/\/(?:api|air-quality-api|geocoding-api)\.open-meteo\.com\//, async (route) => {
       const url = new URL(route.request().url());
       if (url.hostname === "geocoding-api.open-meteo.com") {
@@ -54,7 +55,7 @@ export const test = base.extend({
       } else {
         api.forecasts += 1;
         if (api.fail) await route.fulfill({ status: 503, json: { error: true, reason: "Fixture outage" } });
-        else await route.fulfill({ json: forecastResponse(url) });
+        else await route.fulfill({ json: forecastResponse(url, api.current) });
       }
     });
     await use(api);

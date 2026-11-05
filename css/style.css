@@ -328,12 +328,16 @@ body[data-light="night"][data-weather="hail"] {
 }
 
 body[data-theme="dawn"][data-weather="clear"] {
+  --sky-ink: var(--sky-ink-on-light);
+  --sky-accent: var(--sky-accent-on-light);
   --sky-top: var(--weather-clear-dawn-top, #8a9eaf);
   --sky-mid: var(--weather-clear-dawn-mid, #cbb4ae);
   --sky-horizon: var(--weather-clear-dawn-bottom, #eacaa5);
 }
 
 body[data-theme="dusk"][data-weather="clear"] {
+  --sky-ink: var(--sky-ink-on-light);
+  --sky-accent: var(--sky-accent-on-light);
   --sky-top: var(--weather-clear-dusk-top, #bdccd5);
   --sky-mid: var(--weather-clear-dusk-mid, #d5b29d);
   --sky-horizon: var(--weather-clear-dusk-bottom, #edcd9a);

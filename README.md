@@ -55,6 +55,8 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory dist
 
 设计入口：[天空画笺设计系统](designs/sky-letter-system/project/README.md)、[桌面稿](designs/paper-place-finder/project/SkyLetterStudy.dc.html)、[手机稿](designs/paper-place-finder/project/SkyLetterMobile.dc.html)。全文使用[小赖](assets/fonts/Xiaolai-OFL.txt)：生产字体按字符分片，保留完整字库，先加载界面常用字，其余按需加载。离线可用已缓存的字片。
 
+天气动效验收包含“恢复本机记录 → 刷新实况”：隐藏画布恢复后必须先按可见尺寸重建粒子，不能把零尺寸当作有效画布。晨昏文字按实际天空底色选择深浅，不直接套用昼夜标记。
+
 ### 更新与部署
 
 新增或删除模块后运行 `npm run sync-modules`，同步 import map 和预缓存列表。发布代码更新时运行 `npm run sync-modules -- --bump`，更新模块与应用壳缓存版本；修改 CSS 时还需更新 `index.html` 中对应样式表的版本号。

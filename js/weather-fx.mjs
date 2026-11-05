@@ -976,8 +976,10 @@ export function createWeatherFx(canvas, {
 
   function resizeCanvas() {
     const bounds = canvas.getBoundingClientRect();
-    const nextWidth = Math.max(1, Math.round(bounds.width));
-    const nextHeight = Math.max(1, Math.round(bounds.height));
+    // Retained-record startup hides the canvas. A zero-size box is not a viewport.
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    const nextWidth = Math.round(bounds.width);
+    const nextHeight = Math.round(bounds.height);
     if (nextWidth === width && nextHeight === height) return;
     width = nextWidth;
     height = nextHeight;
@@ -986,6 +988,7 @@ export function createWeatherFx(canvas, {
     const contactRatio = Math.min(window.devicePixelRatio || 1, 1.25);
     resizeContext(canvas, context, pixelRatio);
     resizeContext(contactCanvas, contactContext, contactRatio);
+    retiringLayers.length = 0;
     rebuildParticles();
   }
 
@@ -1100,6 +1103,9 @@ export function createWeatherFx(canvas, {
       stopAnimation();
       return;
     }
+    // Re-measure on reveal/resume, before drawing particles into the visible sky.
+    resizeCanvas();
+    if (!width || !height) return;
     loop.add(drawFrame);
     syncLayerVisibility();
   }

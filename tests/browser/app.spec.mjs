@@ -1,4 +1,70 @@
 import { test, expect, openWelcome, chooseHangzhou, record, expectNoDocumentOverflow } from "./fixtures.mjs";
+import { sunTimes } from "../../js/forecast.mjs";
+
+test("saved-record reveal sizes stars and rain before the first visible frame", async ({ page, weatherApi }) => {
+  await openWelcome(page);
+  await chooseHangzhou(page);
+  await page.clock.setFixedTime(new Date("2026-10-24T12:00:00Z"));
+  await page.getByRole("button", { name: "刷新预报" }).click();
+  await expect(page.locator("#event-pending")).toHaveAttribute("data-state", "live");
+
+  for (const current of [{ weather_code: 2 }, { weather_code: 61, precipitation: 1 }]) {
+    await page.reload();
+    await expect(page.locator("body")).toHaveAttribute("data-unconfirmed", "true");
+    await expect(page.locator("#weather-canvas")).not.toBeVisible();
+    weatherApi.current = current;
+    // Observe every rendered frame, not only the settled canvas after refresh.
+    await page.evaluate(() => {
+      window.badWeatherFrames = [];
+      window.watchWeatherFrames = true;
+      const watch = () => {
+        const c = document.querySelector("#weather-canvas");
+        const bounds = c.getBoundingClientRect();
+        if (document.body.dataset.unconfirmed === "false" && bounds.width > 0) {
+          const ratio = Math.min(devicePixelRatio || 1, 2);
+          if (c.width !== Math.round(bounds.width * ratio) || c.height !== Math.round(bounds.height * ratio)) {
+            window.badWeatherFrames.push([c.width, c.height, bounds.width, bounds.height]);
+          }
+        }
+        if (window.watchWeatherFrames) requestAnimationFrame(watch);
+      };
+      requestAnimationFrame(watch);
+    });
+    await page.getByRole("button", { name: "刷新预报" }).click();
+    await expect(page.locator("body")).toHaveAttribute("data-fx", current.weather_code === 2 ? "stars" : "rain");
+    await expect.poll(() => page.locator("#weather-canvas").evaluate((c) => {
+      const pixels = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+      let occupied = 0;
+      for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 0) occupied++;
+      return occupied > 0 && occupied / (c.width * c.height) < 0.1;
+    })).toBe(true);
+    expect(await page.evaluate(() => {
+      window.watchWeatherFrames = false;
+      return window.badWeatherFrames;
+    })).toEqual([]);
+  }
+});
+
+test("clear twilight retains readable ink after astronomical sunset", async ({ page, weatherApi }) => {
+  await openWelcome(page);
+  weatherApi.current = { weather_code: 0, cloud_cover: 0 };
+  const { sunset } = sunTimes(new Date("2026-10-24T08:00:00Z"), 30.27, 120.15);
+  await page.clock.setFixedTime(new Date(sunset.getTime() + 60_000));
+  await chooseHangzhou(page);
+  await expect(page.locator("body")).toHaveAttribute("data-light", "night");
+  await expect(page.locator("body")).toHaveAttribute("data-theme", "dusk");
+  const contrast = await page.evaluate(() => {
+    const luminance = (rgb) => rgb.map((v) => {
+      const s = v / 255;
+      return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    }).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+    const ink = getComputedStyle(document.querySelector("#home-place-name")).color.match(/[\d.]+/g).slice(0, 3).map(Number);
+    const sky = getComputedStyle(document.body).getPropertyValue("--sky-top").trim().match(/[a-f\d]{2}/gi).map((v) => parseInt(v, 16));
+    const a = luminance(ink), b = luminance(sky);
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  });
+  expect(contrast).toBeGreaterThanOrEqual(4.5);
+});
 
 test("welcome search chooses a place and renders a usable seven-day record", async ({ page, weatherApi }) => {
   await openWelcome(page);
