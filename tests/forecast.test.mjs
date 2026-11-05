@@ -7,7 +7,6 @@ import {
   metricsAt,
   nextEvent,
   scoreSky,
-  sealFor,
   hasCloudLayers,
   twilightWarmthFor,
   skyBreakdown,
@@ -18,7 +17,6 @@ import {
   tierFor,
   scoreSunDisc,
   sunDiscPhenomenon,
-  sealForSunDisc,
   solarAzimuth,
   solarElevation,
   stormLevelFor,
@@ -26,7 +24,6 @@ import {
   moonDiskPosition,
   lunarPhase,
   lunarSvgPath,
-  waitAdvice,
   weatherConditionFor,
   weatherTheme
 } from "../js/forecast.mjs";
@@ -54,31 +51,14 @@ test("理想中高云且空气清洁达到极佳", () => {
   assert.equal(indexBand(score), "极佳");
 });
 
-test("等待建议覆盖全部指数分档", () => {
-  assert.equal(waitAdvice(80), "值得专程等待");
-  assert.equal(waitAdvice(65), "值得追这场霞光");
-  assert.equal(waitAdvice(50), "可以顺路看看");
-  assert.equal(waitAdvice(35), "有空可以留意");
-  assert.equal(waitAdvice(34), "不建议专程等待");
-});
-
-test("朱砂印章研判与副标覆盖全部五档指数分档", () => {
-  assert.deepEqual(sealFor(90), { text: "紫金", sub: "绝艳霞天" });
-  assert.deepEqual(sealFor(75), { text: "晴金", sub: "绚彩可期" });
-  assert.deepEqual(sealFor(55), { text: "柔光", sub: "浮云堪赏" });
-  assert.deepEqual(sealFor(35), { text: "敛光", sub: "云厚光微" });
-  assert.deepEqual(sealFor(20), { text: "微茫", sub: "且待新晴" });
-});
-
-test("档位文字、印章与主题档位共用同一组分界", () => {
-  for (const [score, band, seal, tier] of [
-    [80, "极佳", "紫金", "epic"], [79, "值得追", "晴金", "great"],
-    [65, "值得追", "晴金", "great"], [64, "有机会", "柔光", "good"],
-    [50, "有机会", "柔光", "good"], [49, "一般", "敛光", "fair"],
-    [35, "一般", "敛光", "fair"], [34, "平淡", "微茫", "dull"]
+test("评分文字与主题档位共用同一组分界", () => {
+  for (const [score, band, tier] of [
+    [80, "极佳", "epic"], [79, "值得追", "great"],
+    [65, "值得追", "great"], [64, "有机会", "good"],
+    [50, "有机会", "good"], [49, "一般", "fair"],
+    [35, "一般", "fair"], [34, "平淡", "dull"]
   ]) {
     assert.equal(indexBand(score), band);
-    assert.equal(sealFor(score).text, seal);
     assert.equal(tierFor(score), tier);
   }
 });
@@ -115,6 +95,30 @@ test("远端缺失权重归一化且全缺失返回 null", () => {
   assert.deepEqual(metrics.missingRemote, ["mid", "left", "right"]);
   for (const name of ["near", "mid", "far", "left", "right"]) bundle.forecasts[name] = null;
   assert.equal(metricsAt(bundle, new Date(0)).pathLow, null);
+});
+
+test("远端低云全缺失时沿用本地低云评分但展示为缺测", () => {
+  const local = {
+    time: [0],
+    cloud_cover_low: [48],
+    cloud_cover_mid: [12],
+    cloud_cover_high: [8],
+    relative_humidity_2m: [55],
+    visibility: [25_000],
+    precipitation: [0]
+  };
+  const metrics = metricsAt({ forecasts: { local: { hourly: local } } }, new Date(0));
+  const missing = sunDiscBreakdown(metrics);
+  const measuredFallback = sunDiscBreakdown({ ...metrics, pathLow: metrics.low });
+  const pathLow = missing.factors.find((item) => item.key === "pathLow");
+
+  assert.equal(metrics.pathLow, null);
+  assert.equal(missing.score, measuredFallback.score);
+  assert.equal(pathLow.delta, measuredFallback.factors.find((item) => item.key === "pathLow").delta);
+  assert.deepEqual(
+    { display: pathLow.display, gauge: pathLow.gauge, note: pathLow.note },
+    { display: "缺测", gauge: null, note: "该要素暂缺" }
+  );
 });
 
 test("北京采样生成六个不同且距离准确的点", () => {
@@ -227,29 +231,39 @@ test("实况天气中文描述与温度准确映射", () => {
   assert.equal(clearNight.summary, "晴朗 18℃");
 });
 
-test("天文月相算法准确计算照亮比例、月相命名与农历映射", () => {
+test("天文月相算法准确计算照亮比例、月相命名与地点时区农历映射", () => {
+  const hangzhouZone = "Asia/Shanghai";
+
+  // 同一绝对时刻按杭州当地日期应为农历九月十六。
+  const hangzhouMoon = lunarPhase(new Date("2026-10-24T17:00:00Z"), 30.27, 120.15, hangzhouZone);
+  assert.equal(hangzhouMoon.lunarDate, "农历九月十六");
+
   // 1. 中秋满月 (2026-09-25)
-  const fullMoon = lunarPhase(new Date("2026-09-25T20:00:00+08:00"), 30.27, 120.15);
+  const fullMoon = lunarPhase(new Date("2026-09-25T20:00:00+08:00"), 30.27, 120.15, hangzhouZone);
   assert.ok(fullMoon.phaseFraction > 0.95);
   assert.ok(fullMoon.phaseName.includes("满月") || fullMoon.phaseName.includes("望"));
-  assert.ok(fullMoon.lunarDate.includes("八月"));
+  assert.equal(fullMoon.lunarDate, "农历八月十五");
 
   // 2. 亏凸月 (2026-09-28)
-  const waningGibbous = lunarPhase(new Date("2026-09-28T19:00:00+08:00"), 30.27, 120.15);
+  const waningGibbous = lunarPhase(new Date("2026-09-28T19:00:00+08:00"), 30.27, 120.15, hangzhouZone);
   assert.equal(waningGibbous.phaseName, "亏凸月");
   assert.equal(waningGibbous.isWaxing, false);
   assert.ok(waningGibbous.phaseFraction > 0.9);
 
   // 3. 新月朔日 (2026-09-11)
-  const newMoon = lunarPhase(new Date("2026-09-11T20:00:00+08:00"), 30.27, 120.15);
+  const newMoon = lunarPhase(new Date("2026-09-11T20:00:00+08:00"), 30.27, 120.15, hangzhouZone);
   assert.ok(newMoon.phaseFraction < 0.05);
   assert.equal(newMoon.phaseName, "新月 (朔)");
 
   // 4. 上弦月 (2026-09-18)
-  const quarter = lunarPhase(new Date("2026-09-18T20:00:00+08:00"), 30.27, 120.15);
+  const quarter = lunarPhase(new Date("2026-09-18T20:00:00+08:00"), 30.27, 120.15, hangzhouZone);
   assert.ok(Math.abs(quarter.phaseFraction - 0.5) < 0.1);
   assert.equal(quarter.phaseName, "上弦月");
   assert.equal(quarter.isWaxing, true);
+
+  assert.doesNotThrow(() => lunarPhase(
+    new Date("2026-10-24T17:00:00Z"), 30.27, 120.15, "Invalid/Place"
+  ));
 });
 
 test("月球屏幕映射与月相矢量 SVG 路径生成", () => {
@@ -304,7 +318,6 @@ test("厚重低云或降水严重压制日轮观赏得分并触发地平吞日",
   assert.ok(overcastScore <= 18, `地平厚低云应压制在 18 分以下，实测 ${overcastScore}`);
   const phenOvercast = sunDiscPhenomenon(overcastHorizon, overcastScore);
   assert.equal(phenOvercast.key, "swallowed");
-  assert.equal(sealForSunDisc(overcastScore, phenOvercast).text, "吞日");
 
   const rainScore = scoreSunDisc(rainHorizon);
   assert.ok(rainScore <= 10, `降水应压制在 10 分以下，实测 ${rainScore}`);
@@ -322,14 +335,6 @@ test("适度气溶胶与通透地平准确判定为红润咸蛋黄", () => {
 
   const phen = sunDiscPhenomenon(eggYolkSky, score);
   assert.equal(phen.key, "egg_yolk");
-  assert.equal(phen.name, "红润咸蛋黄");
-
-  const seal = sealForSunDisc(score, phen);
-  assert.deepEqual(seal, { text: "丹曦", sub: "融融红日" });
-
-  const notes = sunDiscBreakdown(eggYolkSky).factors.map((item) => item.note);
-  assert.ok(notes.some((note) => note.includes("消光") || note.includes("红润")));
-
 });
 
 test("极度清朗无污染触发澄金贯日", () => {
@@ -342,8 +347,6 @@ test("极度清朗无污染触发澄金贯日", () => {
 
   const phen = sunDiscPhenomenon(crispSky, score);
   assert.equal(phen.key, "crisp_gold");
-  assert.equal(phen.name, "澄金贯日");
-  assert.equal(sealForSunDisc(score, phen).text, "澄金");
 });
 
 test("中高云开合触发云隙漏金", () => {
@@ -356,7 +359,6 @@ test("中高云开合触发云隙漏金", () => {
 
   const phen = sunDiscPhenomenon(breakSky, score);
   assert.equal(phen.key, "crepuscular");
-  assert.equal(sealForSunDisc(score, phen).text, "云隙");
 });
 
 

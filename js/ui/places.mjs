@@ -23,8 +23,12 @@ function placeIcon(path, className) {
 export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }) {
   const els = {
     dialog: $("places-dialog"), brand: $("open-places"), search: $("city-search"),
+    clearSearch: $("clear-city-search"), scroll: $("places-scroll"),
+    locate: $("dialog-locate"), welcomeLocate: $("locate-button"),
     searchStatus: $("search-status"), searchSpinner: $("search-spinner"), searchResults: $("search-results"),
     geoNotice: $("geo-notice"), favorite: $("favorite-button"),
+    dialogFavorite: $("dialog-save-current"), dialogFavoriteLabel: $("dialog-save-label"),
+    capacity: $("favorites-capacity"), notice: $("favorites-notice"),
     favoritesList: $("favorites-list"), favoritesEmpty: $("favorites-empty"),
     feedback: $("favorite-feedback"), message: $("favorite-message"), undo: $("undo-favorite"),
     dialogFeedback: $("dialog-favorite-feedback"), dialogMessage: $("dialog-favorite-message"), dialogUndo: $("dialog-undo-favorite")
@@ -41,27 +45,36 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
   function setSearchStatus(message, status, detail) {
     if (status) els.searchStatus.dataset.status = status;
     else els.searchStatus.removeAttribute("data-status");
-    if (status === "empty" || status === "error") {
-      const path = status === "empty"
-        ? "M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0ZM15 15l6 6M7 10h6"
-        : "M12 3 23 22H1L12 3ZM12 9v6m0 3v1";
+    if (status === "empty" || status === "error" || status === "loading" || status === "locating") {
       const copy = el("div", "search-status-copy");
-      copy.append(el("strong", null, message), el("p", null, detail));
-      els.searchStatus.replaceChildren(placeIcon(path, "search-status-icon"), copy);
+      copy.append(el("strong", null, message));
+      if (detail) copy.append(el("p", null, detail));
+      if (status === "loading" || status === "locating") {
+        els.searchStatus.replaceChildren(placeIcon("M20 12a8 8 0 1 1-8-8", "search-status-icon"), copy);
+      } else {
+        els.searchStatus.replaceChildren(copy);
+      }
+      if (status === "error" && els.search.value.trim().length >= 2) {
+        const retry = el("button", "search-retry", "重试");
+        retry.type = "button";
+        retry.addEventListener("click", () => runSearch());
+        copy.append(retry);
+      }
     } else {
       els.searchStatus.textContent = message;
     }
   }
 
-  function setLocationStatus(message) {
+  function setLocationStatus(message, status, detail) {
     els.geoNotice.textContent = message;
-    setSearchStatus(message);
+    setSearchStatus(message, status, detail);
   }
 
   function open() {
     if (els.dialog.open) return;
     renderFavorites();
     resetDrawer();
+    els.scroll.scrollTop = 0;
     els.dialog.showModal();
     renderFeedback();
   }
@@ -84,6 +97,7 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     searchRequestId += 1;
     clearTimeout(searchTimer);
     els.search.value = "";
+    els.clearSearch.hidden = true;
     setSearchBusy(false);
     setSearchStatus("");
     els.searchResults.replaceChildren();
@@ -96,11 +110,19 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     onChoose(place);
   }
 
+  function placeDetail(place) {
+    return place.detail || `${place.lat.toFixed(2)}° · ${place.lon.toFixed(2)}°`;
+  }
+
   function renderSearchResults(results) {
     els.searchResults.replaceChildren(...results.map((place) => {
       const button = el("button");
       button.type = "button";
-      button.append(el("strong", "place-label", place.name), el("small", null, place.detail || ""));
+      const copy = el("span", "result-copy");
+      copy.append(el("strong", "place-label", place.name), el("small", null, placeDetail(place)));
+      const arrow = el("span", "choose-arrow", "→");
+      arrow.setAttribute("aria-hidden", "true");
+      button.append(copy, arrow);
       button.addEventListener("click", () => choose(place));
       const item = el("li");
       item.append(button);
@@ -108,50 +130,76 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     }));
   }
 
-  els.search.addEventListener("input", () => {
+  async function runSearch() {
     clearTimeout(searchTimer);
     const requestId = ++searchRequestId;
     const query = els.search.value.trim();
-    if (query.length < 2) {
+    if (query.length < 2) return;
+    els.searchResults.replaceChildren();
+    setSearchBusy(true);
+    setSearchStatus("正在搜索…", "loading", "正在读取城市列表，当前地点未变。");
+    try {
+      const results = await searchCities(query);
+      if (requestId !== searchRequestId) return;
+      renderSearchResults(results);
+      if (results.length) setSearchStatus(`找到 ${results.length} 处地点`, "results");
+      else setSearchStatus("未寻得匹配城市", "empty", "试试省市全称，或使用设备定位。当前地点未变。");
+    } catch {
+      if (requestId !== searchRequestId) return;
       els.searchResults.replaceChildren();
-      setSearchStatus("");
-      setSearchBusy(false);
-      return;
+      setSearchStatus("城市检索网络未通", "error", "可重试或选择收藏地点。当前地点未变。");
+    } finally {
+      if (requestId === searchRequestId) setSearchBusy(false);
     }
-    searchTimer = setTimeout(async () => {
-      setSearchBusy(true);
-      setSearchStatus("正在搜索…", "loading");
-      try {
-        const results = await searchCities(query);
-        if (requestId !== searchRequestId) return;
-        renderSearchResults(results);
-        if (results.length) setSearchStatus(`找到 ${results.length} 处地点`);
-        else setSearchStatus("未寻得匹配城市", "empty", "试试输入省市全称，或使用设备定位。");
-      } catch {
-        if (requestId !== searchRequestId) return;
-        els.searchResults.replaceChildren();
-        setSearchStatus("城市检索网络未通", "error", "请稍后重试。也可以选择已收藏的地点。");
-      } finally {
-        if (requestId === searchRequestId) setSearchBusy(false);
-      }
-    }, SEARCH_DEBOUNCE);
+  }
+
+  els.search.addEventListener("input", () => {
+    searchRequestId += 1;
+    clearTimeout(searchTimer);
+    els.clearSearch.hidden = !els.search.value;
+    els.searchResults.replaceChildren();
+    setSearchStatus("");
+    setSearchBusy(false);
+    if (els.search.value.trim().length >= 2) searchTimer = setTimeout(runSearch, SEARCH_DEBOUNCE);
   });
+  els.search.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      runSearch();
+    }
+  });
+  els.clearSearch.addEventListener("click", () => {
+    clearSearch();
+    els.search.focus();
+  });
+
+  function setLocating(busy) {
+    for (const button of [els.locate, els.welcomeLocate]) {
+      button.disabled = busy;
+      if (busy) button.setAttribute("aria-busy", "true");
+      else button.removeAttribute("aria-busy");
+    }
+  }
 
   // ---------- 定位 ----------
   function locate() {
     const requestId = ++locateRequestId;
     const fallBackToSearch = () => {
-      setLocationStatus("未能获取设备定位，请尝试搜索城市");
+      setLocating(false);
+      setLocationStatus("未能获取设备定位", "error", "请搜索城市，或选择收藏地点。当前地点未变。");
       openForSearch();
     };
+    clearSearch();
     if (!navigator.geolocation) return fallBackToSearch();
-    setLocationStatus("正在探寻当前位置…");
+    setLocating(true);
+    setLocationStatus("正在探寻当前位置…", "locating", "正在读取设备定位，当前地点未变。");
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       if (requestId !== locateRequestId) return;
       const point = { lat: coords.latitude, lon: coords.longitude };
       let place = { ...point, name: "当前位置" };
       try { place = await reverseGeocode(point); } catch { /* 无地名时仍可用坐标 */ }
       if (requestId !== locateRequestId) return;
+      setLocating(false);
       setLocationStatus("");
       clearSearch();
       if (els.dialog.open) els.dialog.close();
@@ -169,13 +217,16 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     els.favorite.classList.toggle("is-active", active);
     els.favorite.setAttribute("aria-pressed", String(active));
     els.favorite.setAttribute("aria-label", active ? "取消收藏当前地点" : "收藏当前地点");
+    els.dialogFavorite.disabled = !place;
+    els.dialogFavorite.setAttribute("aria-pressed", String(active));
+    els.dialogFavorite.setAttribute("aria-label", active ? "移出当前地点收藏，不切换地点" : "收藏当前地点，不切换地点");
+    els.dialogFavoriteLabel.textContent = active ? "已收藏当前地点" : "收藏当前地点";
     updateFavoriteSelection(place);
   }
 
   function favoritesChanged() {
     saveFavorites();
     renderFavorites();
-    updateFavoriteButton();
   }
 
   function renderFeedback() {
@@ -275,7 +326,7 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     const number = el("span", "favorite-number");
     number.setAttribute("aria-hidden", "true");
     const copy = el("span", "favorite-copy");
-    copy.append(el("strong", "place-label", place.name), el("small", null, place.detail || ""));
+    copy.append(el("strong", "place-label", place.name), el("small", null, placeDetail(place)));
     const current = el("span", "favorite-current", "当前");
     current.setAttribute("aria-hidden", "true");
     current.hidden = true;
@@ -283,7 +334,8 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
     pick.addEventListener("click", () => choose(place));
     const remove = el("button", "delete-favorite");
     remove.type = "button";
-    remove.setAttribute("aria-label", `移出收藏 ${place.name}`);
+    remove.setAttribute("aria-label", `移出收藏 ${place.name}，不切换地点`);
+    remove.setAttribute("aria-pressed", "true");
     remove.append(placeIcon("m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 3Z"));
     remove.addEventListener("click", () => removeFavorite(place));
     item.append(pick, remove);
@@ -314,8 +366,13 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
       row.querySelector(".favorite-number").textContent = String(index + 1).padStart(2, "0");
       if (list.children[index] !== row) list.insertBefore(row, list.children[index] || null);
     });
-    updateFavoriteSelection();
     els.favoritesEmpty.hidden = favorites.length > 0;
+    els.capacity.textContent = `已珍藏 ${favorites.length} / ${FAVORITES_LIMIT} 处 · 星标只改收藏`;
+    if (favorites.length < FAVORITES_LIMIT) {
+      els.notice.hidden = true;
+      els.notice.textContent = "";
+    }
+    updateFavoriteButton();
   }
 
   function toggleFavorite() {
@@ -326,28 +383,35 @@ export function createPlaces({ storage, getCurrentPlace, onChoose, resetDrawer }
       return;
     }
     if (favorites.length >= FAVORITES_LIMIT) {
-      setLocationStatus(`最多珍藏 ${FAVORITES_LIMIT} 处地点`);
+      els.notice.textContent = `最多珍藏 ${FAVORITES_LIMIT} 处，请先移出一处。`;
+      els.notice.hidden = false;
       open();
       return;
     }
     if (pendingFavorite && samePlace(pendingFavorite.place, place)) clearUndo();
     favorites.push({ ...place });
     saveFavorites();
-    updateFavoriteButton();
     renderFavorites();
   }
 
   els.favorite.addEventListener("click", toggleFavorite);
+  els.dialogFavorite.addEventListener("click", toggleFavorite);
   els.undo.addEventListener("click", undoRemoval);
   els.dialogUndo.addEventListener("click", undoRemoval);
-  els.dialog.addEventListener("close", renderFeedback);
+  els.dialog.addEventListener("close", () => {
+    locateRequestId += 1;
+    setLocating(false);
+    els.geoNotice.textContent = "";
+    clearSearch();
+    renderFeedback();
+  });
   for (const feedback of [els.feedback, els.dialogFeedback]) {
     for (const event of ["pointerenter", "pointerleave", "focusin", "focusout"]) {
       feedback.addEventListener(event, () => queueMicrotask(scheduleUndoExpiry));
     }
   }
-  $("locate-button").addEventListener("click", locate);
-  $("dialog-locate").addEventListener("click", locate);
+  els.welcomeLocate.addEventListener("click", locate);
+  els.locate.addEventListener("click", locate);
   $("welcome-search").addEventListener("click", openForSearch);
   $("error-search").addEventListener("click", openForSearch);
   renderFavorites();

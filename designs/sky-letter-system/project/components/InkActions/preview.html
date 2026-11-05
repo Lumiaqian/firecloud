@@ -1,0 +1,17 @@
+<!-- @dsCard group="墨迹控件" height=480 -->
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>墨迹操作 · 非实时样例</title></head>
+<body class="sl-preview"><main class="sl-demo"><section class="sl-paper sl-control-paper" aria-labelledby="actions-title">
+<p class="sl-control-eyebrow">操作示例 · 非实时样例</p><h1 class="sl-control-heading" id="actions-title">纸上操作</h1>
+<p class="sl-control-help">用 Tab 查看真正的键盘焦点。朱红笔迹是选择，虚线是焦点；两者可以同时出现。</p>
+<section class="sl-control-section" aria-labelledby="trace-title"><h2 class="sl-control-section-label" id="trace-title">观测时段</h2>
+<div class="sl-choice-options" role="group" aria-labelledby="trace-title">
+<button class="sl-ink-button sl-ink-choice" type="button" aria-pressed="true" data-period="晚霞"><span class="sl-choice-tick" aria-hidden="true">✓</span>晚霞</button>
+<button class="sl-ink-button sl-ink-choice" type="button" aria-pressed="false" data-period="朝霞"><span class="sl-choice-tick" aria-hidden="true">·</span>朝霞</button>
+</div></section>
+<div class="sl-row" style="margin-top:20px;align-items:center">
+<button class="sl-ink-button sl-ink-primary" id="ink-reset" type="button">恢复样例 ↶</button>
+<button class="sl-ink-button sl-icon-button" id="ink-star" type="button" aria-label="收藏此样例" aria-pressed="false"><svg class="sl-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9Z"></path></svg></button>
+<button class="sl-ink-button sl-icon-button" id="ink-clear" type="button" aria-label="清除本页操作回声"><svg class="sl-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button>
+</div><p class="sl-control-feedback" role="status" id="ink-feedback">本页临时状态，不联网、不保存。</p>
+</section></main><script>window.SkyLetter.InkActions(document);</script></body></html>

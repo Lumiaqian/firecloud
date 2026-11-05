@@ -1,0 +1,39 @@
+<!-- @dsCard group="天空与月相" height=1060 -->
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>夜巡月相 · 非实时样例</title></head>
+<body class="sl-preview">
+<main class="sl-moon-phase" id="moon-phase" data-phase="quarter" data-motion="true">
+  <div class="sl-moon-sky" aria-hidden="true"><i class="sl-atmo-star" style="left:5%;top:193px"></i><i class="sl-atmo-star" style="left:46%;top:86px;animation-delay:-2s"></i><i class="sl-atmo-star" style="left:87%;top:243px;animation-delay:-4s"></i><i class="sl-atmo-star" style="left:36%;top:308px;animation-delay:-1s"></i></div>
+  <div class="sl-moon-inner">
+    <div class="sl-atmo-controls sl-paper sl-body14" aria-label="本地月相样例控制">
+      <label for="moon-state">月相 <select id="moon-state"><option value="crescent">蛾眉月</option><option value="quarter" selected>上弦月</option><option value="full">满月</option><option value="new">新月</option><option value="below">地平线下</option><option value="waning">下弦月</option><option value="waning-crescent">残月</option></select></label>
+      <label for="moon-light">天色 <select id="moon-light"><option value="day">白昼</option><option value="dawn">破晓</option><option value="dusk">暮色</option><option value="night">夜色</option></select></label>
+      <button type="button" id="moon-motion" aria-pressed="true">动效 开</button>
+      <p class="sl-atmo-status" id="moon-status" role="status" aria-live="polite">非实时样例 · 月相示意，不是天空位置</p>
+    </div>
+    <aside class="sl-moon-heading sl-paper" aria-label="独立的预报上下文样例">
+      <p class="sl-caption13 sl-muted">杭州 · 晚霞预报 · 非实时样例</p>
+      <label class="sl-caption13" for="moon-forecast">预报日期</label>
+      <select id="moon-forecast" class="sl-action" style="font:inherit;min-height:var(--target-min);background:var(--paper);color:var(--ink);border:0;border-bottom:1px solid var(--line)"><option value="future">11 月 05 日</option><option value="today">11 月 03 日</option></select>
+      <p class="sl-body14" id="moon-forecast-context">84 · 极佳 · 日落 17:10 · 窗口 16:55–17:35</p>
+      <p class="sl-caption12 sl-muted">换预报日期，不改变此刻月相与环境天色。</p>
+    </aside>
+    <figure class="sl-moon-study">
+      <figcaption><h1 id="moon-name">上弦月</h1><p class="sl-moon-note" id="moon-visibility">明暗交界分明，山海有了轮廓。</p><p class="sl-moon-disclaimer">月相示意 · 非天空位置</p></figcaption>
+      <div class="sl-moon-figure" id="moon-figure"><i class="sl-moon-halo" aria-hidden="true"></i><svg viewBox="0 0 200 200" role="img" id="moon-diagram" aria-label="上弦月月相示意，照亮面50.0%"><defs><clipPath id="sl-moon-lit-clip"><path id="moon-mask" d="M100 12 A88 88 0 0 1 100 188 L100 12 Z"/></clipPath></defs><circle class="sl-moon-disc" cx="100" cy="100" r="88"/><path class="sl-moon-lit" id="moon-lit" d="M100 12 A88 88 0 0 1 100 188 L100 12 Z"/><g class="sl-moon-craters" clip-path="url(#sl-moon-lit-clip)"><ellipse cx="132" cy="74" rx="22" ry="17"/><ellipse cx="145" cy="113" rx="16" ry="26"/><circle cx="113" cy="143" r="11"/><circle cx="151" cy="150" r="6"/></g></svg></div>
+      <div class="sl-moon-below" id="moon-below" hidden><svg viewBox="0 0 128 35" fill="none" aria-hidden="true"><path d="M1 17Q16 13 31 17T63 16T95 17T127 15" stroke="currentColor" stroke-width="1"/><path d="M46 28Q64 32 82 28" stroke="currentColor" stroke-dasharray="3 4" opacity=".6"/></svg><span>地平线下 · 不可见</span></div>
+    </figure>
+    <section class="sl-moon-slip sl-paper" aria-labelledby="moon-note-title">
+      <img class="sl-moon-clip" src="../../components/art/clip.png" alt="">
+      <p class="sl-caption12 sl-muted">夜巡 / 观象札记</p><h2 class="sl-heading22" id="moon-note-title">记一页月光</h2>
+      <p class="sl-caption12 sl-muted" id="moon-sample-time">杭州 · 此刻样例 · 11 月 03 日 18:10</p>
+      <p class="sl-caption12 sl-muted" id="moon-metadata">农历初八（样例） · 日月距角 90.0° · 盈月</p>
+      <dl class="sl-moon-values"><div><dt>照亮面比例</dt><dd id="moon-fraction">50.0%</dd></div><div><dt>月龄 · 朔望纪日</dt><dd><span id="moon-age">7.4</span> <span class="sl-body14">天</span></dd></div><div><dt>地平仰角</dt><dd id="moon-altitude">46.2°</dd><small id="moon-alt-label">地平线上</small></div><div><dt>天球方位向</dt><dd id="moon-azimuth">190.4°</dd><small id="moon-direction">南 · 正北为 0°</small></div></dl>
+      <section class="sl-moon-advice"><h2 id="moon-advice-title">宜看环形山</h2><p id="moon-advice">沿晨昏分界寻找环形山与月海，明暗的交界最有层次。</p></section>
+      <p class="sl-caption12 sl-muted" style="margin-top:var(--space-16)">所有数值均为非实时样例，不作天文历算依据。<br>月轮固定不漂移；关闭动效仍保留月相与文字。</p>
+    </section>
+  </div>
+</main>
+<script>window.SkyLetter.MoonPhase(document);</script>
+</body></html>

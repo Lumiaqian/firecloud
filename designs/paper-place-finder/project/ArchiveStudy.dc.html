@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>观测档案夹</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:Hand;src:url('/_blob/b01b7373b008c76f7ec6d7b19468d11f')}
+body{margin:0;background:#e1e6e3}*{box-sizing:border-box;font-family:Hand,sans-serif!important;font-weight:400}html{scroll-behavior:auto}button,a{font:inherit;color:inherit;touch-action:manipulation}button{cursor:pointer;border:0;background:none;min-height:44px}button:focus-visible,a:focus-visible{outline:2px dashed #b53826;outline-offset:5px}h1,h2,h3,p{margin:0}a{text-decoration:none}a:hover,button:hover{color:#b53826}
+.archive-page{position:relative;overflow:hidden;isolation:isolate;background:#e1e6e3!important;--ease-out:cubic-bezier(.23,1,.32,1);--ease-in-out:cubic-bezier(.77,0,.175,1)}
+.archive-page[data-weather=clear]{background:#f0e9d9!important}.archive-page[data-weather=wind]{background:#e7e8dc!important}.archive-page[data-weather=snow]{background:#e9eef0!important}.archive-page[data-weather=thunder]{background:#cbd3d9!important}
+.archive-content{position:relative;z-index:1}.ambient-sky{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}.sky-cloud{position:absolute;width:390px;height:110px;border-radius:50%;background:#849a9c24;filter:blur(22px);top:100px;left:-80px}.sky-cloud.second{top:390px;left:auto;right:-160px;width:520px;background:#7b8f9424}.sky-sun{display:none;position:absolute;width:180px;height:180px;right:-65px;top:140px;border-radius:50%;background:#dfb76930;box-shadow:0 0 0 26px #dfb76912,0 0 0 52px #dfb7690b}
+[data-weather=clear] .sky-sun{display:block}[data-weather=clear] .sky-cloud{background:#fff9e948}[data-weather=snow] .sky-cloud{background:#aab9c32a}[data-weather=thunder] .sky-cloud{background:#5d718e3c}[data-weather=wind] .sky-cloud{height:40px;width:480px;background:#91a18b35;transform:rotate(-8deg)}
+.rain-field,.snow-field,.gust-field{display:none;position:absolute;inset:0}.rain-particle{position:absolute;left:var(--x);top:var(--y);width:1px;height:21px;background:#5c7c8a77;transform:rotate(14deg);animation:folio-rain 1.6s linear infinite;animation-delay:var(--delay)}.snow-particle{position:absolute;left:var(--x);top:var(--y);width:5px;height:5px;background:#fffdf8;border-radius:60% 30% 50% 40%;box-shadow:0 0 3px #92a4af55;animation:folio-snow 8s linear infinite;animation-delay:var(--delay)}
+[data-weather=rain] .rain-field,[data-weather=thunder] .rain-field,[data-weather=snow] .snow-field,[data-weather=wind] .gust-field{display:block}.gust-line{position:absolute;left:-18px;top:var(--y);width:130px;height:30px;opacity:.5;animation:folio-gust 7s var(--ease-in-out) infinite;animation-delay:var(--delay)}.gust-line:nth-child(even){left:auto;right:-30px}.gust-line path{fill:none;stroke:#7c8d76;stroke-width:1.5;stroke-linecap:round}
+.folio{isolation:isolate;position:relative}.folio::before{content:'';position:absolute;z-index:-3;inset:8px 14px -20px 0;background:#cbb892;clip-path:polygon(0 5%,2% 4%,4% 4%,4% 0,29% 0,32% 3.8%,98% 3.3%,100% 5%,99.5% 98%,98% 100%,0 99%);box-shadow:0 8px 30px #5e4a2a20}
+.leaf{position:relative;isolation:isolate;filter:drop-shadow(1px 5px 3px #59493418)}.leaf::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:#fdfaf3;clip-path:polygon(.4% 1.5%,9% .7%,22% 1.1%,37% 0,52% .8%,68% .2%,84% 1%,99.5% .2%,99.9% 23%,99.4% 48%,100% 72%,99.3% 99%,86% 99.5%,69% 99%,52% 100%,34% 99.3%,16% 99.9%,.3% 99%,0 76%,.6% 53%,0 28%)}
+.tab{display:flex;align-items:center;justify-content:center;min-height:50px;position:relative;background:#d5c39f;clip-path:polygon(0 0,94% 3%,100% 15%,96% 91%,87% 100%,0 96%);transform-origin:left center}.side-tabs{position:absolute;right:-37px;top:128px;display:flex;flex-direction:column;gap:12px;z-index:-2}.side-tabs a{writing-mode:vertical-rl;letter-spacing:6px;width:50px;min-height:108px;padding:12px 8px}
+.short-rule{position:relative}.short-rule::after{content:'';position:absolute;left:0;bottom:-5px;width:100%;height:6px;background:url('/_blob/9cedfb4c5bd7f60f6760530f51980cc8') center/100% 100%;opacity:.75}.red-mark{position:relative;display:inline-block}.red-mark::after{content:'';position:absolute;bottom:-5px;left:-6%;width:112%;height:9px;background:url('/_blob/e6a09a2b5261c577a08bbd7f0bef7e0b') center/100% 100%}.stamp{transform:rotate(6deg);color:#8d3a29}
+.dusk-cut{overflow:hidden;isolation:isolate;clip-path:polygon(4% 8%,97% 1%,100% 43%,96% 97%,57% 100%,1% 94%,0 38%);background:#c6d3d3}.dusk-cut::before{content:'';position:absolute;width:96px;height:37px;border-radius:50%;background:#8fabae;left:8px;top:18px;box-shadow:31px 14px 0 #9cb5b5}.dusk-cut::after{content:'';position:absolute;inset:60px 12px 10px;background:repeating-linear-gradient(105deg,transparent 0 14px,#678f9d 15px 16px,transparent 17px 26px)}
+[data-weather=clear] .dusk-cut{background:#edd7a9}[data-weather=clear] .dusk-cut::before{width:55px;height:55px;left:58px;top:15px;background:#dca95e;box-shadow:none}[data-weather=clear] .dusk-cut::after{background:#ba8a6355;inset:75px -10px -12px;transform:rotate(-8deg)}
+[data-weather=wind] .dusk-cut{background:#d6dfc9}[data-weather=wind] .dusk-cut::before{height:11px;top:35px;background:#91a58a;box-shadow:20px 25px 0 #a9b69b;transform:rotate(-8deg)}[data-weather=wind] .dusk-cut::after{background:none;border-top:1px solid #788c72;border-bottom:1px solid #788c72;height:17px;transform:rotate(-8deg)}
+[data-weather=snow] .dusk-cut{background:#d5e1e7}[data-weather=snow] .dusk-cut::before{background:#b2c3cd;box-shadow:30px 12px 0 #c0d0d7}[data-weather=snow] .dusk-cut::after{background:radial-gradient(circle,#fff 0 2px,transparent 3px) 0 0/23px 19px;inset:55px 5px 4px}
+[data-weather=thunder] .dusk-cut{background:#9daebd}[data-weather=thunder] .dusk-cut::before{background:#6b7e92;box-shadow:31px 14px 0 #8295a5}[data-weather=thunder] .dusk-cut::after{background:#f5e4ac;inset:49px 40px 8px 55px;clip-path:polygon(45% 0,100% 0,57% 40%,95% 40%,9% 100%,33% 55%,0 55%)}
+.metal-anchor{position:absolute;right:44px;top:-28px;width:32px;height:64px;z-index:5;pointer-events:none}.clip{width:100%;height:100%;object-fit:contain;transform:rotate(9deg);mix-blend-mode:multiply}.clip-glow{display:none;position:absolute;left:-15px;top:-8px;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle,#fff3b3a6,transparent 70%);opacity:.65}.clip-strike{display:none;position:absolute;left:-39px;bottom:43px;width:110px;height:155px;overflow:visible;filter:drop-shadow(0 0 5px #fff1bc)}.clip-strike path{fill:none;stroke:#fff2bd;stroke-width:2.5;stroke-linejoin:round}
+[data-weather=thunder] .clip-strike,[data-weather=thunder] .clip-glow{display:block}[data-weather=thunder] .clip-glow{animation:folio-glow 5s var(--ease-in-out) infinite}
+.surface-contact{display:none;position:absolute;inset:0;pointer-events:none;z-index:2}.contact-mark{position:absolute;width:8px;height:12px;border-radius:50%;background:#8b9f9c28;box-shadow:2px 4px 0 -1px #6e8d8c15}.contact-mark.left{left:6px;top:84px}.contact-mark.right{right:6px;top:57%}.contact-ring{position:absolute;left:4px;top:74px;width:14px;height:5px;border:1px solid #738b8844;border-radius:50%;opacity:.4;animation:folio-contact 3.6s var(--ease-out) infinite}.contact-ring.right{left:auto;right:3px;top:56%;animation-delay:-1.8s}[data-weather=rain] .surface-contact,[data-weather=thunder] .surface-contact{display:block}
+.edge-snow{display:none;position:absolute;left:0;top:-4px;width:100%;height:17px;overflow:visible;pointer-events:none;z-index:3;filter:drop-shadow(0 1px 1px #9dafb744)}.edge-snow path{fill:#fffefa}.report .edge-snow{top:-2px}.report .edge-snow path{transform:translateY(2px)}[data-weather=snow] .edge-snow{display:block}
+.free-corner{position:absolute;right:1px;bottom:0;width:42px;height:42px;pointer-events:none;z-index:3;transform-origin:top left}.free-corner::before{content:'';position:absolute;inset:0;background:#dfd8c3;clip-path:polygon(100% 0,100% 100%,0 100%)}.free-corner::after{content:'';position:absolute;inset:0;background:#f8f4e7;clip-path:polygon(100% 0,0 100%,11% 11%);opacity:0}
+[data-weather=wind] .free-corner{animation:folio-corner 7s var(--ease-in-out) infinite}[data-weather=wind] .free-corner::after{opacity:1}[data-weather=wind] .side-tabs a{animation:folio-tab 7s var(--ease-in-out) infinite}[data-weather=wind] .side-tabs a:nth-child(2){animation-delay:-.18s}[data-weather=wind] .side-tabs a:nth-child(3){animation-delay:-.36s}[data-weather=wind] .sky-cloud{animation:folio-cloud 12s linear infinite}
+.factor-slip::before{background:#edf0e5;clip-path:polygon(1% 1%,98.6% 0,100% 3%,99.2% 21%,100% 40%,99% 60%,100% 79%,99% 98.5%,1% 100%,0 87%,1% 74%,0 62%,1% 49%,0 36%,1% 23%,0 10%)}.factor-item{position:relative}.factor-item:nth-child(n+5)::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:url('/_blob/9cedfb4c5bd7f60f6760530f51980cc8') center/100% 100%;opacity:.45}.seven-leaf::before{background:#fbf7e9;clip-path:polygon(0 2%,13% 0,31% 1%,52% .3%,73% 1%,99.5% 0,100% 98%,85% 99%,65% 98%,49% 100%,29% 99%,12% 100%,.5% 98%)}.forecast-day{position:relative}.forecast-day:not(:last-child)::after{content:'';position:absolute;right:0;top:16px;bottom:14px;border-right:1px dashed #afa68e}.forecast-day.current .score::after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:8px;background:url('/_blob/e6a09a2b5261c577a08bbd7f0bef7e0b') center/100% 100%}.fold{position:absolute;top:20px;bottom:18px;left:50%;width:1px;background:#a9a38720;pointer-events:none}.quiet{color:#665f51}.small-action{position:relative;padding:8px 12px}.small-action:hover::after{content:'';position:absolute;left:10px;right:10px;bottom:4px;height:5px;background:url('/_blob/e6a09a2b5261c577a08bbd7f0bef7e0b') center/100% 100%}.period-link{padding:8px 12px;min-height:44px;display:inline-flex;align-items:center}.period-link[aria-current=page]{color:#b53826}.period-link[aria-disabled=true]{color:#665f51;cursor:default}
+@keyframes folio-rain{from{transform:translate3d(18px,-100px,0) rotate(14deg);opacity:0}15%{opacity:.7}85%{opacity:.7}to{transform:translate3d(-26px,150px,0) rotate(14deg);opacity:0}}
+@keyframes folio-snow{from{transform:translate3d(0,-65px,0);opacity:0}15%{opacity:.9}85%{opacity:.9}to{transform:translate3d(28px,180px,0);opacity:0}}
+@keyframes folio-gust{0%,25%,100%{transform:translateX(-15px);opacity:.15}45%,58%{transform:translateX(30px);opacity:.6}75%{transform:translateX(55px);opacity:0}}
+@keyframes folio-cloud{from{transform:translateX(-20px) rotate(-8deg)}to{transform:translateX(110px) rotate(-8deg)}}
+@keyframes folio-sun{0%,100%{opacity:.55}50%{opacity:.9}}
+[data-weather=clear] .sky-sun{animation:folio-sun 9s var(--ease-in-out) infinite}
+@keyframes folio-tab{0%,24%,75%,100%{transform:perspective(250px) rotateY(0deg) rotateZ(0deg)}40%{transform:perspective(250px) rotateY(-22deg) rotateZ(-2deg)}53%{transform:perspective(250px) rotateY(-10deg) rotateZ(1deg)}63%{transform:perspective(250px) rotateY(-16deg) rotateZ(-1deg)}}
+@keyframes folio-corner{0%,24%,75%,100%{transform:perspective(180px) rotate3d(1,-1,0,0deg)}42%{transform:perspective(180px) rotate3d(1,-1,0,27deg) translateY(-4px)}57%{transform:perspective(180px) rotate3d(1,-1,0,13deg) translateY(-1px)}65%{transform:perspective(180px) rotate3d(1,-1,0,19deg) translateY(-2px)}}
+@keyframes folio-contact{0%,100%{transform:scale(.8);opacity:.15}35%{transform:scale(1.25);opacity:.55}75%{transform:scale(1.6);opacity:0}}
+@keyframes folio-glow{0%,100%{opacity:.45}50%{opacity:.8}}
+@media(max-width:700px){.archive-page{padding:22px 18px 48px!important;min-height:1400px!important}.masthead{gap:12px!important;align-items:flex-start!important}.brand-caption{font-size:11px!important;letter-spacing:1px!important}.masthead-actions{gap:0!important}.small-action{padding:8px!important;font-size:14px!important}.archive-heading{margin:30px 0 26px!important;gap:12px!important}.archive-heading h1{font-size:32px!important}.issue-stamp{font-size:11px!important;width:102px!important}.folio{padding:43px 12px 16px 0!important;margin-right:35px!important}.folio::before{inset:8px -2px -12px -7px}.folder-label{left:13px!important;top:17px!important;font-size:12px!important;letter-spacing:1px!important}.side-tabs{right:-38px;top:120px;gap:8px}.side-tabs a{width:44px;min-height:92px;font-size:12px;letter-spacing:3px;padding:10px 4px}.report{padding:25px 19px 24px!important;margin:0 0 0 1px!important}.report-topline{font-size:11px!important;gap:5px!important;align-items:flex-start!important}.report-topline .quiet{letter-spacing:0!important}.period-link{padding:8px 5px}.report-columns{grid-template-columns:1fr!important;gap:22px!important;margin:20px 0!important}.index-number{font-size:103px!important}.index-block{gap:12px!important}.sunset-panel{display:grid!important;grid-template-columns:1fr 75px!important;gap:10px!important;align-items:center!important}.dusk-cut{position:relative!important;right:auto!important;top:auto!important;width:75px!important;height:95px!important;margin:0!important}.sunset-time{font-size:43px!important}.sunset-detail{display:block;margin:3px 0 0!important;font-size:11px!important}.sunset-window{gap:18px!important;grid-column:1/-1!important;flex-wrap:wrap}.report-note{font-size:16px!important;line-height:1.8!important}.report-footer{gap:8px!important;flex-wrap:wrap!important}.factor-slip{margin:24px 7px 0 -3px!important;padding:23px 19px 19px!important}.factor-heading{gap:10px!important;flex-wrap:wrap!important}.factor-heading h2,.seven-heading h2{font-size:21px!important}.factor-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;column-gap:22px!important}.factor-item:nth-child(n+3)::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:url('/_blob/9cedfb4c5bd7f60f6760530f51980cc8') center/100% 100%;opacity:.45}.factor-item{padding:12px 0!important}.factor-name{font-size:12px!important}.factor-value{font-size:20px!important}.factor-summary{font-size:11px!important}.seven-leaf{margin:25px -2px 0 7px!important;padding:25px 17px 22px!important}.seven-heading{gap:14px!important;flex-wrap:wrap!important}.forecast-grid{display:flex!important;flex-direction:column!important;gap:0!important;margin-top:13px!important}.forecast-day{display:grid!important;grid-template-columns:59px 34px 1fr 37px!important;gap:5px!important;align-items:center!important;padding:12px 0!important;text-align:left!important;min-height:51px}.forecast-day:not(:last-child)::after{top:auto;left:0;right:0;bottom:0;border-right:0;border-bottom:1px dashed #bdb4a0}.forecast-day p{margin:0!important;font-size:12px!important}.forecast-day .score{font-size:24px!important;margin:0!important;justify-self:start}.forecast-day small{font-size:11px!important;margin:0!important}.fold{display:none}.seven-footnote{font-size:11px!important}.folio-bottom{font-size:11px!important;gap:12px!important;flex-wrap:wrap!important}.metal-anchor{right:24px;width:27px;height:53px}.clip-strike{left:-41.5px;bottom:32px}.stamp-seal{width:78px!important;padding:8px!important}.stamp-seal strong{font-size:23px!important}.brand-name{font-size:21px!important}.free-corner{width:32px;height:32px}.edge-snow{height:13px}}
+.archive-page[data-motion=false] *,.archive-page[data-motion=false] *::before,.archive-page[data-motion=false] *::after{animation:none!important;transition:none!important}.archive-page[data-motion=false][data-weather=wind] .free-corner{transform:rotate3d(1,-1,0,12deg)}.archive-page[data-motion=false] .rain-particle{opacity:.6}.archive-page[data-motion=false] .snow-particle{opacity:.9}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.archive-page *,.archive-page *::before,.archive-page *::after{animation:none!important;transition:none!important}.rain-particle{opacity:.6}.snow-particle{opacity:.9}}
+.stamp-seal{background:url('/_blob/6cb74947f962f1e36340b5c851c818d4') center/100% 100%}
+</style>
+</helmet>
+<main class="archive-page" data-weather="{{weather}}" data-motion="{{motion}}" style="min-height:1400px;padding:30px 6% 55px;color:#36372f;background:#e1e6e3;">
+<div class="ambient-sky" aria-hidden="true">
+<span class="sky-sun"></span><span class="sky-cloud"></span><span class="sky-cloud second"></span>
+<div class="rain-field"><sc-for list="{{particles}}" as="drop" hint-placeholder-count="28"><span class="rain-particle" style="{{drop.style}}"></span></sc-for></div>
+<div class="snow-field"><sc-for list="{{particles}}" as="flake" hint-placeholder-count="28"><span class="snow-particle" style="{{flake.style}}"></span></sc-for></div>
+<div class="gust-field"><svg class="gust-line" style="--y:15%;--delay:0s;" viewBox="0 0 130 30"><path d="M0 23 Q35 21 69 13 T128 8 M25 29 Q69 27 105 18"></path></svg><svg class="gust-line" style="--y:44%;--delay:-2s;" viewBox="0 0 130 30"><path d="M0 23 Q35 21 69 13 T128 8 M25 29 Q69 27 105 18"></path></svg><svg class="gust-line" style="--y:73%;--delay:-4s;" viewBox="0 0 130 30"><path d="M0 23 Q35 21 69 13 T128 8 M25 29 Q69 27 105 18"></path></svg></div>
+</div>
+<div class="archive-content" style="max-width:1080px;margin:0 auto;">
+<header class="masthead" style="display:flex;justify-content:space-between;align-items:center;gap:24px;">
+<div style="display:flex;align-items:center;gap:12px;">
+<img src="/_blob/85712d98fe5c97592b888ef332c464b3" alt="霞光预报标志" style="width:45px;height:45px;object-fit:contain;">
+<div><p class="brand-name" style="font-size:24px;">霞光预报</p><p class="brand-caption quiet" style="font-size:12px;letter-spacing:3px;margin-top:3px;">晨昏观测手记</p></div>
+</div>
+<div class="masthead-actions" style="display:flex;align-items:center;gap:12px;">
+<button class="small-action" type="button" onClick="{{toggleSaved}}" aria-pressed="{{saved}}" style="font-size:16px;">{{saveLabel}}</button>
+<button class="small-action" type="button" onClick="{{refresh}}" style="font-size:16px;">刷新</button>
+</div>
+</header>
+<div class="archive-heading" style="display:flex;align-items:center;justify-content:space-between;gap:30px;margin:35px 13px 25px;">
+<div><p class="quiet" style="font-size:12px;letter-spacing:3px;margin-bottom:10px;">杭州 · 浙江 / 暮天卷</p><h1 style="font-size:39px;letter-spacing:3px;">观测档案夹</h1><p class="quiet" style="font-size:12px;margin-top:10px;">当前实况 · {{weatherLabel}}</p></div>
+<div class="issue-stamp stamp" style="width:145px;font-size:13px;line-height:1.8;text-align:center;padding:8px 0;transform:rotate(4deg);"><span class="short-rule">11 月 03 日 · 周二</span><p style="margin-top:8px;letter-spacing:2px;">观测记录 01</p></div>
+</div>
+<div class="folio" style="padding:52px 32px 22px 30px;margin-right:36px;">
+<p class="folder-label" style="position:absolute;left:40px;top:18px;font-size:13px;letter-spacing:3px;color:#544b3e;">杭州 · 晚霞档案</p>
+<nav class="side-tabs" aria-label="档案索引"><a class="tab" href="#report" style="background:#c4a777;color:#463d30;">当日</a><a class="tab" href="#factors" style="background:#bfc7b0;color:#3f4837;">因子</a><a class="tab" href="#seven" style="background:#d0b49a;color:#514033;">七日</a></nav>
+<article id="report" class="leaf report" style="padding:30px 42px 24px;margin:0 0 0 13px;scroll-margin-top:20px;">
+<div class="metal-anchor" aria-hidden="true"><span class="clip-glow"></span><svg class="clip-strike" viewBox="0 0 110 155"><path d="M17 0 L65 44 L43 75 L91 111 L55 106 L55 155"></path></svg><img class="clip" src="/_blob/6b03c41165f044976faf1a60b98098b2" alt=""></div>
+<svg class="edge-snow" aria-hidden="true" viewBox="0 0 1000 20" preserveAspectRatio="none"><path d="M4 12 Q35 4 65 8 Q78 3 90 5 L220 8 Q290 9 370 1 Q390 -2 413 5 L520 7 L680 3 Q727 -1 752 8 L840 9 Q900 4 945 4 L995 1 L995 9 L840 16 L680 10 L520 15 L370 9 L220 16 L90 12 L4 19 Z"></path></svg>
+<div class="surface-contact" aria-hidden="true"><span class="contact-mark left"></span><span class="contact-mark right"></span><span class="contact-ring"></span><span class="contact-ring right"></span></div>
+<span class="free-corner" aria-hidden="true"></span>
+<header class="report-topline" style="display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:13px;">
+<p class="quiet" style="letter-spacing:2px;">01 / 当日观测 · 样例</p>
+<div style="display:flex;gap:5px;align-items:center;"><a class="period-link" href="#report" aria-current="page"><span class="red-mark">晚霞</span></a><span class="period-link" aria-disabled="true">朝霞</span></div>
+</header>
+<div class="report-columns" style="display:grid;grid-template-columns:1.2fr 1fr;gap:48px;margin:13px 0 25px;">
+<section>
+<p style="font-size:15px;">霞光指数 <span class="quiet" style="font-size:12px;">/ 满分 99</span></p>
+<div class="index-block" style="display:flex;align-items:center;gap:30px;margin:5px 0 1px;">
+<strong class="index-number" style="font-size:140px;letter-spacing:-6px;line-height:1.05;color:#8f4006;">77</strong>
+<div class="stamp-seal stamp" style="width:101px;text-align:center;padding:14px 10px;"><strong style="display:block;font-size:28px;letter-spacing:3px;">晴金</strong><p style="font-size:12px;margin-top:6px;letter-spacing:1px;">绚彩可期</p></div>
+</div>
+<h2 style="font-size:29px;margin-top:7px;"><span class="red-mark">值得追</span></h2>
+<p class="quiet" style="font-size:13px;margin-top:18px;">上弦月 · 日轮指数 56</p>
+</section>
+<section class="sunset-panel" style="position:relative;padding-top:7px;">
+<div style="position:relative;z-index:1;"><p style="font-size:14px;">日落 <span class="sunset-detail quiet" style="font-size:12px;margin-left:10px;">西南偏西 250°</span></p><p class="sunset-time" style="font-size:56px;line-height:1.1;margin-top:8px;">17:12</p><p class="quiet" style="font-size:13px;margin-top:7px;">还有 1 小时 42 分钟</p></div>
+<div class="dusk-cut" aria-hidden="true" style="position:absolute;right:-2px;top:23px;width:130px;height:114px;transform:rotate(5deg);opacity:.85;z-index:0;"></div>
+<div class="sunset-window" style="display:flex;gap:28px;margin-top:29px;padding-top:11px;"><div><p class="quiet" style="font-size:12px;">观赏窗口</p><p style="font-size:19px;margin-top:5px;">16:57–17:37</p></div><div><p class="quiet" style="font-size:12px;">余晖峰值</p><p style="font-size:19px;margin-top:5px;">17:22</p></div></div>
+</section>
+</div>
+<div style="display:flex;align-items:center;gap:12px;padding-top:14px;"><span aria-hidden="true" style="width:23px;height:3px;background:#b53826;transform:rotate(-8deg);flex-shrink:0;"></span><p class="report-note" style="font-size:18px;">中高云适宜，留意西侧低云。</p></div>
+<footer class="report-footer quiet" style="display:flex;justify-content:space-between;gap:20px;font-size:12px;margin-top:17px;"><span>更新 15:30 · UTC+8</span><span aria-live="polite">{{refreshLabel}}</span></footer>
+</article>
+<section id="factors" class="leaf factor-slip" style="margin:24px -9px 0 -10px;padding:23px 35px 18px;scroll-margin-top:20px;">
+<svg class="edge-snow" aria-hidden="true" viewBox="0 0 1000 20" preserveAspectRatio="none"><path d="M10 10 Q75 3 130 7 L370 5 Q495 -1 530 4 L720 4 Q830 -1 880 4 L986 0 L986 9 L720 12 L530 11 L370 13 L130 15 L10 18 Z"></path></svg>
+<div aria-hidden="true" class="fold"></div>
+<header class="factor-heading" style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;"><h2 style="font-size:23px;">02 / 气象因子附页</h2><p class="quiet" style="font-size:12px;">基准 89 分 · 右侧为指数增减</p></header>
+<div class="factor-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:37px;margin-top:10px;">
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">高云</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">32%</span><span style="font-size:14px;">−4</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">中云</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">25%</span><span style="font-size:14px;">−2</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">本地低云</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">18%</span><span style="font-size:14px;">−2</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">西向低云</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">40%</span><span style="font-size:14px;color:#b53826;">−10</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">湿度</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">55%</span><span style="font-size:14px;">0</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">能见度</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">32 km</span><span style="font-size:14px;color:#46583c;">+6</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">气溶胶</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:23px;">0.18</span><span style="font-size:14px;">0</span></div></div>
+<div class="factor-item" style="padding:11px 0;"><p class="factor-name quiet" style="font-size:12px;">PM2.5</p><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-top:4px;"><span class="factor-value" style="font-size:20px;">18 <small style="font-size:12px;">μg/m³</small></span><span style="font-size:14px;">0</span></div></div>
+</div>
+<p class="factor-summary quiet" style="font-size:12px;margin-top:8px;">89 − 4 − 2 − 2 − 10 + 6 = 77</p>
+</section>
+<section id="seven" class="leaf seven-leaf" style="margin:28px 1px 0 26px;padding:26px 27px 23px;scroll-margin-top:20px;">
+<svg class="edge-snow" aria-hidden="true" viewBox="0 0 1000 20" preserveAspectRatio="none"><path d="M0 16 Q65 3 130 0 Q152 -3 175 3 L310 8 L520 3 Q610 -1 655 6 L730 8 L995 0 L995 8 L730 15 L520 10 L310 15 L130 8 L0 23 Z"></path></svg>
+<span class="free-corner" aria-hidden="true"></span>
+<header class="seven-heading" style="display:flex;align-items:baseline;justify-content:space-between;gap:20px;"><h2 style="font-size:23px;">03 / 七日索引</h2><p class="quiet" style="font-size:12px;">11 月 · 晚霞 / 日落时刻</p></header>
+<div class="forecast-grid" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));margin-top:16px;">
+<div class="forecast-day current" style="text-align:center;padding:12px 7px 13px;color:#8f4006;"><p style="font-size:13px;">03 周二</p><strong class="score" style="display:inline-block;position:relative;font-size:37px;margin:11px 0 9px;">77</strong><p style="font-size:13px;">值得追</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:12</small></div>
+<div class="forecast-day" style="text-align:center;padding:12px 7px 13px;"><p style="font-size:13px;">04 周三</p><strong class="score" style="display:inline-block;font-size:37px;margin:11px 0 9px;">61</strong><p style="font-size:13px;">有机会</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:11</small></div>
+<div class="forecast-day" style="text-align:center;padding:12px 7px 13px;"><p style="font-size:13px;">05 周四</p><strong class="score" style="display:inline-block;font-size:37px;margin:11px 0 9px;color:#b53826;">84</strong><p style="font-size:13px;">极佳</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:10</small></div>
+<div class="forecast-day" style="text-align:center;padding:12px 7px 13px;"><p style="font-size:13px;">06 周五</p><strong class="score" style="display:inline-block;font-size:37px;margin:11px 0 9px;">48</strong><p style="font-size:13px;">一般</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:10</small></div>
+<div class="forecast-day" style="text-align:center;padding:12px 7px 13px;"><p style="font-size:13px;">07 周六</p><strong class="score" style="display:inline-block;font-size:37px;margin:11px 0 9px;">32</strong><p style="font-size:13px;">平淡</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:09</small></div>
+<div class="forecast-day" style="text-align:center;padding:12px 7px 13px;"><p style="font-size:13px;">08 周日</p><strong class="score" style="display:inline-block;font-size:37px;margin:11px 0 9px;">57</strong><p style="font-size:13px;">有机会</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:08</small></div>
+<div class="forecast-day" style="text-align:center;padding:12px 7px 13px;"><p style="font-size:13px;">09 周一</p><strong class="score" style="display:inline-block;font-size:37px;margin:11px 0 9px;">69</strong><p style="font-size:13px;">值得追</p><small class="quiet" style="display:block;font-size:13px;margin-top:10px;">17:08</small></div>
+</div>
+<p class="seven-footnote quiet" style="font-size:12px;margin-top:17px;">第 5–7 日仅供参考</p>
+</section>
+<footer class="folio-bottom" style="display:flex;justify-content:space-between;gap:25px;font-size:12px;margin:24px 15px 0;color:#544b3e;"><span>杭州 / 暮天卷</span><span>收录于晨昏观测手记</span></footer>
+</div>
+<footer class="quiet" style="text-align:center;font-size:12px;margin-top:43px;line-height:1.8;">天气联动设计样例 · 非实时数据</footer>
+</div>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"weather":{"editor":"enum","options":["clear","rain","wind","snow","thunder"],"default":"rain"},"motion":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const saved = this.state.saved === true;
+    const weatherLabels = { clear: '晴', rain: '雨', wind: '风', snow: '雪', thunder: '雷雨' };
+    const weather = Object.prototype.hasOwnProperty.call(weatherLabels, this.props.weather) ? this.props.weather : 'rain';
+    const motion = typeof this.props.motion === 'boolean' ? this.props.motion : true;
+    const particlePositions = [[1,8],[4,18],[97,12],[99,26],[2,32],[95,38],[5,47],[98,51],[1,62],[96,66],[3,74],[99,81],[5,89],[97,94],[8,23],[92,30],[6,57],[94,77],[25,5],[49,9],[72,4],[15,97],[36,92],[61,96],[87,98],[2,43],[98,61],[3,83]];
+    return {
+      weather: weather,
+      weatherLabel: weatherLabels[weather],
+      motion: motion,
+      particles: particlePositions.map((position, index) => ({ style: '--x:' + position[0] + '%;--y:' + position[1] + '%;--delay:-' + ((index * 0.61) % 8).toFixed(2) + 's;' })),
+      saved: saved,
+      saveLabel: saved ? '已收藏' : '收藏',
+      refreshLabel: this.state.refreshed ? '样例已重读 · 非实时' : '静态观测样例',
+      toggleSaved: () => this.setState({ saved: !saved }),
+      refresh: () => this.setState({ refreshed: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

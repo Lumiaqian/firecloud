@@ -1,0 +1,42 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>天空画笺 · 更新失败保留旧稿</title><script src="./support.js"></script><link rel="stylesheet" href="/_blob/c5daf36620e07d335b3847f55a0d297e"></head>
+<body><x-dc><helmet><style>body{margin:0}</style></helmet>
+<main class="sky-page" data-light="{{light}}"><div class="inner">
+<header class="page-top"><a href="SkyLetterMobile.dc.html" class="brand"><img src="/_blob/85712d98fe5c97592b888ef332c464b3" alt=""><span>霞光预报<small>晨昏观测手记</small></span></a><a class="action" href="SkyPlacesMobile.dc.html">换个地点 ↗</a></header>
+<div class="feedback-layout">
+<sc-if value="{{retained}}" hint-placeholder-val="true">
+<header class="feedback-context"><div><h1>杭州</h1><p>浙江 · 中国</p></div><div class="feedback-tabs" role="group" aria-label="预报时段"><button aria-pressed="{{sunsetSelected}}" onClick="{{cancel}}">晚霞</button><button aria-pressed="{{sunriseSelected}}" aria-busy="{{switching}}" onClick="{{switchEvent}}">朝霞</button></div></header>
+<div class="record-status" data-state="{{mode}}" aria-busy="{{busy}}"><p class="record-copy" role="status" aria-live="polite"><span>上次更新 11/3 15:30</span><span class="record-state">{{statusTitle}}</span><span>{{statusCopy}}</span></p><div class="record-actions"><button type="button" disabled="{{busy}}" onClick="{{retry}}">{{retryText}}</button><button type="button" class="record-cancel" data-available="{{canCancel}}" disabled="{{cancelDisabled}}" onClick="{{cancel}}">取消</button></div></div>
+<div class="retained-stage" aria-label="保留的晚霞记录">
+<article class="paper retained" aria-label="已保存的晚霞判断"><img class="score-ink" src="/_blob/a3a5f3b700b02619f6dafa51f92ed274" alt=""><span class="retained-header">11/3 · 周二 · 晚霞预报</span><p class="retained-label">霞光指数 0–99</p><div class="retained-score-line"><strong class="retained-score">77</strong><small>分</small></div><h2 class="retained-grade">值得追</h2><p class="retained-verdict">中高云适宜，留意西侧低云。</p><footer class="retained-meta"><span>{{freshness}}</span><span>UTC+8</span></footer></article>
+<aside class="paper retained-time" aria-label="已保存的11月3日日落时间"><img class="note-clip" src="/_blob/6b03c41165f044976faf1a60b98098b2" alt=""><span class="note-label">日落 · 11/3 周二</span><p class="time">17:12</p><p class="event-day">保存的预报时刻</p><p class="azimuth">UTC+8 · 所选日期未变</p><div class="window"><span class="note-label">观赏窗口</span><p>16:57–17:37</p><small>保存的窗口 · 非实时</small></div></aside>
+</div>
+<div class="record-footer"><p>非实时样例 · 天气实况待更新</p><a class="action" href="SkyLetterMobile.dc.html">天气批注与未来七日 →</a></div>
+</sc-if>
+<sc-if value="{{loading}}" hint-placeholder-val="false"><section class="blank-stage" role="status" aria-live="polite" aria-busy="true"><article class="paper loading-note"><div class="loading-sky" aria-hidden="true"><i class="loading-sun"></i></div><h1 class="loading-title">正在读取天空</h1><p class="loading-copy">正在计算晚霞方向的云层…<br>首次读取完成前，暂不展示指数。</p><p class="loading-caption">杭州 · 首次读取 · 交互样例</p><div class="status-actions"><button class="ink-action" onClick="{{retry}}">重新读取</button><a class="action" href="SkyPlacesMobile.dc.html">换个地点</a></div></article></section></sc-if>
+<sc-if value="{{blank}}" hint-placeholder-val="false"><section class="blank-stage"><article class="paper empty-paper" role="alert"><svg class="state-symbol" viewBox="0 0 112 58" fill="none" aria-hidden="true"><path d="M8 42 Q28 39 51 42 T105 41 M20 33 Q12 18 27 17 Q36 0 55 15 Q78 8 81 28 Q97 32 89 38" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h1>{{blankTitle}}</h1><p>{{blankCopy}}</p><div class="status-actions"><sc-if value="{{blankRetry}}" hint-placeholder-val="true"><button class="ink-action" onClick="{{retry}}">重新尝试</button></sc-if><a class="action" href="SkyPlacesMobile.dc.html">{{searchText}}</a></div></article></section></sc-if>
+</div><footer class="page-foot"><span>状态交互样例 · 非实时数据</span><span>重试仅演示状态，不发送请求</span></footer>
+</div></main>
+</x-dc><script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["loading","error","empty","missing","cached","stale","refreshing","switching","switchfailed","ready"],"default":"stale"},"retryResult":{"editor":"enum","options":["ready","stale"],"default":"ready"},"light":{"editor":"enum","options":["dusk","night"],"default":"dusk"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+ state={mode:null,priorMode:null};
+ componentWillUnmount(){clearTimeout(this.timer)}
+ componentDidUpdate(prev){if(prev.variant!==this.props.variant){clearTimeout(this.timer);this.setState({mode:null,priorMode:null})}}
+ finishRead(hadRecord){this.timer=setTimeout(()=>this.setState({mode:this.props.retryResult==='stale'?(hadRecord?'stale':'error'):'ready',priorMode:null}),1800)}
+ renderVals(){
+  const mode=this.state.mode??this.props.variant??'stale';
+  const retained=['cached','stale','refreshing','switching','switchfailed','ready'].includes(mode);
+  const switching=mode==='switching',busy=switching||mode==='refreshing',canCancel=switching||mode==='switchfailed';
+  return {mode,light:this.props.light??'dusk',retained,loading:mode==='loading',blank:['error','empty','missing'].includes(mode),blankRetry:mode!=='empty',sunsetSelected:true,sunriseSelected:false,switching,busy,canCancel,cancelDisabled:!canCancel,
+   retryText:switching?'读取中…':mode==='refreshing'?'更新中…':mode==='switchfailed'?'重试朝霞':mode==='cached'?'刷新':'重新更新',
+   freshness:mode==='ready'?'预报样例':'保存的预报 · 非当前天气',
+   statusTitle:({cached:'尚未更新',stale:'更新未成功 · 沿用记录',refreshing:'正在更新晚霞…',switching:'正在读取朝霞…',switchfailed:'朝霞读取未成功',ready:'样例读取完成'})[mode]??'',
+   statusCopy:({cached:'天气实况待更新',stale:'天气实况待更新',refreshing:'仍显示原晚霞记录',switching:'仍显示原晚霞记录',switchfailed:'保留原晚霞与日期',ready:'非实时预报样例'})[mode]??'',
+   blankTitle:({error:'天空暂时失联',empty:'暂无晨昏视窗',missing:'云层资料暂缺'})[mode]??'',
+   blankCopy:({error:'暂无可用预测，请稍后重试。',empty:'极昼或极夜期间，未来三天没有对应的晨昏视窗。',missing:'当地高空分层云量暂缺，暂不能给出可靠评分。'})[mode]??'',searchText:mode==='missing'?'查看临近城市':'搜索其他城市',
+   cancel:()=>{if(!canCancel)return;clearTimeout(this.timer);const restored=this.state.priorMode??'stale';this.setState({mode:restored,priorMode:null});if(restored==='refreshing')this.finishRead(true)},
+   switchEvent:()=>{if(switching)return;clearTimeout(this.timer);this.setState({mode:'switching',priorMode:mode==='switchfailed'?(this.state.priorMode??'stale'):mode});this.timer=setTimeout(()=>this.setState({mode:'switchfailed'}),1800)},
+   retry:()=>{if(busy)return;clearTimeout(this.timer);if(mode==='switchfailed'){this.setState({mode:'switching'});this.timer=setTimeout(()=>this.setState({mode:'switchfailed'}),1800)}else{this.setState({mode:retained?'refreshing':'loading',priorMode:mode});this.finishRead(retained)}}
+  };
+ }
+}
+</script></body></html>

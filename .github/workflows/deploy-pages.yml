@@ -29,10 +29,12 @@ jobs:
           package-manager-cache: false
       - name: Verify static app
         run: npm run verify
+      - name: Package production site
+        run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

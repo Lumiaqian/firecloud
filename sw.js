@@ -1,36 +1,49 @@
-const SHELL_CACHE = "firecloud-shell-v89";
+const SHELL_CACHE = "firecloud-shell-v101";
 const SHELL = [
   "./",
   "./index.html",
-  "./css/style.css?v=63",
-  "./js/api.mjs?v=25",
-  "./js/app.mjs?v=25",
-  "./js/core/format.mjs?v=25",
-  "./js/core/session.mjs?v=25",
-  "./js/core/storage.mjs?v=25",
-  "./js/forecast.mjs?v=25",
-  "./js/frame-loop.mjs?v=25",
-  "./js/ui/dev-lab.mjs?v=25",
-  "./js/ui/dom.mjs?v=25",
-  "./js/ui/drawer.mjs?v=25",
-  "./js/ui/factors.mjs?v=25",
-  "./js/ui/hero.mjs?v=25",
-  "./js/ui/loaders.mjs?v=25",
-  "./js/ui/moon.mjs?v=25",
-  "./js/ui/motion.mjs?v=25",
-  "./js/ui/paper-fx.mjs?v=25",
-  "./js/ui/paper.mjs?v=25",
-  "./js/ui/places.mjs?v=25",
-  "./js/ui/sky.mjs?v=25",
-  "./js/ui/week.mjs?v=25",
-  "./js/ui/welcome.mjs?v=25",
-  "./js/weather-fx.mjs?v=25",
-  "./manifest.webmanifest?v=5",
-  "./icons/icon.svg?v=4",
-  "./icons/brand-mark.svg?v=1",
-  "./icons/icon-192.png?v=4",
-  "./icons/icon-512.png?v=4",
-  "./icons/apple-touch-icon.png?v=4"
+  "./css/sky-letter-tokens.css?v=3",
+  "./css/style.css?v=75",
+  "./js/api.mjs?v=36",
+  "./js/app.mjs?v=36",
+  "./js/core/format.mjs?v=36",
+  "./js/core/session.mjs?v=36",
+  "./js/core/storage.mjs?v=36",
+  "./js/forecast.mjs?v=36",
+  "./js/frame-loop.mjs?v=36",
+  "./js/ui/dom.mjs?v=36",
+  "./js/ui/drawer.mjs?v=36",
+  "./js/ui/factors.mjs?v=36",
+  "./js/ui/hero.mjs?v=36",
+  "./js/ui/loaders.mjs?v=36",
+  "./js/ui/moon.mjs?v=36",
+  "./js/ui/motion.mjs?v=36",
+  "./js/ui/paper-fx.mjs?v=36",
+  "./js/ui/paper.mjs?v=36",
+  "./js/ui/places.mjs?v=36",
+  "./js/ui/sky.mjs?v=36",
+  "./js/ui/week.mjs?v=36",
+  "./js/ui/welcome.mjs?v=36",
+  "./js/weather-fx.mjs?v=36",
+  "./assets/fonts/Xiaolai-Regular.woff2",
+  "./assets/logo-a.png",
+  "./assets/paper/clip.png",
+  "./assets/paper/score-annotations.png",
+  "./assets/paper/home-time-marks.png",
+  "./assets/paper/supporting-paper-mask.svg",
+  "./assets/paper/supporting-brace.png",
+  "./assets/paper/supporting-pencil.png",
+  "./assets/paper/supporting-leader.png",
+  "./assets/paper/supporting-rule.png",
+  "./assets/paper/outlook-focus.png",
+  "./assets/paper/paper-grain-wide.png",
+  "./manifest.webmanifest?v=6",
+  "./icons/favicon-a-16.png",
+  "./icons/favicon-a-32.png",
+  "./icons/favicon-a-48.png",
+  "./icons/icon-192.png?v=5",
+  "./icons/icon-512.png?v=5",
+  "./icons/apple-touch-icon.png?v=5"
 ];
 
 self.addEventListener("install", (event) => {
@@ -53,13 +66,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  const networkResponse = fetch(event.request).then(async (response) => {
+  const networkResponse = fetch(event.request);
+  const cacheUpdate = networkResponse.then(async (response) => {
     if (response.ok) {
+      const copy = response.clone();
       const cache = await caches.open(SHELL_CACHE);
-      await cache.put(event.request, response.clone());
+      await cache.put(event.request, copy);
     }
-    return response;
-  }, async (error) => {
+  });
+  const responseWithFallback = networkResponse.catch(async (error) => {
     if (event.request.mode === "navigate" && url.href.startsWith(self.registration.scope)) {
       const shell = await caches.match(new URL("./index.html", self.registration.scope).href)
         || await caches.match(self.registration.scope);
@@ -68,6 +83,6 @@ self.addEventListener("fetch", (event) => {
     throw error;
   });
 
-  event.waitUntil(networkResponse.catch(() => undefined));
-  event.respondWith(caches.match(event.request).then((cached) => cached || networkResponse));
+  event.waitUntil(Promise.allSettled([cacheUpdate, responseWithFallback]));
+  event.respondWith(caches.match(event.request).then((cached) => cached || responseWithFallback));
 });

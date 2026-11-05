@@ -1,66 +1,86 @@
 /**
- * 纸面彩蛋与手势：点黄铜夹引雷、点印章暖阳、点胶带或向右滑动起风，桌面端主卡随指针微倾。
- * 这些装饰不进入键盘与读屏顺序，只响应指针（见设计规范 §4）。
+ * 纸缘反馈：夹端局部受光、评分圈注暖光、胶带与天空右划起风。
+ * 天气与预报文字始终留在原处；横笺滚动不参与天空手势。
  */
 import { $ } from "./dom.mjs";
-import { reducedMotion, triggerHaptic } from "./motion.mjs";
+import { motionAllowed, triggerHaptic } from "./motion.mjs";
 
 const SWIPE_MIN = 90;
 const SWIPE_STRONG = 160;
 const SWIPE_MAX_DRIFT = 55;
+const SWIPE_EXCLUDED = "button, a, input, select, textarea, label, summary, dialog, [role='dialog'], [role='button'], [contenteditable], [data-weather-surface], [data-scroll-region], .horizontal-scroll-region, .week-scroll, #week, .week-block";
 
 export function bindPaperInteractions(paperFx) {
-  $("hero-brass-clip").addEventListener("click", () => {
+  const announce = (message) => {
+    const status = $("paper-fx-status");
+    if (status) {
+      status.hidden = false;
+      status.textContent = `${motionAllowed() ? "" : "静态反馈 · "}${message}`;
+    }
+  };
+  $("paper-clip-action")?.addEventListener("click", () => {
     triggerHaptic([15, 30, 20]);
     paperFx.strike();
+    announce("夹端受光 · 一次局部光影，天气与预报不变。");
   });
-  $("seal-stamp").addEventListener("click", () => {
+  $("score-circle-action")?.addEventListener("click", () => {
     triggerHaptic(25);
     paperFx.warm();
+    announce("圈注暖光 · 天气与预报不变。");
   });
   const windFromTape = () => {
     triggerHaptic([12, 22]);
     paperFx.gust("high");
+    announce("纸缘起风 · 文字与预报留在原处。");
   };
-  $("hero-washi-tape").addEventListener("click", windFromTape);
-  $("folio-washi-tape").addEventListener("click", windFromTape);
+  $("paper-tape-action")?.addEventListener("click", windFromTape);
 
-  // 手机端向右横扫唤起一阵风
-  let startX = 0;
-  let startY = 0;
+  let gesture = null;
+  let suppressClickUntil = 0;
+  const excludesSwipe = (target) => document.querySelector("dialog[open]") || (target instanceof Element && Boolean(target.closest(SWIPE_EXCLUDED)));
+  const trackMovement = (touch) => {
+    if (Math.hypot(touch.clientX - gesture.x, touch.clientY - gesture.y) > 12) {
+      suppressClickUntil = performance.now() + 500;
+    }
+  };
+
   document.addEventListener("touchstart", (event) => {
-    if (event.touches.length !== 1) return;
-    startX = event.touches[0].clientX;
-    startY = event.touches[0].clientY;
+    if (event.touches.length !== 1 || excludesSwipe(event.target)) {
+      gesture = null;
+      return;
+    }
+    const touch = event.touches[0];
+    gesture = { id: touch.identifier, x: touch.clientX, y: touch.clientY };
   }, { passive: true });
+  document.addEventListener("touchmove", (event) => {
+    if (!gesture) return;
+    if (event.touches.length !== 1 || excludesSwipe(event.target)) {
+      gesture = null;
+      return;
+    }
+    if (event.touches[0].identifier === gesture.id) trackMovement(event.touches[0]);
+  }, { passive: true });
+  document.addEventListener("touchcancel", () => { gesture = null; }, { passive: true });
   document.addEventListener("touchend", (event) => {
-    if (event.changedTouches.length !== 1) return;
-    const deltaX = event.changedTouches[0].clientX - startX;
-    const deltaY = event.changedTouches[0].clientY - startY;
-    if (deltaX > SWIPE_MIN && Math.abs(deltaY) < SWIPE_MAX_DRIFT) {
+    const start = gesture;
+    if (!start) return;
+    const touch = event.changedTouches[0];
+    if (touch?.identifier === start.id) trackMovement(touch);
+    gesture = null;
+    if (event.touches.length || event.changedTouches.length !== 1 || excludesSwipe(event.target) || touch.identifier !== start.id) return;
+    const deltaX = touch.clientX - start.x;
+    const drift = Math.abs(touch.clientY - start.y);
+    if (deltaX > SWIPE_MIN && drift < SWIPE_MAX_DRIFT && deltaX > drift * 2) {
       triggerHaptic(12);
       paperFx.gust(deltaX > SWIPE_STRONG ? "high" : "gentle");
+      announce("天空起风 · 文字与预报留在原处。");
     }
   }, { passive: true });
-}
-
-// 桌面端主卡随指针轻微 3D 倾斜
-export function bindHeroTilt(card = $("hero-master-card")) {
-  let frame = 0;
-  card.addEventListener("mousemove", (event) => {
-    if (reducedMotion.matches) return;
-    cancelAnimationFrame(frame);
-    frame = requestAnimationFrame(() => {
-      const rect = card.getBoundingClientRect();
-      const x = event.clientX - rect.left - rect.width / 2;
-      const y = event.clientY - rect.top - rect.height / 2;
-      const rotX = -(y / (rect.height / 2)) * 1.5;
-      const rotY = (x / (rect.width / 2)) * 2.0;
-      card.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) rotateZ(-0.35deg) translateY(-2px)`;
-    });
-  });
-  card.addEventListener("mouseleave", () => {
-    cancelAnimationFrame(frame);
-    card.style.transform = "";
-  });
+  document.addEventListener("click", (event) => {
+    if (performance.now() >= suppressClickUntil || event.detail === 0) return;
+    if (event.sourceCapabilities?.firesTouchEvents === false) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    suppressClickUntil = 0;
+  }, true);
 }

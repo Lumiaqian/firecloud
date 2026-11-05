@@ -1,5 +1,5 @@
 /**
- * 窄屏底部抽屉：手柄、标题区或滚动到顶时可下拉，带橡皮筋阻尼与按释放速度投影的关闭判定。
+ * 窄屏底部抽屉：手柄与非控件标题区可下拉，列表始终独立滚动。
  * 返回重置函数，打开前调用以清除上次拖拽留下的位移。
  */
 import { motionAllowed } from "./motion.mjs";
@@ -57,10 +57,15 @@ export function initFluidDrawer(dialog) {
 
   function resetDialogStyles() {
     cancelMotion();
+    if (activePointerId !== null) {
+      try { dialog.releasePointerCapture(activePointerId); } catch {}
+    }
     dialog.classList.remove("is-dragging", "is-settling", "is-dismissing");
     dialog.style.removeProperty("--sheet-translate-y");
     dialog.style.removeProperty("--backdrop-opacity");
     dialog.style.removeProperty("animation");
+    dialog.style.removeProperty("transform");
+    dialog.style.removeProperty("opacity");
     currentTranslateY = 0;
     isDragging = false;
     activePointerId = null;
@@ -90,10 +95,14 @@ export function initFluidDrawer(dialog) {
   }
 
   function springBack() {
+    if (!motionAllowed()) {
+      resetDialogStyles();
+      return;
+    }
     dialog.classList.remove("is-dragging", "is-dismissing");
     dialog.classList.add("is-settling");
     setTranslateY(0);
-    finishMotion(resetDialogStyles, 320);
+    finishMotion(resetDialogStyles, 280);
   }
 
   function canStartDrag(e) {
@@ -108,11 +117,13 @@ export function initFluidDrawer(dialog) {
       if (e.target.closest("button, a, input")) return false;
       return true;
     }
-    if (dialog.scrollTop <= 0) {
-      if (e.target.closest("button, a, input")) return false;
-      return true;
+    if (e.target.closest("button, a, input, select, textarea, summary")) return false;
+    // Sheet bodies scroll independently; dragging must not steal their scroll.
+    for (let element = e.target; element && element !== dialog; element = element.parentElement) {
+      if (element.scrollHeight > element.clientHeight &&
+          /auto|scroll/.test(getComputedStyle(element).overflowY)) return false;
     }
-    return false;
+    return dialog.scrollTop <= 0;
   }
 
   dialog.addEventListener("pointerdown", (e) => {
@@ -218,6 +229,9 @@ export function initFluidDrawer(dialog) {
   });
   dialog.addEventListener("close", () => {
     if (!dialog.open) resetDialogStyles();
+  });
+  window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", () => {
+    if (!motionAllowed()) resetDialogStyles();
   });
   return resetDialogStyles;
 }

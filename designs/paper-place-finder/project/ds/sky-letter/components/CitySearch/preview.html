@@ -1,0 +1,14 @@
+<!-- @dsCard group="墨迹控件" height=650 -->
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>城市搜索 · 非实时样例</title></head>
+<body class="sl-preview"><main class="sl-demo"><section class="sl-paper sl-control-paper" aria-labelledby="city-title">
+<p class="sl-control-eyebrow">地点与收藏 · 非实时样例</p><h1 class="sl-control-heading" id="city-title">选择天空</h1>
+<div class="sl-search-block"><label class="sl-search-label" for="city-query">想看哪里的晨昏？</label>
+<div class="sl-search-field"><svg class="sl-control-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg><input class="sl-city-input" id="city-query" type="search" placeholder="搜索城市…" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-describedby="city-hint" aria-controls="city-results"><button class="sl-ink-button sl-search-clear" id="city-clear" type="button" disabled>清空</button></div>
+<p class="sl-search-hint" id="city-hint">试试“杭州”“浙江”或“ningbo”。只筛选下方本地列表，不发送请求。</p></div>
+<p class="sl-result-heading" id="city-count" role="status" aria-live="polite" aria-atomic="true"></p>
+<ul class="sl-place-list" id="city-results" aria-label="本地样例搜索结果"></ul>
+<div class="sl-search-empty" id="city-empty" hidden><h3>未寻得匹配城市</h3><p>试试省市全称，或清空重选。当前地点未变。</p></div>
+<p class="sl-control-feedback" id="city-feedback" role="status">当前：杭州 · 非实时样例。点地名才会切换。</p>
+<p class="sl-control-help">非实时样例 · 不联网、不定位、不写入本机存储。</p>
+</section></main><script>window.SkyLetter.CitySearch(document);</script></body></html>

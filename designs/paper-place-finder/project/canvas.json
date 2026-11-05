@@ -1,1 +1,912 @@
-{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-03T02:10:31Z"},"title":"纸上寻城 · 霞光观测手记","launch":{"view":"canvas"},"pages":[],"boards":{"Main.dc.html":{"x":0,"y":0,"w":1280,"h":900,"title":"01 · 桌面 / 选择天空","expand":"fill"},"Mobile.dc.html":{"x":1360,"y":0,"w":390,"h":844,"title":"02 · 手机 / 地点抽屉"},"States.dc.html":{"x":0,"y":1020,"w":1100,"h":900,"title":"03 · 纸笔控件 / 状态与反馈"}},"order":["Main.dc.html","Mobile.dc.html","States.dc.html"],"notes":{"direction":{"x":0,"y":-270,"kind":"title1","maxW":1750,"text":"纸上寻城 · 把控件写进手记"},"scope":{"x":1830,"y":0,"w":340,"text":"设计边界\n静态可编辑稿，不连接真实搜索、定位或天气接口。杭州、厦门、大理仅为排版样例，不代表用户收藏。\n\n保留宋体、朱砂、和纸；借鉴 Looseleaf 的笔触与标记，不复制其组件或引入 React。"},"rules":{"x":1180,"y":1020,"w":420,"text":"落地约束\n文字与交互保持真实 DOM；手描线仅作装饰，不随指针随机重绘。输入、按钮命中区域至少 44px。\n\n搜索先于定位，收藏独立移出；移动端抽屉内滚动。取消、失败不改变当前地点。\n\n无标准 Design System 工件；沿用仓库 design/DESIGN_SYSTEM.md 的品牌色与字体。"}},"designSystems":[]}
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "SkyNotesHorizontal.dc.html": {
+      "expand": "fill",
+      "h": 1080,
+      "page": "design-system",
+      "title": "天气批注与七日 · A 已采用",
+      "w": 1280,
+      "x": 1040,
+      "y": 1400
+    },
+    "SkyNotesVertical.dc.html": {
+      "expand": "fill",
+      "h": 1080,
+      "page": "alternatives",
+      "title": "天气批注与七日 · B 备选",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "ArchiveStudy.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "is_interactive": true,
+      "page": "alternatives",
+      "title": "观测档案夹 · 构图备选",
+      "w": 1280,
+      "x": 1360,
+      "y": 1200
+    },
+    "AtmosphereStudy.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "page": "alternatives",
+      "title": "暮天手札 · 前期构图备选",
+      "w": 1280,
+      "x": 0,
+      "y": 2720
+    },
+    "DecisionStudy.dc.html": {
+      "expand": "fill",
+      "h": 1100,
+      "page": "archive",
+      "title": "出门前的一页笔记 · 结构探索",
+      "w": 1280,
+      "x": 0,
+      "y": 9480
+    },
+    "FeedbackInk.dc.html": {
+      "expand": "fill",
+      "h": 1060,
+      "page": "archive",
+      "title": "等待与反馈",
+      "w": 1280,
+      "x": 0,
+      "y": 8300
+    },
+    "FeedbackInkMobile.dc.html": {
+      "h": 844,
+      "page": "archive",
+      "title": "反馈 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 8300
+    },
+    "ForecastInk.dc.html": {
+      "expand": "fill",
+      "h": 1920,
+      "page": "archive",
+      "title": "预报手记",
+      "w": 1280,
+      "x": 0,
+      "y": 5160
+    },
+    "ForecastInkMobile.dc.html": {
+      "h": 844,
+      "page": "archive",
+      "title": "预报 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 5160
+    },
+    "InkPlaces.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "archive",
+      "title": "选择天空 · 钢笔彩铅对照",
+      "w": 1280,
+      "x": 0,
+      "y": 2040
+    },
+    "LogoMore.dc.html": {
+      "h": 820,
+      "page": "archive",
+      "title": "山川与邮记 · 品牌标识追加方案",
+      "w": 1100,
+      "x": 1180,
+      "y": 1020
+    },
+    "LogoStudies.dc.html": {
+      "h": 820,
+      "page": "design-system",
+      "title": "Logo · 暂选 A「日轮云笺」",
+      "w": 1100,
+      "x": 1360,
+      "y": 0
+    },
+    "LunarInk.dc.html": {
+      "expand": "fill",
+      "h": 980,
+      "page": "archive",
+      "title": "夜巡月相",
+      "w": 1280,
+      "x": 0,
+      "y": 7200
+    },
+    "LunarInkMobile.dc.html": {
+      "h": 844,
+      "page": "archive",
+      "title": "月相 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 7200
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "archive",
+      "title": "桌面 · 选择天空",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Mobile.dc.html": {
+      "h": 844,
+      "page": "archive",
+      "title": "手机 · 地点抽屉",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "ObservationStudy.dc.html": {
+      "expand": "fill",
+      "h": 1080,
+      "page": "archive",
+      "title": "晨昏观测页 · 紧凑数据版",
+      "w": 1280,
+      "x": 1360,
+      "y": 9480
+    },
+    "PlacesInkMobile.dc.html": {
+      "h": 844,
+      "page": "archive",
+      "title": "地点抽屉 · 手机小赖",
+      "w": 390,
+      "x": 1360,
+      "y": 2040
+    },
+    "SketchbookStudy.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "is_interactive": true,
+      "page": "alternatives",
+      "title": "装订速写本 · 构图备选",
+      "w": 1280,
+      "x": 0,
+      "y": 1200
+    },
+    "SkyCached.dc.html": {
+      "expand": "fill",
+      "h": 2040,
+      "is_interactive": true,
+      "page": "current",
+      "title": "完整首页 · 本地记录 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 2160
+    },
+    "SkyCachedMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "title": "完整首页 · 本地记录 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 2160
+    },
+    "SkyDesignSystem.dc.html": {
+      "expand": "fill",
+      "h": 1280,
+      "is_interactive": true,
+      "page": "design-system",
+      "title": "基础令牌与控件 · 已采用 A",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkyDrawerStates.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "flows",
+      "title": "手机键盘与抽屉手势",
+      "w": 1440,
+      "x": 0,
+      "y": 3360
+    },
+    "SkyEmptyMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "极昼极夜 · 手机",
+      "w": 390,
+      "x": 470,
+      "y": 1120
+    },
+    "SkyFavoritesFull.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "flows",
+      "title": "收藏满额 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 1120
+    },
+    "SkyFavoritesFullMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "flows",
+      "title": "收藏撤销冲突 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 1120
+    },
+    "SkyFeedback.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "更新未果 · 保留手记",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkyFeedbackMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "首次读取失败 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "SkyForecastEdges.dc.html": {
+      "expand": "fill",
+      "h": 2200,
+      "is_interactive": true,
+      "page": "forecast-modes",
+      "title": "评分封顶与七日缺测 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 4320
+    },
+    "SkyForecastEdgesMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "forecast-modes",
+      "title": "评分封顶与七日缺测 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 4320
+    },
+    "SkyLetterMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "current",
+      "title": "首页 · 手机 · 已采用 A",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "SkyLetterNight.dc.html": {
+      "expand": "fill",
+      "h": 2040,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "夜间完整首页 · 已采用 A",
+      "w": 1280,
+      "x": 0,
+      "y": 3660
+    },
+    "SkyLetterStudy.dc.html": {
+      "expand": "fill",
+      "h": 2040,
+      "is_interactive": true,
+      "page": "current",
+      "title": "首页 · 桌面 · 已采用 A",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkyLoadingMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "首次加载 · 手机",
+      "w": 390,
+      "x": 0,
+      "y": 1120
+    },
+    "SkyMissingMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "云层缺失 · 手机",
+      "w": 390,
+      "x": 940,
+      "y": 1120
+    },
+    "SkyMoon.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "screens",
+      "title": "夜巡月相 · 观象札记",
+      "w": 1280,
+      "x": 0,
+      "y": 2240
+    },
+    "SkyMoonMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "screens",
+      "title": "夜巡月相 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 2240
+    },
+    "SkyMoonWaningMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "flows",
+      "title": "亏月与未来预报 · 手机",
+      "w": 390,
+      "x": 0,
+      "y": 4580
+    },
+    "SkyMotionFlow.dc.html": {
+      "expand": "fill",
+      "h": 1900,
+      "is_interactive": true,
+      "page": "motion-handoff",
+      "title": "天气过场与纸面互动 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkyMotionFlowMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "motion-handoff",
+      "title": "天气过场与纸面互动 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "SkyPlaceFlow.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "flows",
+      "title": "换城与定位交接 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkyPlaceFlowMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "flows",
+      "title": "换城与定位交接 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "SkyPlaces.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "screens",
+      "title": "选择天空 · 地点与收藏",
+      "w": 1280,
+      "x": 0,
+      "y": 1120
+    },
+    "SkyPlacesMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "screens",
+      "title": "选择天空 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 1120
+    },
+    "SkyRefreshingMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "后台更新 · 手机",
+      "w": 390,
+      "x": 940,
+      "y": 2084
+    },
+    "SkyScenesDay.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "白昼 · 天空通透度",
+      "w": 1740,
+      "x": 0,
+      "y": 0
+    },
+    "SkyScenesLightWind.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "晨暮 · 风的叠加",
+      "w": 1740,
+      "x": 0,
+      "y": 2440
+    },
+    "SkyScenesMoon.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "月相 · 可见性边界",
+      "w": 1740,
+      "x": 1820,
+      "y": 2440
+    },
+    "SkyScenesNight.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "夜间 · 月亮与遮挡",
+      "w": 1740,
+      "x": 0,
+      "y": 1220
+    },
+    "SkyScenesNightWet.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "夜间 · 降水叠加",
+      "w": 1740,
+      "x": 1820,
+      "y": 1220
+    },
+    "SkyScenesPrecip.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "scenarios",
+      "title": "白昼 · 降水与接触",
+      "w": 1740,
+      "x": 1820,
+      "y": 0
+    },
+    "SkyStaleMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "旧记录 · 手机",
+      "w": 390,
+      "x": 1410,
+      "y": 1120
+    },
+    "SkySunDisc.dc.html": {
+      "expand": "fill",
+      "h": 2040,
+      "is_interactive": true,
+      "page": "forecast-modes",
+      "title": "日轮完整预报 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkySunDiscMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "forecast-modes",
+      "title": "日轮完整预报 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "SkySunrise.dc.html": {
+      "expand": "fill",
+      "h": 2040,
+      "is_interactive": true,
+      "page": "forecast-modes",
+      "title": "朝霞成功态 · 桌面",
+      "w": 1280,
+      "x": 0,
+      "y": 2160
+    },
+    "SkySunriseMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "forecast-modes",
+      "title": "朝霞成功态 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 2160
+    },
+    "SkySwitchFailedMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "切换失败 · 手机",
+      "w": 390,
+      "x": 470,
+      "y": 2084
+    },
+    "SkySwitchingMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "feedback",
+      "title": "切换朝霞 · 手机",
+      "w": 390,
+      "x": 0,
+      "y": 2084
+    },
+    "SkyWelcome.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "is_interactive": true,
+      "page": "screens",
+      "title": "初见天空 · 首次进入",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "SkyWelcomeMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "screens",
+      "title": "初见天空 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 0
+    },
+    "States.dc.html": {
+      "h": 900,
+      "page": "archive",
+      "title": "纸笔控件 · 状态与反馈",
+      "w": 1100,
+      "x": 0,
+      "y": 1020
+    },
+    "WeatherClearStudy.dc.html": {
+      "expand": "fill",
+      "h": 1440,
+      "is_interactive": true,
+      "page": "weather",
+      "title": "晴 · 暖光纸页",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "WeatherRainMobile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "weather",
+      "title": "手机 · 雨天",
+      "w": 390,
+      "x": 1360,
+      "y": 3120
+    },
+    "WeatherRainStudy.dc.html": {
+      "expand": "fill",
+      "h": 1440,
+      "is_interactive": true,
+      "page": "weather",
+      "title": "雨 · 纸缘接触",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "WeatherSnowStudy.dc.html": {
+      "expand": "fill",
+      "h": 1440,
+      "is_interactive": true,
+      "page": "weather",
+      "title": "雪 · 沿缘积雪",
+      "w": 1280,
+      "x": 1360,
+      "y": 1560
+    },
+    "WeatherThunderStudy.dc.html": {
+      "expand": "fill",
+      "h": 1440,
+      "is_interactive": true,
+      "page": "weather",
+      "title": "雷暴 · 夹口受光",
+      "w": 1280,
+      "x": 0,
+      "y": 3120
+    },
+    "WeatherWindStudy.dc.html": {
+      "expand": "fill",
+      "h": 1440,
+      "is_interactive": true,
+      "page": "weather",
+      "title": "风 · 自由边",
+      "w": 1280,
+      "x": 0,
+      "y": 1560
+    },
+    "WelcomeInk.dc.html": {
+      "expand": "fill",
+      "h": 960,
+      "page": "archive",
+      "title": "晨昏启封",
+      "w": 1280,
+      "x": 0,
+      "y": 4080
+    },
+    "WelcomeInkMobile.dc.html": {
+      "h": 844,
+      "page": "archive",
+      "title": "欢迎 · 手机",
+      "w": 390,
+      "x": 1360,
+      "y": 4080
+    },
+    "XiaolaiPlaces.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "design-system",
+      "title": "全文小赖 · 字体与控件参考",
+      "w": 1280,
+      "x": 0,
+      "y": 2600
+    },
+    "YozaiPlaces.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "page": "archive",
+      "title": "全文悠哉",
+      "w": 1280,
+      "x": 0,
+      "y": 3060
+    },
+    "SkyFieldNote.dc.html": {
+      "h": 700,
+      "page": "design-system",
+      "title": "评分笺 · 笔迹参考",
+      "w": 960,
+      "x": 0,
+      "y": 1400
+    },
+    "SkyBrowserIdentity.dc.html": {
+      "x": 2540,
+      "y": 0,
+      "w": 1100,
+      "h": 820,
+      "page": "design-system",
+      "title": "浏览器入口 · Logo A 小尺寸适配"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-03T02:10:31Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "/Users/lumiaqian/tools/firecloud/designs/sky-letter-system",
+      "copiedAt": "2026-11-05T02:16:34.905Z",
+      "namespace": "sky-letter",
+      "title": "天空画笺",
+      "version": null
+    }
+  ],
+  "launch": {
+    "page": "current",
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "paperReview",
+    "approvedTypography",
+    "remainingScreens",
+    "forecastCoverage",
+    "recoveryRules",
+    "flowCoverage",
+    "sceneContract",
+    "motionCoverage",
+    "alternativeWeather",
+    "weatherContract",
+    "scope",
+    "decisionStudy"
+  ],
+  "notes": {
+    "alternativeWeather": {
+      "page": "alternatives",
+      "text": "未采用方案，仅供比较，不作为实现依据。\nB「主因摘记 + 七日纵览」保留；装订速写本、观测档案夹、暮天手札为前期构图备选。\n已采用的 A 详图在 02，完整桌面与手机首页在 01。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "approvedTypography": {
+      "page": "design-system",
+      "text": "已同步 A：评分圈注、事件旁批、云层与空气分组、无折痕七日横笺。源设计系统与画布安装副本保持一致。\n字体为全文小赖，Logo 暂选 A；Logo 板内其他方案仅供对照。组件预览包含常规、封顶、缺测、恢复及动效关闭状态。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "decisionStudy": {
+      "page": "archive",
+      "text": "「出门前的一页笔记」已否决：文案过长，弱化预报工具价值。仅留作历史对照。",
+      "w": 900,
+      "x": 0,
+      "y": 10680
+    },
+    "flowCoverage": {
+      "page": "flows",
+      "text": "换城定位、收藏满额、抽屉手势与亏月。完整本地记录首页已移到 01，与正常首页并列。\n换城收起旧城分数；response 切换 success/error/cache。满额撤销先腾位置，保留原顺序。短拖回弹、长拖关闭、重开归零。月相不随预报日期变化。\n软键盘为占位模拟；不联网、不请求定位、不写浏览器存储。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "forecastCoverage": {
+      "page": "forecast-modes",
+      "text": "预报专题：日轮、朝霞、封顶与缺测；左桌面、右手机，统一评分圈注、两组天气旁批与七日横笺。\n切换日期、朝晚霞及日轮时，分数、时间、批注、最高日联动，实况天空独立。缺测不记零分；封顶保留原因与降水、沙尘等补充项。固定样例，不连接预报接口。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "motionCoverage": {
+      "page": "motion-handoff",
+      "text": "完整 A 动效原型：晴 → 雨 → 雷暴 → 雨停 → 夜色；650ms 过场，可前进回退。\n夹子引雷、圈注暖光、胶带或右划天空起风；七日横滑不触发阵风。纸面数值固定，不作为日期联动样例。\n关闭动效或系统减弱动态时停止粒子、闪电、暖光和纸角变化，保留静态天气与文字反馈。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "paperReview": {
+      "page": "current",
+      "text": "完整方案 A：上排正常首页，下排本地记录；左桌面、右手机。均包含评分、事件时间、天气批注与未来七日，不再以跳转代替后半页。\n城市下方统一更新提示；状态变化不增加第三张纸，不移动主卡。未确认记录不显示实时倒计时或旧天气实况。Tweaks 的 freshness / refreshResult 可切换与演示刷新结果。\n全文小赖、开口圈注、软纸边；批注在七日前，当前划线、最高圈注。02–08 同步规范与专题；90、98–99 只作历史。均为非实时样例。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "recoveryRules": {
+      "page": "feedback",
+      "text": "首次失败、加载、无事件、缺测、旧记录、切换中、切换失败、后台更新。无记录保留专用状态纸；有记录只在城市下方轻量反馈，评分与时间双笺不位移。\n刷新失败保留原日期、分数和窗口；旧值不显示实时倒计时。切换失败仍选原时段，取消还原状态。本机恢复不等于失败。完整本地记录与批注、七日见 01；换城见 06。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "remainingScreens": {
+      "page": "screens",
+      "text": "完整页面：首次进入、地点与收藏、月相；左桌面、右手机，共用已采用 A 的纸笔规则。\nPlay 可操作；搜索「浙江」「错误」「无结果」查看样例。Tweaks 切换昼夜、月相与异常状态。不联网、不定位、不持久保存；照片为观测实录，预报与天文数值为样例。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "sceneContract": {
+      "page": "scenarios",
+      "text": "完整天气稿：24 个可滚动手机场景 + 夜间桌面，均包含同一套判断笺、时间笺、天气旁批与七日横笺。\n天幕 → 月轮星空 → 云雾降水 → 不透明纸面 → 纸缘接触。月位不漂移，月晕缓慢呼吸；新月与地平线下不伪造可见月轮。雷暴不让数字频闪。\nPlay 查看运动，motion 可静止。固定天文位置与天气强度样例，正式实现需接入实况。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "scope": {
+      "page": "archive",
+      "text": "历史界面探索，不作为实现依据。保留旧地点控件、字体试稿、欢迎页、预报、月相、反馈及结构探索。\n当前已选：全文小赖、Logo 暂选 A、天空画笺首页与批注 A。见 01–02；此处旧规范与文案不覆盖当前决定。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    },
+    "weatherContract": {
+      "page": "weather",
+      "text": "历史天气散页，不作为当前卡片实现依据。\n保留晴、雨、风、雪、雷暴与雨天手机稿作过程对照。天空和纸缘变化不改写预报分数；胶带与夹口固定，风只掀自由边。\nTweaks 可切换 weather / motion；非实况数据。最新首页见 01，天气专题见 07–08。",
+      "w": 1100,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "SkyLetterStudy.dc.html",
+    "SkyLetterMobile.dc.html",
+    "SkyDesignSystem.dc.html",
+    "LogoStudies.dc.html",
+    "SkyFieldNote.dc.html",
+    "SkyNotesHorizontal.dc.html",
+    "XiaolaiPlaces.dc.html",
+    "SkyWelcome.dc.html",
+    "SkyWelcomeMobile.dc.html",
+    "SkyPlaces.dc.html",
+    "SkyPlacesMobile.dc.html",
+    "SkyMoon.dc.html",
+    "SkyMoonMobile.dc.html",
+    "SkySunDisc.dc.html",
+    "SkySunDiscMobile.dc.html",
+    "SkySunrise.dc.html",
+    "SkySunriseMobile.dc.html",
+    "SkyForecastEdges.dc.html",
+    "SkyForecastEdgesMobile.dc.html",
+    "SkyFeedback.dc.html",
+    "SkyFeedbackMobile.dc.html",
+    "SkyLoadingMobile.dc.html",
+    "SkyEmptyMobile.dc.html",
+    "SkyMissingMobile.dc.html",
+    "SkyStaleMobile.dc.html",
+    "SkySwitchingMobile.dc.html",
+    "SkySwitchFailedMobile.dc.html",
+    "SkyRefreshingMobile.dc.html",
+    "SkyPlaceFlow.dc.html",
+    "SkyPlaceFlowMobile.dc.html",
+    "SkyFavoritesFull.dc.html",
+    "SkyFavoritesFullMobile.dc.html",
+    "SkyCached.dc.html",
+    "SkyCachedMobile.dc.html",
+    "SkyDrawerStates.dc.html",
+    "SkyMoonWaningMobile.dc.html",
+    "SkyScenesDay.dc.html",
+    "SkyScenesPrecip.dc.html",
+    "SkyScenesNight.dc.html",
+    "SkyScenesNightWet.dc.html",
+    "SkyScenesLightWind.dc.html",
+    "SkyScenesMoon.dc.html",
+    "SkyLetterNight.dc.html",
+    "SkyMotionFlow.dc.html",
+    "SkyMotionFlowMobile.dc.html",
+    "SkyNotesVertical.dc.html",
+    "SketchbookStudy.dc.html",
+    "ArchiveStudy.dc.html",
+    "AtmosphereStudy.dc.html",
+    "WeatherClearStudy.dc.html",
+    "WeatherRainStudy.dc.html",
+    "WeatherWindStudy.dc.html",
+    "WeatherSnowStudy.dc.html",
+    "WeatherThunderStudy.dc.html",
+    "WeatherRainMobile.dc.html",
+    "Main.dc.html",
+    "Mobile.dc.html",
+    "States.dc.html",
+    "LogoMore.dc.html",
+    "InkPlaces.dc.html",
+    "PlacesInkMobile.dc.html",
+    "YozaiPlaces.dc.html",
+    "WelcomeInk.dc.html",
+    "WelcomeInkMobile.dc.html",
+    "ForecastInk.dc.html",
+    "ForecastInkMobile.dc.html",
+    "LunarInk.dc.html",
+    "LunarInkMobile.dc.html",
+    "FeedbackInk.dc.html",
+    "FeedbackInkMobile.dc.html",
+    "DecisionStudy.dc.html",
+    "ObservationStudy.dc.html",
+    "SkyBrowserIdentity.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "current",
+      "name": "01 · 首页 · 已采用"
+    },
+    {
+      "id": "design-system",
+      "name": "02 · 视觉规范与组件"
+    },
+    {
+      "id": "screens",
+      "name": "03 · 页面 · 地点与月相"
+    },
+    {
+      "id": "forecast-modes",
+      "name": "04 · 预报与评分"
+    },
+    {
+      "id": "feedback",
+      "name": "05 · 状态与恢复"
+    },
+    {
+      "id": "flows",
+      "name": "06 · 流程与边界"
+    },
+    {
+      "id": "scenarios",
+      "name": "07 · 天气与月相"
+    },
+    {
+      "id": "motion-handoff",
+      "name": "08 · 动效交接"
+    },
+    {
+      "id": "alternatives",
+      "name": "90 · 备选 · 未采用"
+    },
+    {
+      "id": "weather",
+      "name": "98 · 历史 · 天气散页"
+    },
+    {
+      "id": "archive",
+      "name": "99 · 历史 · 界面探索"
+    }
+  ],
+  "title": "纸上寻城 · 霞光观测手记"
+}

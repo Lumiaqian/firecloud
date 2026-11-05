@@ -3,44 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" id="theme-color" content="#1c5b94">
+  <meta name="theme-color" id="theme-color" content="#fdfaf3">
   <meta name="description" content="结合高空云层、光路与空气质量的自然霞光指数预报">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="霞光">
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg?v=4">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=4">
-  <link rel="manifest" href="manifest.webmanifest?v=5">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
-  <link rel="stylesheet" href="css/style.css?v=63">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-a-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-a-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-a-48.png">
+  <link rel="manifest" href="manifest.webmanifest?v=6">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5">
+  <link rel="preload" href="assets/fonts/Xiaolai-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/sky-letter-tokens.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=75">
   <title>霞光预报</title>
-  <!-- 模块版本统一由 import map 钉住；增删模块或发布时运行 npm run sync-modules（tests/release.test.mjs 校验） -->
+  <!-- 模块版本统一由 import map 钉住；增删模块或发布时运行 npm run sync-modules -->
   <script type="importmap">
     {
       "imports": {
-        "./js/api.mjs": "./js/api.mjs?v=25",
-        "./js/app.mjs": "./js/app.mjs?v=25",
-        "./js/core/format.mjs": "./js/core/format.mjs?v=25",
-        "./js/core/session.mjs": "./js/core/session.mjs?v=25",
-        "./js/core/storage.mjs": "./js/core/storage.mjs?v=25",
-        "./js/forecast.mjs": "./js/forecast.mjs?v=25",
-        "./js/frame-loop.mjs": "./js/frame-loop.mjs?v=25",
-        "./js/ui/dev-lab.mjs": "./js/ui/dev-lab.mjs?v=25",
-        "./js/ui/dom.mjs": "./js/ui/dom.mjs?v=25",
-        "./js/ui/drawer.mjs": "./js/ui/drawer.mjs?v=25",
-        "./js/ui/factors.mjs": "./js/ui/factors.mjs?v=25",
-        "./js/ui/hero.mjs": "./js/ui/hero.mjs?v=25",
-        "./js/ui/loaders.mjs": "./js/ui/loaders.mjs?v=25",
-        "./js/ui/moon.mjs": "./js/ui/moon.mjs?v=25",
-        "./js/ui/motion.mjs": "./js/ui/motion.mjs?v=25",
-        "./js/ui/paper-fx.mjs": "./js/ui/paper-fx.mjs?v=25",
-        "./js/ui/paper.mjs": "./js/ui/paper.mjs?v=25",
-        "./js/ui/places.mjs": "./js/ui/places.mjs?v=25",
-        "./js/ui/sky.mjs": "./js/ui/sky.mjs?v=25",
-        "./js/ui/week.mjs": "./js/ui/week.mjs?v=25",
-        "./js/ui/welcome.mjs": "./js/ui/welcome.mjs?v=25",
-        "./js/weather-fx.mjs": "./js/weather-fx.mjs?v=25"
+        "./js/api.mjs": "./js/api.mjs?v=36",
+        "./js/app.mjs": "./js/app.mjs?v=36",
+        "./js/core/format.mjs": "./js/core/format.mjs?v=36",
+        "./js/core/session.mjs": "./js/core/session.mjs?v=36",
+        "./js/core/storage.mjs": "./js/core/storage.mjs?v=36",
+        "./js/forecast.mjs": "./js/forecast.mjs?v=36",
+        "./js/frame-loop.mjs": "./js/frame-loop.mjs?v=36",
+        "./js/ui/dom.mjs": "./js/ui/dom.mjs?v=36",
+        "./js/ui/drawer.mjs": "./js/ui/drawer.mjs?v=36",
+        "./js/ui/factors.mjs": "./js/ui/factors.mjs?v=36",
+        "./js/ui/hero.mjs": "./js/ui/hero.mjs?v=36",
+        "./js/ui/loaders.mjs": "./js/ui/loaders.mjs?v=36",
+        "./js/ui/moon.mjs": "./js/ui/moon.mjs?v=36",
+        "./js/ui/motion.mjs": "./js/ui/motion.mjs?v=36",
+        "./js/ui/paper-fx.mjs": "./js/ui/paper-fx.mjs?v=36",
+        "./js/ui/paper.mjs": "./js/ui/paper.mjs?v=36",
+        "./js/ui/places.mjs": "./js/ui/places.mjs?v=36",
+        "./js/ui/sky.mjs": "./js/ui/sky.mjs?v=36",
+        "./js/ui/week.mjs": "./js/ui/week.mjs?v=36",
+        "./js/ui/welcome.mjs": "./js/ui/welcome.mjs?v=36",
+        "./js/weather-fx.mjs": "./js/weather-fx.mjs?v=36"
       }
     }
   </script>
@@ -54,19 +56,17 @@
         var h = new Date().getHours();
         var isDay = (h >= 6 && h < 20);
         var light = (theme && theme.light) || (isDay ? "day" : "night");
-        var weather = (theme && theme.weather) || "clear";
         var tier = (theme && theme.tier) || "great";
         var b = document.body;
         if (b) {
-          if (hasPlace) b.dataset.state = "ready";
-          b.dataset.light = light;
-          b.dataset.weather = weather;
-          b.dataset.tier = tier;
-          if (theme) {
-            if (theme.skyTop) b.style.setProperty("--sky-top", theme.skyTop);
-            if (theme.skyMid) b.style.setProperty("--sky-mid", theme.skyMid);
-            if (theme.skyHorizon) b.style.setProperty("--sky-horizon", theme.skyHorizon);
+          if (hasPlace) {
+            b.dataset.state = "ready";
+            b.dataset.unconfirmed = "true";
           }
+          b.dataset.light = light;
+          b.dataset.theme = (theme && theme.paperTheme) || light;
+          b.dataset.weather = "clear";
+          b.dataset.tier = tier;
         }
       } catch (e) {}
     })();
@@ -92,16 +92,14 @@
     <header class="topbar">
       <button class="brand" id="open-places" type="button" aria-label="霞光预报 - 选择地点，当前地点：未选择">
         <span class="brand-mark" aria-hidden="true">
-          <img class="brand-mark-svg" src="icons/brand-mark.svg?v=1" alt="" width="42" height="42">
+          <img class="brand-mark-svg" src="assets/logo-a.png" alt="" width="43" height="43">
         </span>
         <span class="brand-copy"><strong>霞光预报</strong><small id="place-name">选择地点</small></span>
       </button>
       <div class="top-actions paper-surface">
+        <button id="motion-toggle" class="text-button motion-toggle" type="button" aria-pressed="true">动效 开</button>
         <button class="icon-button favorite-button" id="favorite-button" type="button" aria-label="收藏当前地点" aria-pressed="false" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 3Z"/></svg>
-        </button>
-        <button class="icon-button" id="refresh-button" type="button" aria-label="刷新预报" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5M5.4 9a7 7 0 0 1 11.8-2.4L19 8M5 17v-5h5m8.6 3a7 7 0 0 1-11.8 2.4L5 16"/></svg>
         </button>
       </div>
     </header>
@@ -113,240 +111,165 @@
 
     <section class="panel welcome" id="panel-welcome">
       <div class="welcome-layout">
-        <!-- 欢迎页左侧：扉页 -->
-        <article class="welcome-journal-folio" id="welcome-folio" data-weather-surface>
-          <div class="folio-paper-perforations" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-          </div>
+        <section class="welcome-copy">
+          <span class="welcome-eyebrow">晨昏启封 / 01</span>
+          <h1 id="welcome-title"><span id="welcome-title-prefix">今晚落日</span><br><span id="welcome-title-suffix">值得等吗</span></h1>
+          <p class="intro" id="welcome-intro">看云层、光路与空气，<br>再决定要不要出发。</p>
+          <article class="welcome-journal-folio" id="welcome-folio" data-weather-surface>
+            <h2>先选一座城市</h2>
+            <div class="welcome-actions">
+              <button class="text-button folio-btn-search" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市 ↗</button>
+              <button class="text-button folio-btn-locate" id="locate-button" type="button" aria-describedby="privacy-note">使用当前位置</button>
+            </div>
+            <p class="notice" id="geo-notice" role="status"></p>
+            <p class="privacy-note" id="privacy-note">记录留在本机；查询向第三方发送城市关键词或坐标。</p>
+          </article>
+          <a class="welcome-bottom" href="#specimen-card">先看一页观测实录 →</a>
+        </section>
 
-          <!-- 纸面装饰（指针彩蛋，不进入读屏顺序） -->
-          <div class="folio-washi-tape" id="folio-washi-tape" aria-hidden="true"></div>
-
-          <div class="folio-brass-pin" aria-hidden="true"></div>
-
-          <div class="folio-inner">
-            <div class="folio-header">
-              <div class="folio-tag-wrap">
-                <span class="folio-dot" aria-hidden="true"></span>
-                <span class="folio-tag">VOL. 01 · 晨昏启封</span>
-                <span class="folio-subtitle">自然光象实录</span>
+        <aside class="welcome-specimen" aria-label="非实时观测实录示例">
+          <article class="specimen-card" id="specimen-card" data-slot="sunset" data-weather-surface tabindex="-1">
+            <header class="specimen-header">
+              <p class="specimen-tag">观测实录 / 非实时样例</p>
+              <div class="specimen-tabs" role="radiogroup" aria-label="观测时段">
+                <button type="button" class="specimen-tab active" data-slot="sunset" id="tab-journal-sunset" role="radio" aria-checked="true" tabindex="0">暮天</button>
+                <button type="button" class="specimen-tab" data-slot="sunrise" id="tab-journal-sunrise" role="radio" aria-checked="false" tabindex="-1">破晓</button>
               </div>
-              <span class="folio-seal-mark" aria-hidden="true">观象司</span>
-            </div>
-
-            <div class="welcome-copy">
-              <h1 id="welcome-title"><span id="welcome-title-prefix">今晚落日</span><br><span id="welcome-title-suffix">值得等吗</span></h1>
-              <p class="intro" id="welcome-intro">读取云幕、远端光路与空气通透度，为下一次朝霞或晚霞给出一份简明判断。</p>
-              <div class="welcome-actions">
-                <button class="primary folio-btn-locate" id="locate-button" type="button" aria-describedby="privacy-note">
-                  <span>使用当前位置</span><span aria-hidden="true">↗</span>
-                </button>
-                <button class="text-button folio-btn-search" id="welcome-search" type="button" aria-describedby="privacy-note">搜索城市</button>
-              </div>
-              <p class="privacy-note" id="privacy-note">最近地点、收藏和预报仅保存在本机；查询时需向第三方发送坐标。</p>
-              <p class="notice" id="geo-notice" role="status"></p>
-            </div>
-          </div>
-        </article>
-
-        <!-- 欢迎页右侧：标杆实录示例卡 -->
-        <aside class="welcome-specimen" aria-label="典范天幕观测手记">
-          <div class="specimen-card" id="specimen-card" data-slot="sunset" data-weather-surface>
-              <div class="specimen-paper-perforations" aria-hidden="true">
-              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-            </div>
-
-            <div class="specimen-brass-clip" aria-hidden="true"></div>
-
-            <!-- 暮天卷 / 破晓卷切换 -->
-            <div class="specimen-header">
-              <span class="specimen-tag">FIELD SPECIMEN · 标杆实录</span>
-              <div class="specimen-tabs" role="radiogroup" aria-label="观测手记卷别">
-                <button type="button" class="specimen-tab active" data-slot="sunset" id="tab-journal-sunset" role="radio" aria-checked="true">
-                  <svg class="specimen-tab-icon" viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="3.2" fill="#e26d36"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="#e26d36" stroke-width="1.1" stroke-linecap="round"/><path d="M1 14h14" stroke="#7a5538" stroke-width="1.2" stroke-linecap="round"/></svg>
-                  <span>暮天卷</span>
-                </button>
-                <button type="button" class="specimen-tab" data-slot="sunrise" id="tab-journal-sunrise" role="radio" aria-checked="false">
-                  <svg class="specimen-tab-icon" viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true"><circle cx="8" cy="8.5" r="3.2" fill="#d98926"/><path d="M8 2v2M2.5 8.5h2M11.5 8.5h2M3.8 4.3l1.4 1.4M10.8 5.7l1.4-1.4" stroke="#d98926" stroke-width="1.1" stroke-linecap="round"/><path d="M1 13.5h14" stroke="#7a5538" stroke-width="1.2" stroke-linecap="round"/></svg>
-                  <span>破晓卷</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 实景照片 -->
+            </header>
             <figure class="specimen-photo-frame">
               <img class="specimen-photo" id="specimen-photo" src="assets/sayram_sunset.jpg" alt="新疆赛里木湖西海落日雪山实景观测" width="960" height="640" fetchpriority="high" loading="eager">
-              <figcaption class="specimen-caption">
-                <span class="specimen-caption-place" id="specimen-place">新疆 · 赛里木湖 (2,073 m)</span>
-                <span class="specimen-caption-target" id="specimen-target">暮天火烧云与雪峰漫射实录 · 标杆观测</span>
-              </figcaption>
+              <figcaption class="specimen-caption" id="specimen-place">新疆 · 赛里木湖</figcaption>
             </figure>
-
-            <!-- 评定与三条依据 -->
             <div class="specimen-body" id="specimen-body">
               <div class="specimen-verdict-row">
-                <div class="specimen-cinnabar-seal" id="specimen-stamp">
-                  <span class="specimen-seal-border">
-                    <span class="specimen-seal-tag">实录研判</span>
-                    <strong class="specimen-seal-title" id="specimen-stamp-text">晚霞极佳 · 值得专程等待</strong>
-                  </span>
-                </div>
-                <div class="specimen-time-box" id="specimen-time-box">
-                  <span class="time-box-label">最佳视窗</span>
-                  <strong class="time-box-val" id="specimen-time-val">21:25 – 22:15</strong>
-                </div>
+                <strong id="specimen-stamp-text">晚霞 · 极佳</strong>
+                <span id="specimen-time-val">21:25–22:15</span>
               </div>
-
-              <dl class="specimen-metrics" id="specimen-metrics">
-                <div>
-                  <dt>01</dt>
-                  <dd>
-                    <strong id="specimen-m1-title">云幕受光</strong>
-                    <span id="specimen-m1-desc">博罗科努高层卷云迎阳，将映衬出近半小时壮阔火烧云</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>02</dt>
-                  <dd>
-                    <strong id="specimen-m2-title">地平光路</strong>
-                    <span id="specimen-m2-desc">西海低云仅 8%，太阳落入地平前无遮挡</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>03</dt>
-                  <dd>
-                    <strong id="specimen-m3-title">高山空气</strong>
-                    <span id="specimen-m3-desc">视距超 80km，瑞利散射纯净，雪山倒影赤红</span>
-                  </dd>
-                </div>
-              </dl>
+              <p class="specimen-note">观测样例，不代表你所在地的天气。</p>
+              <p class="specimen-photo-credit" id="specimen-target">实景照片 · 新疆赛里木湖西海落日雪山</p>
             </div>
-          </div>
+          </article>
         </aside>
       </div>
     </section>
 
-    <section class="panel loading" id="panel-loading" hidden aria-live="polite">
+    <section class="panel loading state-paper" id="panel-loading" hidden role="status" aria-live="polite">
       <div class="loader-stage" id="loader-stage" aria-hidden="true"></div>
       <h1>正在读取天空</h1>
       <p id="loading-text">连接气象数据…</p>
+      <p class="loading-caption" id="loading-context">首次读取</p>
+      <button class="text-button loading-search" id="loading-search" type="button">换个地点</button>
     </section>
 
     <section class="panel ready" id="panel-ready" hidden>
-      <div class="ready-toolbar" data-weather-surface>
-        <div class="event-status">
-          <p id="event-context">下一次可见时段</p>
-          <p id="event-pending" class="event-pending" role="status" aria-atomic="true" hidden>
-            <span class="search-spinner event-pending-spinner" aria-hidden="true"></span>
-            <span class="event-pending-copy">
-              <strong id="event-pending-label"></strong>
-              <span id="event-pending-detail"></span>
-            </span>
-          </p>
+      <div class="forecast-context">
+        <div class="home-location">
+          <button id="home-place-button" class="home-city" type="button" aria-label="选择地点"><span id="home-place-name">—</span><span aria-hidden="true">⌄</span></button>
+          <p id="home-region" class="home-region"></p>
         </div>
-        <div class="event-tabs paper-surface" role="group" aria-label="霞光时段">
-          <button id="tab-sunset" aria-pressed="true" data-event="sunset" type="button">晚霞</button>
-          <button id="tab-sunrise" aria-pressed="false" data-event="sunrise" type="button">朝霞</button>
+        <div class="ready-toolbar">
+          <div class="event-status">
+            <p id="event-context">下一次可见时段</p>
+          </div>
+          <div class="event-tabs paper-surface" role="group" aria-label="霞光时段">
+            <button id="tab-sunset" aria-pressed="true" data-event="sunset" type="button">晚霞</button>
+            <button id="tab-sunrise" aria-pressed="false" data-event="sunrise" type="button">朝霞</button>
+          </div>
+        </div>
+        <p id="home-weather" class="home-weather">当前实况 · —</p>
+        <div id="event-pending" class="forecast-note" role="status" aria-atomic="true">
+          <div class="freshness-copy">
+            <span id="updated-at">—</span>
+            <span class="freshness-message"><span id="event-pending-label" tabindex="-1"></span><span id="event-pending-detail"></span></span>
+          </div>
+          <div class="freshness-actions">
+            <button id="refresh-button" class="text-button" type="button" aria-label="刷新预报" hidden>刷新</button>
+            <button id="forecast-note-action" class="text-button" type="button" hidden></button>
+          </div>
         </div>
       </div>
 
-      <!-- 主卡 -->
-      <article class="hero-master-card" id="hero-master-card" aria-labelledby="index-label" data-weather-surface>
-        <div class="hero-paper-perforations" aria-hidden="true">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </div>
-
-        <!-- 纸面装饰：仅作指针彩蛋，不进入键盘与读屏顺序 -->
-        <div class="hero-washi-tape-topleft" id="hero-washi-tape" aria-hidden="true"></div>
-        <div class="hero-brass-clip" id="hero-brass-clip" aria-hidden="true"></div>
-
-        <div class="hero-card-header">
-          <div class="journal-entry-tag-row">
-            <div class="journal-entry-tag" id="entry-tag">晨昏观测手记</div>
-            <button type="button" class="hero-lunar-badge" id="hero-lunar-badge" aria-label="查看今夜月相详情">
-              <span class="lunar-badge-icon" id="lunar-badge-icon" aria-hidden="true"></span>
-              <span class="lunar-badge-text" id="lunar-badge-text">—</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 先回答“值不值得等”：分数、档位与建议；随后才是时间 -->
+      <!-- 状态在城市下原位更新，不改变评分与时间两笺的位置。 -->
+      <article class="hero-master-card" id="hero-master-card" aria-labelledby="index-label">
         <div class="hero-journal-grid">
-          <div class="hero-score-col">
-            <div class="hero-score-main">
-              <div class="score-label-row">
-                <span id="index-label">霞光指数</span>
-                <small>0–99</small>
-              </div>
-              <div class="score-number-display">
-                <strong id="score">—</strong>
-                <small>分</small>
-              </div>
+          <section class="hero-score-col" data-weather-surface aria-label="所选预报判断">
+            <img class="score-annotations" src="assets/paper/score-annotations.png" alt="" aria-hidden="true">
+            <p class="journal-entry-tag" id="entry-tag">晨昏观测手记</p>
+            <button id="score-circle-action" class="score-circle-action" type="button" aria-label="轻触评分圈注">
+              <span class="score-label-row"><span id="index-label">霞光指数</span><small>0–99</small></span>
+              <span class="score-number-display"><strong id="score">—</strong><small>分</small></span>
+            </button>
+            <h1 class="hero-grade-line" id="band">—</h1>
+            <p class="hero-verdict-quote" id="verdict">—</p>
+            <div class="data-meta">
+              <span id="data-source">预报数据</span>
+              <span id="record-timezone"></span>
+              <span id="event-date" hidden>—</span>
             </div>
-            <div class="cinnabar-seal-stamp" id="seal-stamp" aria-hidden="true">
-              <span class="seal-grade" id="seal-grade">霞光</span>
-              <span class="seal-sub" id="seal-sub">且待新晴</span>
-            </div>
-            <p class="hero-grade-line" id="band">—</p>
-          </div>
-
-          <div class="hero-meta-col">
-            <h1 class="hero-event-time" id="event-time" tabindex="-1">
-              — <small id="hero-time-sub">—</small>
-            </h1>
-            <div class="hero-countdown-tape" id="countdown">—</div>
+          </section>
+          <aside class="hero-meta-col" data-weather-surface aria-label="所选事件时间与窗口">
+            <button class="paper-clip-action" id="paper-clip-action" type="button" aria-label="轻触纸夹"></button>
+            <p class="hero-event-label" id="hero-event-label">日落</p>
+            <p class="hero-event-time" id="event-time" tabindex="-1">—</p>
+            <p class="hero-countdown-tape" id="countdown">—</p>
+            <p id="hero-time-sub" class="hero-time-sub">—</p>
             <div class="hero-window">
               <p class="hero-window-text">
                 <span id="window-label">观赏窗口</span>
                 <strong id="window-range">—</strong>
                 <span id="window-peak">—</span>
               </p>
-              <div class="hero-window-track" aria-hidden="true">
-                <i class="hero-window-mark is-event" id="window-event-mark"></i>
-                <i class="hero-window-mark is-peak" id="window-peak-mark"></i>
-              </div>
             </div>
-          </div>
+          </aside>
         </div>
-
-        <div class="hero-journal-foot">
-          <p class="hero-verdict-quote" id="verdict">—</p>
+        <button type="button" class="hero-lunar-badge" id="hero-lunar-badge" aria-label="查看今夜月相详情">
+          <span class="lunar-badge-icon" id="lunar-badge-icon" aria-hidden="true"></span>
+          <span class="lunar-badge-text" id="lunar-badge-text">—</span>
+        </button>
+        <div class="hero-comment">
           <button type="button" class="hero-companion-pill" id="hero-companion-pill">
-            <span class="companion-text" id="companion-text">日轮指数 计算中…</span>
-            <span class="companion-arrow" aria-hidden="true">切换 ⇄</span>
+            <span class="companion-text" id="companion-text">日轮指数 —</span>
+            <span class="companion-arrow" aria-hidden="true">↗</span>
           </button>
-          <div class="data-meta">
-            <span id="data-source">实时数据</span>
-            <span id="updated-at">—</span>
-            <span id="event-date" hidden>—</span>
-          </div>
         </div>
       </article>
+      <p id="paper-fx-status" class="paper-fx-status" role="status" aria-atomic="true" hidden></p>
 
       <section class="section-block factors-block" aria-labelledby="factors-title">
-        <div class="section-head" data-weather-surface><div><span>01</span><h2 id="factors-title">影响因素</h2></div><p id="factors-base">—</p></div>
-        <div class="factor-sheet">
-          <ul class="factor-list" id="factors"></ul>
+        <div class="section-head"><div><h2 id="factors-title">天气批注</h2></div><p id="factors-base">—</p></div>
+        <div class="factor-sheet" data-weather-surface>
+          <button class="paper-tape-action" id="paper-tape-action" type="button" aria-label="轻触纸笺边角"></button>
+          <div class="factor-groups" id="factors">
+            <section class="factor-group" aria-labelledby="cloud-factors-title"><header class="factor-group-heading"><h3 id="cloud-factors-title">云层</h3><span>观测值 / 影响分</span></header><ul class="factor-list" id="cloud-factors"></ul></section>
+            <section class="factor-group" aria-labelledby="air-factors-title"><header class="factor-group-heading"><h3 id="air-factors-title">空气</h3><span>观测值 / 影响分</span></header><ul class="factor-list" id="air-factors"></ul></section>
+          </div>
+          <p class="factor-margin" id="factors-attention"></p>
           <p class="factor-cap" id="factors-cap" hidden></p>
-          <p class="factor-legend">绿色区段为理想区间，圆点为本次数值；右侧为该要素对指数的增减</p>
+          <details class="factor-details">
+            <summary>理想区间与计分</summary>
+            <p>分项按原始值计分，显示保留一位小数；封顶规则优先。缺测项沿用模型默认值计分，不代表实测为零。</p>
+            <div id="factors-details-content"></div>
+          </details>
         </div>
       </section>
 
       <section class="section-block week-block" aria-labelledby="week-title">
-        <div class="section-head" data-weather-surface><div><span>02</span><h2 id="week-title">未来 7 日</h2></div><p><button class="week-best" id="week-best" type="button" hidden></button></p></div>
-        <div class="week-overview" id="week-overview" aria-hidden="true"></div>
-        <div class="horizontal-scroll-region" data-scroll-region>
-          <div class="week-strip" id="week"></div>
+        <div class="section-head"><div><h2 id="week-title">未来七日</h2></div><p><button class="week-best" id="week-best" type="button" hidden></button></p></div>
+        <div class="horizontal-scroll-region" data-scroll-region role="region" aria-label="未来七日，可横向浏览" tabindex="0">
+          <div class="week-strip" id="week" data-weather-surface role="group" aria-label="七日预报"></div>
         </div>
+        <p class="week-foot"><span><span id="week-time-label">时刻为日落时间</span> · 第 5–7 日仅供参考</span><span class="week-swipe-hint" aria-hidden="true">向左翻看 →</span></p>
       </section>
     </section>
 
-    <section class="panel error" id="panel-error" hidden role="alert">
-      <div class="error-symbol">云</div>
+    <section class="panel error state-paper" id="panel-error" hidden role="alert">
+      <svg class="error-symbol" viewBox="0 0 112 58" fill="none" aria-hidden="true"><path d="M8 42 Q28 39 51 42 T105 41 M20 33 Q12 18 27 17 Q36 0 55 15 Q78 8 81 28 Q97 32 89 38" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       <h1 id="error-title" tabindex="-1">天空暂时失联</h1>
-      <p id="error-text">暂无可用预测，请稍后重试</p>
-      <button class="primary" id="retry-button" type="button">重新尝试</button>
-      <button class="text-button" id="error-search" type="button">搜索其他城市</button>
+      <p id="error-text">暂无可用预测，请稍后重试。</p>
+      <div class="error-actions">
+        <button class="primary" id="retry-button" type="button">重新尝试</button>
+        <button class="text-button" id="error-search" type="button">搜索其他城市</button>
+      </div>
     </section>
 
     <footer><div><span>气象数据</span><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></div><p>天象变幻莫测 · 仅供个人观测参考</p></footer>
@@ -354,118 +277,66 @@
 
   <dialog class="paper-surface paper-sheet" id="places-dialog" aria-labelledby="places-title">
     <div class="drawer-handle" id="drawer-handle" aria-hidden="true"></div>
-    <form method="dialog" class="dialog-head"><div><p>地点与收藏</p><h2 id="places-title">选择天空</h2></div><button class="icon-button dialog-close" value="cancel" aria-label="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
-    <label class="search-label" for="city-search">想看哪里的晨昏？</label>
-    <div class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="dialog-privacy"><span class="search-spinner" id="search-spinner" aria-hidden="true" hidden></span></div>
-    <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span><svg class="location-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
-    <div class="dialog-status" id="search-status" role="status" aria-atomic="true"></div>
-    <ul class="search-results" id="search-results"></ul>
-    <section class="favorites-section"><h3>收藏地点</h3><ul id="favorites-list"></ul><div id="favorites-empty"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m20 5 5 10 11 1-8 8 2 11-10-5-10 5 2-11-8-8 11-1Z"/></svg><div class="favorite-empty-copy"><strong>留住想看的天空</strong><p>暂无收藏地点，<br>点击手记卡片右上角星标即可珍藏。</p></div></div></section>
-    <div id="dialog-favorite-feedback" class="favorite-feedback" hidden>
-      <p id="dialog-favorite-message" role="status" aria-atomic="true"></p>
-      <button id="dialog-undo-favorite" class="text-button" type="button">撤销</button>
+    <form method="dialog" class="dialog-head"><div><p>地点与收藏</p><h2 id="places-title">选择天空</h2></div><button class="icon-button dialog-close" value="cancel" aria-label="取消并关闭地点选择"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
+    <div class="places-search-block">
+      <label class="search-label" for="city-search">想看哪里的晨昏？</label>
+      <div class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="city-search" name="city" type="search" placeholder="搜索城市…" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-describedby="city-search-hint dialog-privacy"><span class="search-spinner" id="search-spinner" aria-hidden="true" hidden></span><button class="clear-search" id="clear-city-search" type="button" aria-label="清空城市搜索" hidden>清空</button></div>
+      <p class="search-hint" id="city-search-hint">输入城市或省市全称 · 至少 2 个字</p>
     </div>
-    <footer class="places-footer"><p class="dialog-privacy" id="dialog-privacy">最近地点、收藏和预报保存在本机。天气与地名查询向第三方发送坐标，城市搜索发送关键词；不保存搜索历史。</p></footer>
-  </dialog>
-
-  <dialog class="paper-surface paper-sheet dev-lab-dialog" id="dev-lab-dialog" aria-labelledby="dev-lab-title">
-    <div class="drawer-handle" id="dev-lab-handle" aria-hidden="true"></div>
-    <form method="dialog" class="dialog-head">
-      <div>
-        <p class="dev-badge">LABS · 观测台</p>
-        <h2 id="dev-lab-title">天体穹顶观测台</h2>
+    <div class="places-scroll" id="places-scroll" tabindex="0" aria-label="地点列表，可上下滚动">
+      <button class="location-row" id="dialog-locate" type="button" aria-describedby="dialog-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span><strong>使用当前位置</strong><small>通过设备定位</small></span><svg class="location-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+      <div class="dialog-status" id="search-status" role="status" aria-atomic="true"></div>
+      <ul class="search-results" id="search-results" aria-label="城市搜索结果"></ul>
+      <section class="favorites-section" aria-labelledby="favorites-title">
+        <div class="favorites-head"><h3 id="favorites-title">收藏地点</h3><button class="save-current" id="dialog-save-current" type="button" aria-label="收藏当前地点" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 3Z"/></svg><span id="dialog-save-label">收藏当前地点</span></button></div>
+        <p class="favorites-capacity" id="favorites-capacity">已珍藏 0 / 8 处 · 星标只改收藏</p>
+        <p class="favorites-notice" id="favorites-notice" role="status" aria-atomic="true" hidden></p>
+        <ul id="favorites-list" aria-label="收藏地点，地名用于切换，星标用于移出"></ul>
+        <div id="favorites-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.5 6.3-.9L12 3Z"/></svg><div class="favorite-empty-copy"><strong>留住想看的天空</strong><p>暂无收藏。点星标珍藏当前地点，<br>点地名才会切换天空。</p></div></div>
+      </section>
+      <div id="dialog-favorite-feedback" class="favorite-feedback" hidden>
+        <p id="dialog-favorite-message" role="status" aria-atomic="true"></p>
+        <button id="dialog-undo-favorite" class="text-button" type="button">撤销</button>
       </div>
-      <button class="icon-button dialog-close" value="cancel" aria-label="关闭">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-      </button>
-    </form>
-    
-    <div class="dev-lab-content">
-      <div class="lens-liquid-dome" id="dev-preview-stage"></div>
-
-      <div class="lens-liquid-capsule" role="tablist" aria-label="选择动效风格">
-        <div class="lens-liquid-slider" id="dev-lens-slider"></div>
-        <button class="lens-tab" type="button" role="tab" data-active="true" aria-selected="true" data-style="horizon" data-idx="0" id="tab-horizon">地平线 2.0</button>
-        <button class="lens-tab" type="button" role="tab" data-active="false" aria-selected="false" data-style="horizon-classic" data-idx="1" id="tab-horizon-classic">地平线 1.0</button>
-        <button class="lens-tab" type="button" role="tab" data-active="false" aria-selected="false" data-style="kepler" data-idx="2" id="tab-kepler">开普勒</button>
-        <button class="lens-tab" type="button" role="tab" data-active="false" aria-selected="false" data-style="prismatic" data-idx="3" id="tab-prismatic">色差环</button>
-      </div>
-
-      <div class="lens-liquid-toolbar">
-        <span>动效速率调控</span>
-        <div class="lens-speed-options">
-          <button class="lens-speed-btn" type="button" data-speed="2">0.5x</button>
-          <button class="lens-speed-btn" type="button" data-speed="1" data-active="true">1x</button>
-          <button class="lens-speed-btn" type="button" data-speed="0.5">2x</button>
-        </div>
-      </div>
-
-      <div class="lens-liquid-toolbar" style="margin-top: 14px;">
-        <span>天体月相实测调控</span>
-        <button class="lens-speed-btn" id="dev-btn-toggle-night" type="button">切换夜幕天体</button>
-      </div>
-      <div class="lunar-dev-slider-row" style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;opacity:0.88;">
-        <span>朔 0%</span>
-        <input type="range" id="dev-moon-slider" min="0" max="100" value="96" aria-label="天体月相模拟照亮比例" style="flex:1;accent-color:#c89c56;cursor:pointer;">
-        <span>望 100%</span>
-      </div>
-
-      <div class="dev-lab-actions">
-        <button class="btn-liquid-secondary" id="dev-btn-test-loading" type="button">
-          <span>全屏实测 3s</span>
-        </button>
-        <button class="btn-liquid-primary" id="dev-btn-save-default" type="button">
-          <span>设为全局默认</span>
-        </button>
-      </div>
-      
-      <p class="dev-hint">提示：连续点击顶部 Logo 3 次或按快捷键 Shift + D 即可随时唤起此观测台</p>
+      <footer class="places-footer"><p class="dialog-privacy" id="dialog-privacy">最近地点、收藏和预报保存在本机。天气与地名查询向第三方发送坐标，城市搜索发送关键词；不保存搜索历史。</p></footer>
     </div>
   </dialog>
 
-    <!-- 月相详情弹窗 -->
   <dialog class="paper-surface paper-sheet lunar-dialog" id="lunar-dialog" aria-labelledby="lunar-dialog-title">
-    <div class="drawer-handle" aria-hidden="true"></div>
-    <form method="dialog" class="dialog-head">
-      <div>
-        <p class="lunar-tag-pill">今宵月相 · 观象手记</p>
-        <h2 id="lunar-dialog-title">夜巡月相札记</h2>
-      </div>
-      <button class="icon-button dialog-close" value="cancel" aria-label="关闭">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-      </button>
-    </form>
-    <div class="lunar-dialog-content">
-      <div class="lunar-stage">
-        <div class="lunar-stage-moon" id="lunar-dialog-moon"></div>
-        <div class="lunar-stage-name" id="lunar-dialog-name">—</div>
-        <p class="lunar-stage-date" id="lunar-dialog-date">—</p>
-      </div>
-      <div class="lunar-grid">
-        <div class="lunar-cell">
-          <small>照亮面比例</small>
-          <strong id="lunar-cell-fraction">—</strong>
-        </div>
-        <div class="lunar-cell">
-          <small>月龄 · 朔望纪日</small>
-          <strong id="lunar-cell-age">—</strong>
-        </div>
-        <div class="lunar-cell">
-          <small>地平仰角</small>
-          <strong id="lunar-cell-alt">—</strong>
-        </div>
-        <div class="lunar-cell">
-          <small>天球方位向</small>
-          <strong id="lunar-cell-az">—</strong>
-        </div>
-      </div>
-      <div class="lunar-advice-box">
-        <span class="lunar-advice-stamp" id="lunar-dialog-stamp">观象札记</span>
-        <p id="lunar-dialog-advice">—</p>
-      </div>
+    <div class="lunar-dialog-scroll">
+      <figure class="lunar-study">
+        <div class="lunar-moon-figure" id="lunar-moon-figure"><i class="lunar-study-halo" id="lunar-study-halo" aria-hidden="true"></i><div id="lunar-dialog-moon" role="img" aria-label="此刻月相示意"></div></div>
+        <div class="lunar-below-mark" id="lunar-below-mark" hidden><svg viewBox="0 0 180 44" aria-hidden="true"><path d="M6 18Q90 8 174 18" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 5"/><path d="M77 29Q90 46 103 29" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span>已在地平线下</span></div>
+        <figcaption><h3 id="lunar-dialog-name">—</h3><p class="lunar-visibility" id="lunar-dialog-visibility">—</p><p class="lunar-diagram-note">月相示意 · 非天空位置</p></figcaption>
+      </figure>
+      <section class="lunar-observation-sheet">
+        <div class="drawer-handle" aria-hidden="true"></div>
+        <form method="dialog" class="dialog-head">
+          <div><p class="lunar-sheet-tag">夜巡 / 观象札记</p><h2 id="lunar-dialog-title">记一页月光</h2></div>
+          <button class="icon-button dialog-close" value="cancel" aria-label="关闭月相详情，返回预报"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+        </form>
+        <p class="lunar-sheet-date" id="lunar-observed-at">此刻月相</p>
+        <p class="lunar-sheet-date" id="lunar-dialog-date">—</p>
+        <dl class="lunar-values">
+          <div><dt>照亮面比例</dt><dd id="lunar-cell-fraction">—</dd></div>
+          <div><dt>月龄 · 朔望纪日</dt><dd><span id="lunar-cell-age">—</span> <span class="lunar-unit">天</span></dd></div>
+          <div><dt>地平仰角</dt><dd id="lunar-cell-alt">—</dd><small id="lunar-alt-label">—</small></div>
+          <div><dt>天球方位向</dt><dd id="lunar-cell-az">—</dd><small id="lunar-az-label">正北为 0°</small></div>
+        </dl>
+        <section class="lunar-advice"><h3 id="lunar-dialog-stamp">观象札记</h3><p id="lunar-dialog-advice">—</p></section>
+        <footer class="lunar-sheet-foot"><p>月相看此刻<br>不随预报日期切换</p><form method="dialog"><button class="lunar-sheet-return" value="close">收起札记 ↙</button></form></footer>
+      </section>
+      <aside class="lunar-forecast-context" aria-label="保留的所选预报">
+        <p id="lunar-context-place">—</p>
+        <p id="lunar-context-event">—</p>
+        <div class="lunar-context-reading"><strong id="lunar-context-score">—</strong><span id="lunar-context-grade">—</span></div>
+        <p>事件时间 <span id="lunar-context-time">—</span></p>
+        <p>观赏窗口 <span id="lunar-context-window">—</span></p>
+        <p class="lunar-context-note">所选预报 · 不改写此刻月相</p>
+      </aside>
     </div>
   </dialog>
 
-  <script type="module" src="js/app.mjs?v=25"></script>
+  <script type="module" src="js/app.mjs?v=36"></script>
 </body>
 </html>

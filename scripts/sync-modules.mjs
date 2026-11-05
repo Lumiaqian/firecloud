@@ -25,12 +25,12 @@ const mapJson = JSON.stringify({ imports }, null, 2).replace(/\n/g, "\n    ");
 html = html.replace(/<script type="importmap">[\s\S]*?<\/script>/, `<script type="importmap">\n    ${mapJson}\n  </script>`);
 html = html.replace(/src="js\/app\.mjs\?v=\d+"/, `src="js/app.mjs?v=${version}"`);
 
-const cssVersion = html.match(/href="css\/style\.css\?v=([^"]+)"/)[1];
+const stylesheets = [...html.matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((match) => match[1]);
 sw = sw.replace(/const SHELL = \[[\s\S]*?\];/, (block) => {
   const keep = block.match(/"[^"]+"/g).filter((entry) => !entry.startsWith('"./js/') && !entry.startsWith('"./css/'));
   const entries = [
     ...keep.slice(0, 2),
-    `"./css/style.css?v=${cssVersion}"`,
+    ...stylesheets.map((path) => `"./${path}"`),
     ...files.map((path) => `"./${path}?v=${version}"`),
     ...keep.slice(2)
   ];

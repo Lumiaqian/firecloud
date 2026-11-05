@@ -1,0 +1,269 @@
+/* 天空画笺 — generated from tokens.json */
+:root, [data-theme="dusk"] {
+  --paper: #fdfaf3; /* 主纸笺不透明底；夜晚只压暗纸色。 */
+  --paper-note: #f8f3e4; /* 天气批注纸底。 */
+  --ink: #36372f; /* 正文、标题及键盘焦点；用于 paper / paper-note。 */
+  --ink-muted: #625b4e; /* 辅助文字及单位；用于 paper / paper-note。 */
+  --ink-placeholder: #6f685c; /* 源稿输入提示色：日间 paper 上5.29:1，夜间纸色上4.32:1不足；夜间输入须改用 ink-muted，详见 Accessibility.md。 */
+  --ink-accent: #a63827; /* 动作、错误文字和当前地点标记；用于 paper，不单凭颜色表达状态。 */
+  --ink-selected: #a23f25; /* 七日选中分数，配手绘下划线和当前文字；用于 paper。 */
+  --ink-score: #8f4006; /* 已认可 77 分样例的主数值墨色；业务档位仍由产品决定。 */
+  --ink-seal: #b53826; /* 朱砂印章文字；用于 paper。 */
+  --ink-helpful: #47655b; /* 正向因素增量；须带 + 号，用于 paper-note。 */
+  --line: #8c8372; /* 输入底线；纸面控件边界，不用于正文。 */
+  --tape: #dcc395aa; /* 半透明胶带，仅装饰，不能承载文字。 */
+  --sky-ink: var(--sky-ink-on-light); /* 天空文字语义色；默认随环境主题，雨、雷暴、冰雹用对应 on-dark 令牌覆盖。 */
+  --sky-accent: var(--sky-accent-on-light); /* 天空动作与选中语义色；默认随环境主题，雨、雷暴、冰雹用对应 on-dark 令牌覆盖。 */
+  --sky-ink-on-light: #253b43; /* 浅色天空上的正文与控件文字；生产默认天空文字色。 */
+  --sky-accent-on-light: #812f22; /* 浅色天空上的动作与选中笔迹，须配文字或状态标记。 */
+  --sky-ink-on-dark: #fbf7ed; /* 夜间或雨、雷暴、冰雹天空上的文字；不用于纸面正文。 */
+  --sky-accent-on-dark: #ffcfab; /* 夜间或雨、雷暴、冰雹天空上的动作与选中笔迹；不用于纸面正文，不随预报评分切换。 */
+  --sky-top: #bdccd5; /* 当前实况天空渐变的top色；不能从预报分数或所选日期推断。 */
+  --sky-mid: #d5b29d; /* 当前实况天空渐变的mid色；不能从预报分数或所选日期推断。 */
+  --sky-bottom: #edcd9a; /* 当前实况天空渐变的bottom色；不能从预报分数或所选日期推断。 */
+  --weather-clear-dusk-top: #bdccd5; /* clear-dusk 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-dusk-mid: #d5b29d; /* clear-dusk 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-dusk-bottom: #edcd9a; /* clear-dusk 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-day-top: #9dbecb; /* clear-day 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-day-mid: #c2d0cd; /* clear-day 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-day-bottom: #e5dcc0; /* clear-day 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-dawn-top: #8a9eaf; /* clear-dawn 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-dawn-mid: #cbb4ae; /* clear-dawn 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-clear-dawn-bottom: #eacaa5; /* clear-dawn 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-partly-top: #91a7b5; /* partly 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-partly-mid: #bdc8c7; /* partly 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-partly-bottom: #d8d3bf; /* partly 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-overcast-top: #697a83; /* overcast 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-overcast-mid: #9ba6a8; /* overcast 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-overcast-bottom: #bbc0b8; /* overcast 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-fog-top: #a6b3b8; /* fog 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-fog-mid: #bec7c6; /* fog 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-fog-bottom: #d0d2c7; /* fog 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-rain-top: #3a5263; /* rain 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-rain-mid: #6e8790; /* rain 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-rain-bottom: #b7c3c1; /* rain 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-snow-top: #8aa0ad; /* snow 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-snow-mid: #c3cfd2; /* snow 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-snow-bottom: #e4e8e4; /* snow 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-thunder-top: #253643; /* thunder 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-thunder-mid: #4b6270; /* thunder 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-thunder-bottom: #acb9bb; /* thunder 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-hail-top: #304957; /* hail 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-hail-mid: #657f88; /* hail 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-hail-bottom: #a0b2b0; /* hail 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-wind-top: #9aaeb8; /* wind 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-wind-mid: #c7c7b7; /* wind 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-wind-bottom: #dac49a; /* wind 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-top: #142936; /* night 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-mid: #2b414b; /* night 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-bottom: #56646a; /* night 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-heavy-top: #101e2a; /* night-heavy 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-heavy-mid: #26353f; /* night-heavy 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-heavy-bottom: #46565e; /* night-heavy 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-fog-top: #344853; /* night-fog 实况天空的上段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-fog-mid: #52646a; /* night-fog 实况天空的中段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-night-fog-bottom: #778181; /* night-fog 实况天空的下段色，按天气而非纸面主题切换；插画背景，不承诺整片天空上的文字对比度。 */
+  --weather-ink-clear: #393b38; /* 原稿天气文字色；浅色字在雨天/雷暴浅色地平线、夜雾低处可能不足4.5:1，正文必须回到不透明纸面；详见 Accessibility.md。 */
+  --weather-ink-overcast: #152b36; /* 原稿天气文字色；浅色字在雨天/雷暴浅色地平线、夜雾低处可能不足4.5:1，正文必须回到不透明纸面；详见 Accessibility.md。 */
+  --weather-ink-fog: #243c47; /* 原稿天气文字色；浅色字在雨天/雷暴浅色地平线、夜雾低处可能不足4.5:1，正文必须回到不透明纸面；详见 Accessibility.md。 */
+  --weather-ink-wet: #fbf7ed; /* 原稿天气文字色；浅色字在雨天/雷暴浅色地平线、夜雾低处可能不足4.5:1，正文必须回到不透明纸面；详见 Accessibility.md。 */
+  --weather-ink-snow: #253d49; /* 原稿天气文字色；浅色字在雨天/雷暴浅色地平线、夜雾低处可能不足4.5:1，正文必须回到不透明纸面；详见 Accessibility.md。 */
+  --weather-ink-night: #edece1; /* 原稿天气文字色；浅色字在雨天/雷暴浅色地平线、夜雾低处可能不足4.5:1，正文必须回到不透明纸面；详见 Accessibility.md。 */
+  --moon-dark: #263b43; /* 月相示意的月体、亮面与纹理；不是正文配色。 */
+  --moon-outline: #9ba99a; /* 月相示意的月体、亮面与纹理；不是正文配色。 */
+  --moon-lit: #e5e3c9; /* 月相示意的月体、亮面与纹理；不是正文配色。 */
+  --moon-crater: #a3aa96; /* 月相示意的月体、亮面与纹理；不是正文配色。 */
+  --ink-accent-wash: #a638272b; /* 收藏星标的朱砂淡填色，配合完整轮廓与 aria-pressed；源 SkyPlaces。 */
+}
+[data-theme="day"] {
+  --paper: #fdfaf3;
+  --paper-note: #f8f3e4;
+  --ink: #36372f;
+  --ink-muted: #625b4e;
+  --ink-placeholder: #6f685c;
+  --ink-accent: #a63827;
+  --ink-selected: #a23f25;
+  --ink-score: #8f4006;
+  --ink-seal: #b53826;
+  --ink-helpful: #47655b;
+  --line: #8c8372;
+  --tape: #dcc395aa;
+  --sky-ink: var(--sky-ink-on-light);
+  --sky-accent: var(--sky-accent-on-light);
+  --sky-top: #9dbecb;
+  --sky-mid: #c2d0cd;
+  --sky-bottom: #e5dcc0;
+  --ink-accent-wash: #a638272b;
+}
+[data-theme="dawn"] {
+  --paper: #fdfaf3;
+  --paper-note: #f8f3e4;
+  --ink: #36372f;
+  --ink-muted: #625b4e;
+  --ink-placeholder: #6f685c;
+  --ink-accent: #a63827;
+  --ink-selected: #a23f25;
+  --ink-score: #8f4006;
+  --ink-seal: #b53826;
+  --ink-helpful: #47655b;
+  --line: #8c8372;
+  --tape: #dcc395aa;
+  --sky-ink: var(--sky-ink-on-light);
+  --sky-accent: var(--sky-accent-on-light);
+  --sky-top: #8a9eaf;
+  --sky-mid: #cbb4ae;
+  --sky-bottom: #eacaa5;
+  --ink-accent-wash: #a638272b;
+}
+[data-theme="night"] {
+  --paper: #e7e4d6;
+  --paper-note: #e7e4d6;
+  --ink: #36372f;
+  --ink-muted: #625b4e;
+  --ink-placeholder: #625b4e;
+  --ink-accent: #a63827;
+  --ink-selected: #a23f25;
+  --ink-score: #8f4006;
+  --ink-seal: #b53826;
+  --ink-helpful: #47655b;
+  --line: #8c8372;
+  --tape: #dcc395aa;
+  --sky-ink: var(--sky-ink-on-dark);
+  --sky-accent: var(--sky-accent-on-dark);
+  --sky-top: #142936;
+  --sky-mid: #2b414b;
+  --sky-bottom: #56646a;
+  --ink-accent-wash: #a638272b;
+}
+:root {
+  --space-4: 4px; /* 已认可纸面布局使用的 4px 间距；不强制抹平其他源稿精确值。 */
+  --space-8: 8px; /* 已认可纸面布局使用的 8px 间距；不强制抹平其他源稿精确值。 */
+  --space-12: 12px; /* 已认可纸面布局使用的 12px 间距；不强制抹平其他源稿精确值。 */
+  --space-16: 16px; /* 已认可纸面布局使用的 16px 间距；不强制抹平其他源稿精确值。 */
+  --space-20: 20px; /* 已认可纸面布局使用的 20px 间距；不强制抹平其他源稿精确值。 */
+  --space-24: 24px; /* 已认可纸面布局使用的 24px 间距；不强制抹平其他源稿精确值。 */
+  --space-28: 28px; /* 已认可纸面布局使用的 28px 间距；不强制抹平其他源稿精确值。 */
+  --space-32: 32px; /* 已认可纸面布局使用的 32px 间距；不强制抹平其他源稿精确值。 */
+  --space-44: 44px; /* 触控最小尺度；不是默认内容间距。 */
+  --radius-none: 0px; /* 不绘制闭合卡片描边；纸面使用组件专属软轮廓或原始遮罩，不能用统一直角或圆角矩形替代。 */
+  --radius-disc: 50%; /* 月体及图标焦点的圆形轮廓，不用于纸张。 */
+  --target-min: 44px; /* 按钮、图标及交互目标最小宽高。 */
+  --duration-drawer: 240ms; /* 抽屉收起；源稿值，减少动态效果时停用。 */
+  --duration-rebound: 280ms; /* 抽屉回弹；源稿值，减少动态效果时停用。 */
+  --duration-scene: 650ms; /* 天气状态过场；不用于常规按钮；源稿值，减少动态效果时停用。 */
+  --duration-cloud: 26s; /* 云层缓移；源稿值，减少动态效果时停用。 */
+  --duration-moon: 12s; /* 月晕缓慢明暗；源稿值，减少动态效果时停用。 */
+  --duration-star: 7s; /* 星点呼吸；源稿值，减少动态效果时停用。 */
+  --font-hand: "Xiaolai", sans-serif;
+  --text-sl-caption12: 400 12px/1.65 var(--font-hand); /* 元信息、单位、说明；不再缩小正文 */
+  --text-sl-caption13: 400 13px/1.65 var(--font-hand); /* 天气批注标签与帮助 */
+  --text-sl-body14: 400 14px/1.7 var(--font-hand); /* 日期及观测窗口说明 */
+  --text-sl-body16: 400 16px/1.65 var(--font-hand); /* 常规正文与工具 */
+  --text-sl-action18: 400 18px/1.5 var(--font-hand); /* 朝霞晚霞及主要文字动作 */
+  --text-sl-heading22: 400 22px/1.3 var(--font-hand); /* 天气批注小节 */
+  --text-sl-title34: 400 34px/1.3 var(--font-hand); /* 地点与月相标题 */
+  --text-sl-city46: 400 46px/1.15 var(--font-hand); /* 桌面地点名称 */
+  --text-sl-time58: 400 58px/1.2 var(--font-hand); /* 桌面时间旁批；对应已采用 A 首页，手机改用 sl-time54。 */
+  --text-sl-score124: 400 124px/1 var(--font-hand); /* 桌面主分数上限；实际按卡片宽度 clamp(76px,22cqw,124px) */
+  --text-sl-score99: 400 99px/1 var(--font-hand); /* 手机主分数上限；实际按卡片宽度 clamp(68px,23cqw,99px) */
+  --text-sl-day42: 400 42px/1.1 var(--font-hand); /* 桌面与手机七日横笺共用；不缩小手机分数 */
+  --text-sl-time54: 400 54px/1.2 var(--font-hand); /* 手机时间旁批；对应已采用 A 首页，桌面使用 sl-time58。 */
+}
+.sl-caption12 {
+  font-family: var(--font-hand);
+  font-size: 12px;
+  line-height: 1.65;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-caption13 {
+  font-family: var(--font-hand);
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-body14 {
+  font-family: var(--font-hand);
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-body16 {
+  font-family: var(--font-hand);
+  font-size: 16px;
+  line-height: 1.65;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-action18 {
+  font-family: var(--font-hand);
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-heading22 {
+  font-family: var(--font-hand);
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-title34 {
+  font-family: var(--font-hand);
+  font-size: 34px;
+  line-height: 1.3;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-city46 {
+  font-family: var(--font-hand);
+  font-size: 46px;
+  line-height: 1.15;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-time58 {
+  font-family: var(--font-hand);
+  font-size: 58px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -2px;
+}
+.sl-score124 {
+  font-family: var(--font-hand);
+  font-size: 124px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -5px;
+}
+.sl-score99 {
+  font-family: var(--font-hand);
+  font-size: 99px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -5px;
+}
+.sl-day42 {
+  font-family: var(--font-hand);
+  font-size: 42px;
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.sl-time54 {
+  font-family: var(--font-hand);
+  font-size: 54px;
+  line-height: 1.2;
+  font-weight: 400;
+  letter-spacing: -2px;
+}
+@font-face {
+  font-family: "Xiaolai";
+  src: url("fonts/Xiaolai-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

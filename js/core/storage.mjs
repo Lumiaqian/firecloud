@@ -5,15 +5,17 @@ export const KEYS = {
   favorites: "firecloud:favorites:v1",
   viewMode: "firecloud:view_mode:v1",
   data: "firecloud:data:v1",
-  theme: "firecloud:theme:v1",
-  loaderStyle: "firecloud:loader_style:v1"
+  theme: "firecloud:theme:v1"
 };
 
 export const FAVORITES_LIMIT = 8;
 const CACHE_MAX_AGE = 12 * 60 * 60 * 1000;
 const CACHE_LIMIT = 16;
 
-export function createStorage(backend = globalThis.localStorage) {
+export function createStorage(backend) {
+  if (backend === undefined) {
+    try { backend = globalThis.localStorage; } catch { /* storage access denied */ }
+  }
   return {
     get(key, fallback = null) {
       try {
@@ -54,26 +56,34 @@ export function normalizeFavorites(favorites) {
   }).slice(0, FAVORITES_LIMIT);
 }
 
+const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const isCacheEntry = (entry) => isRecord(entry) && isRecord(entry.bundle) && Number.isFinite(entry.savedAt);
+
 /**
  * 预报缓存：按地点（两位小数）与晨昏时段分条保存，超过 12 小时失效，最多保留 16 条最新记录。
  * 缓存年龄由保存时间计算，与渲染无关。
  */
 export function createForecastCache(storage, { now = Date.now } = {}) {
   const keyFor = (place, eventType) => `${place.lat.toFixed(2)},${place.lon.toFixed(2)}:${eventType}`;
+  const readEntries = () => {
+    const entries = storage.get(KEYS.data, {});
+    return isRecord(entries) ? entries : {};
+  };
   return {
     read(place, eventType) {
-      const entries = storage.get(KEYS.data, {});
-      const entry = entries?.[keyFor(place, eventType)];
-      if (!entry || !entry.bundle || !Number.isFinite(entry.savedAt)) return null;
+      const entries = readEntries();
+      const entry = entries[keyFor(place, eventType)];
+      if (!isCacheEntry(entry)) return null;
       const age = now() - entry.savedAt;
       if (age < 0 || age > CACHE_MAX_AGE) return null;
       return { bundle: entry.bundle, savedAt: entry.savedAt, age };
     },
     write(bundle) {
-      const entries = storage.get(KEYS.data, {});
+      const entries = readEntries();
       entries[keyFor(bundle.place, bundle.eventType)] = { bundle, savedAt: now() };
       const newest = Object.entries(entries)
-        .sort(([, a], [, b]) => (b.savedAt ?? 0) - (a.savedAt ?? 0))
+        .filter(([, entry]) => isCacheEntry(entry))
+        .sort(([, a], [, b]) => b.savedAt - a.savedAt)
         .slice(0, CACHE_LIMIT);
       storage.set(KEYS.data, Object.fromEntries(newest));
     }

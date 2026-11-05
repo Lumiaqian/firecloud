@@ -55,14 +55,17 @@ export function weatherEffectFor({
   light,
   storm,
   windSpeed,
-  windGust
+  windGust,
+  unconfirmed = false
 } = {}) {
+  if (unconfirmed === true || unconfirmed === "true") return null;
+  if (weather === "wind") return "wind";
   if (weather === "rain" || weather === "thunder") return "rain";
   if (weather === "snow" || weather === "hail") return weather;
   if (weather === "fog") return "fog";
   const windDrive = Math.max(finiteMetric(windSpeed) ?? 0, finiteMetric(windGust) ?? 0);
   if ((storm === "strong" || storm === "severe") && windDrive >= 40) return "wind";
-  if (light === "night" && (weather === "clear" || weather === "partly")) return "stars";
+  if (light === "night" && (weather === "clear" || weather === "partly" || weather === "clearing")) return "stars";
   return null;
 }
 
@@ -73,8 +76,10 @@ export function overlayStarfieldFor({
   storm,
   windSpeed,
   windGust,
-  effect
+  effect,
+  unconfirmed = false
 } = {}) {
+  if (unconfirmed === true || unconfirmed === "true") return false;
   if (light !== "night" || weather === "overcast" || weather === "fog") return false;
   const primary = effect === undefined
     ? weatherEffectFor({ weather, light, storm, windSpeed, windGust })
@@ -374,38 +379,6 @@ function createFogWisp(width, height, initial = true, dynamics = DEFAULT_DYNAMIC
   };
 }
 
-function createLightningBolt(width, height) {
-  const segments = [];
-  let x = randomBetween(width * 0.12, width * 0.88);
-  let y = randomBetween(-12, height * 0.06);
-  const endY = randomBetween(height * 0.26, height * 0.52);
-  let branchesLeft = 2;
-  while (y < endY && segments.length < 18) {
-    const nextY = y + randomBetween(16, 38);
-    const nextX = x + randomBetween(-32, 32);
-    segments.push({ x1: x, y1: y, x2: nextX, y2: nextY, width: 1.15 });
-    if (branchesLeft > 0 && segments.length > 2 && Math.random() < 0.28) {
-      branchesLeft -= 1;
-      const side = Math.random() < 0.5 ? -1 : 1;
-      segments.push({
-        x1: nextX,
-        y1: nextY,
-        x2: nextX + randomBetween(18, 48) * side,
-        y2: nextY + randomBetween(22, 56),
-        width: 0.55
-      });
-    }
-    x = nextX;
-    y = nextY;
-  }
-  return {
-    segments,
-    age: 0,
-    life: randomBetween(0.06, 0.14),
-    alpha: randomBetween(0.5, 0.85)
-  };
-}
-
 function createStar(width, height) {
   const roll = Math.random();
   const layer = roll < 0.34 ? 0 : roll < 0.72 ? 1 : 2;
@@ -420,7 +393,7 @@ function createStar(width, height) {
     size: 0.22 + depth * (layer === 0 ? 0.5 : layer === 1 ? 0.85 : 1.2),
     alpha: (0.12 + depth * 0.52) * (layer === 0 ? 0.62 : 1),
     phase: randomBetween(0, Math.PI * 2),
-    twinkle: randomBetween(0.4, 1.2) * (layer === 2 ? 1.15 : 0.85),
+    twinkle: Math.PI / 7,
     layer
   };
 }
@@ -657,17 +630,6 @@ function updateFog(particles, width, height, elapsed, dynamics) {
   }
 }
 
-function updateLightning(bolts, elapsed) {
-  let activeCount = 0;
-  for (const bolt of bolts) {
-    bolt.age += elapsed;
-    if (bolt.age >= bolt.life) continue;
-    bolts[activeCount] = bolt;
-    activeCount += 1;
-  }
-  bolts.length = activeCount;
-}
-
 function drawRain(context, particles) {
   context.lineCap = "round";
   for (let i = 0; i < STATIC_RAIN_BUCKETS.length; i++) {
@@ -851,24 +813,6 @@ function drawFog(context, particles) {
   }
 }
 
-function drawLightning(context, bolts) {
-  context.lineCap = "round";
-  context.lineJoin = "round";
-  for (const bolt of bolts) {
-    const progress = clamp(bolt.age / bolt.life, 0, 1);
-    const flash = progress < 0.18 ? 1 : 1 - (progress - 0.18) / 0.82;
-    const alpha = bolt.alpha * flash;
-    for (const segment of bolt.segments) {
-      context.beginPath();
-      context.moveTo(segment.x1, segment.y1);
-      context.lineTo(segment.x2, segment.y2);
-      context.lineWidth = segment.width + (1 - progress) * 0.8;
-      context.strokeStyle = `rgba(228, 242, 255, ${alpha})`;
-      context.stroke();
-    }
-  }
-}
-
 function drawStars(context, particles, alphaScale = 1) {
   for (const star of particles) {
     const shimmer = 0.58 + Math.sin(star.phase) * 0.42;
@@ -917,8 +861,6 @@ export function createWeatherFx(canvas, {
   const surfaces = [];
   const hailContacts = [];
   const starfield = [];
-  const lightningBolts = [];
-  let lightningWait = 0;
   let contactDirty = false;
   let width = 0;
   let height = 0;
@@ -926,12 +868,11 @@ export function createWeatherFx(canvas, {
   let surfaceFrame = null;
   let previousTime = 0;
 
-  let retiringParticles = [];
-  let retiringEffect = null;
-  const retiringGroundImpacts = [];
-  const retiringContactImpacts = [];
-  const retiringSnowContacts = [];
-  const retiringHailContacts = [];
+  // Keep each visible layer at its current opacity when interrupted or reversed.
+  // At most one layer per effect survives; scene changes never queue animations.
+  const retiringLayers = [];
+  let currentAlpha = 1;
+  let currentFromAlpha = 1;
   let transitionProgress = 1;
   const TRANSITION_DURATION = 0.65;
 
@@ -950,6 +891,7 @@ export function createWeatherFx(canvas, {
       storm: root.dataset.storm,
       windSpeed: root.dataset.windSpeed,
       windGust: root.dataset.windGust,
+      unconfirmed: root.dataset.unconfirmed,
       effect
     })) {
       starfield.length = 0;
@@ -967,8 +909,6 @@ export function createWeatherFx(canvas, {
     const count = particleBudget(effect, width, height, dynamics.densityScale);
     particles = Array.from({ length: count }, () => createParticle(effect, width, height, true, dynamics));
     groundImpacts.length = 0;
-    lightningBolts.length = 0;
-    lightningWait = 0;
     starfield.length = 0;
     clearContactEffects();
     syncStarfield();
@@ -1019,9 +959,9 @@ export function createWeatherFx(canvas, {
       // Collide with the top edge of UI surfaces (small inset), not the bottom.
       if (bounds.width <= 0 || bounds.top < 0 || bounds.top > height) continue;
       surfaces.push({
-        left: Math.max(0, bounds.left),
-        right: Math.min(width, bounds.right),
-        y: bounds.top + SURFACE_TOP_INSET
+        left: Math.max(0, bounds.left + bounds.width * 0.04),
+        right: Math.min(width, bounds.right - bounds.width * 0.04),
+        y: bounds.top + Math.max(SURFACE_TOP_INSET, bounds.height * 0.02)
       });
     }
     surfaces.sort((a, b) => a.y - b.y);
@@ -1064,23 +1004,12 @@ export function createWeatherFx(canvas, {
     if (contactContext) contactDirty = true;
   }
 
-  function maybeSpawnLightning(elapsed) {
-    if (root.dataset.lightning !== "true") {
-      lightningBolts.length = 0;
-      lightningWait = 0;
-      return;
-    }
-    lightningWait -= elapsed;
-    if (lightningWait > 0) return;
-    const thunder = root.dataset.weather === "thunder";
-    lightningWait = thunder ? randomBetween(2.4, 7.2) : randomBetween(6.5, 14);
-    if (Math.random() < (thunder ? 0.72 : 0.4)) {
-      lightningBolts.push(createLightningBolt(width, height));
-      if (thunder && Math.random() < 0.28) lightningBolts.push(createLightningBolt(width, height));
-    }
+  function syncLayerVisibility() {
+    root.dataset.fxVisible = String(Boolean(effect || retiringLayers.length));
+    root.dataset.contactVisible = String(CONTACT_EFFECTS.has(effect) || retiringLayers.some((layer) => CONTACT_EFFECTS.has(layer.effect)));
   }
 
-  function renderEffectSet(eff, pts, gImpacts, cImpacts, sContacts, hContacts, alphaMultiplier = 1, elapsed = 0) {
+  function renderEffectSet(eff, pts, gImpacts, cImpacts, sContacts, hContacts, alphaMultiplier = 1, elapsed = 0, layerDynamics = dynamics) {
     if (alphaMultiplier <= 0 || !eff || !pts.length) return;
     const prevAlpha = context.globalAlpha;
     const prevContactAlpha = contactContext ? contactContext.globalAlpha : 1;
@@ -1088,26 +1017,26 @@ export function createWeatherFx(canvas, {
     if (contactContext) contactContext.globalAlpha = prevContactAlpha * alphaMultiplier;
 
     if (eff === "rain") {
-      updateRain(pts, gImpacts, cImpacts, surfaces, width, height, elapsed, dynamics);
+      updateRain(pts, gImpacts, cImpacts, surfaces, width, height, elapsed, layerDynamics);
       drawRain(context, pts);
       drawRainImpacts(context, gImpacts);
       drawRainImpacts(contactContext ?? context, cImpacts);
       markContactDrawn();
     } else if (eff === "snow") {
-      updateSnow(pts, sContacts, surfaces, width, height, elapsed, dynamics);
+      updateSnow(pts, sContacts, surfaces, width, height, elapsed, layerDynamics);
       drawSnow(context, pts);
       drawSnowContacts(contactContext ?? context, sContacts);
       markContactDrawn();
     } else if (eff === "hail") {
-      updateHail(pts, hContacts, surfaces, width, height, elapsed, dynamics);
+      updateHail(pts, hContacts, surfaces, width, height, elapsed, layerDynamics);
       drawHail(context, pts);
       drawHailContacts(contactContext ?? context, hContacts);
       markContactDrawn();
     } else if (eff === "wind") {
-      updateWind(pts, width, height, elapsed, dynamics);
+      updateWind(pts, width, height, elapsed, layerDynamics);
       drawWind(context, pts);
     } else if (eff === "fog") {
-      updateFog(pts, width, height, elapsed, dynamics);
+      updateFog(pts, width, height, elapsed, layerDynamics);
       drawFog(context, pts);
     } else if (eff === "stars") {
       updateStars(pts, elapsed);
@@ -1123,58 +1052,41 @@ export function createWeatherFx(canvas, {
     previousTime = timestamp;
     clearCanvases();
     context.globalCompositeOperation = "screen";
-    if (contactContext && CONTACT_EFFECTS.has(effect)) contactContext.globalCompositeOperation = "screen";
+    if (contactContext) contactContext.globalCompositeOperation = "screen";
     if (starfield.length) {
-      updateStars(starfield, elapsed);
       drawStars(context, starfield, 0.38);
     }
-    if (transitionProgress < 1) {
-      transitionProgress = Math.min(1, transitionProgress + (elapsed > 0 ? elapsed : 0.016) / TRANSITION_DURATION);
-      renderEffectSet(retiringEffect, retiringParticles, retiringGroundImpacts, retiringContactImpacts, retiringSnowContacts, retiringHailContacts, 1 - transitionProgress, elapsed);
-      renderEffectSet(effect, particles, groundImpacts, contactImpacts, snowContacts, hailContacts, transitionProgress, elapsed);
-      if (transitionProgress >= 1) {
-        retiringParticles.length = 0;
-        retiringEffect = null;
-        retiringGroundImpacts.length = 0;
-        retiringContactImpacts.length = 0;
-        retiringSnowContacts.length = 0;
-        retiringHailContacts.length = 0;
+    transitionProgress = Math.min(1, transitionProgress + elapsed / TRANSITION_DURATION);
+    currentAlpha = currentFromAlpha + (1 - currentFromAlpha) * transitionProgress;
+    for (let i = retiringLayers.length - 1; i >= 0; i -= 1) {
+      const layer = retiringLayers[i];
+      layer.alpha = layer.fromAlpha * (1 - transitionProgress);
+      if (layer.alpha <= 0) {
+        retiringLayers.splice(i, 1);
+        syncLayerVisibility();
+        continue;
       }
-    } else {
-      renderEffectSet(effect, particles, groundImpacts, contactImpacts, snowContacts, hailContacts, 1, elapsed);
+      renderEffectSet(layer.effect, layer.particles, layer.groundImpacts, layer.contactImpacts, layer.snowContacts, layer.hailContacts, layer.alpha, elapsed, layer.dynamics);
     }
-    if (root.dataset.lightning === "true") {
-      maybeSpawnLightning(elapsed);
-      updateLightning(lightningBolts, elapsed);
-      drawLightning(context, lightningBolts);
-      let flashIntensity = 0;
-      for (const bolt of lightningBolts) {
-        const progress = clamp(bolt.age / bolt.life, 0, 1);
-        const flash = progress < 0.18 ? 1 : 1 - (progress - 0.18) / 0.82;
-        flashIntensity = Math.max(flashIntensity, bolt.alpha * flash);
-      }
-      if (flashIntensity > 0.01) {
-        root.style.setProperty("--atmosphere-lightning-flash", flashIntensity.toFixed(3));
-      } else if (root.style.getPropertyValue("--atmosphere-lightning-flash")) {
-        root.style.removeProperty("--atmosphere-lightning-flash");
-      }
-    } else if (root.style.getPropertyValue("--atmosphere-lightning-flash")) {
-      root.style.removeProperty("--atmosphere-lightning-flash");
-    }
+    renderEffectSet(effect, particles, groundImpacts, contactImpacts, snowContacts, hailContacts, currentAlpha, elapsed);
+    if (!effect && !retiringLayers.length) loop.remove(drawFrame);
   }
 
   function stopAnimation() {
     loop.remove(drawFrame);
     previousTime = 0;
-    retiringParticles.length = 0;
-    retiringEffect = null;
+    retiringLayers.length = 0;
     transitionProgress = 1;
-    root.style.removeProperty("--atmosphere-lightning-flash");
+    currentAlpha = currentFromAlpha = 1;
+    groundImpacts.length = 0;
+    clearContactEffects();
     clearCanvases();
+    root.dataset.fxVisible = "false";
+    root.dataset.contactVisible = "false";
   }
 
   function shouldAnimate() {
-    return root.dataset.state === "ready" && effect && !document.hidden && !reducedMotion.matches;
+    return root.dataset.state === "ready" && root.dataset.unconfirmed !== "true" && (effect || retiringLayers.length) && !document.hidden && !reducedMotion.matches && root.dataset.motion !== "false";
   }
 
   function syncAnimation() {
@@ -1183,6 +1095,7 @@ export function createWeatherFx(canvas, {
       return;
     }
     loop.add(drawFrame);
+    syncLayerVisibility();
   }
 
   function syncTheme() {
@@ -1190,26 +1103,42 @@ export function createWeatherFx(canvas, {
     const nextDynamics = weatherDynamicsFor({ effect: nextEffect, ...root.dataset });
     const dynamicsChanged = !sameDynamics(nextDynamics, dynamics);
     if (nextEffect !== effect) {
-      if (effect && particles.length > 0) {
-        retiringParticles = particles.slice();
-        retiringEffect = effect;
-        retiringGroundImpacts.length = 0;
-        retiringGroundImpacts.push(...groundImpacts);
-        retiringContactImpacts.length = 0;
-        retiringContactImpacts.push(...contactImpacts);
-        retiringSnowContacts.length = 0;
-        retiringSnowContacts.push(...snowContacts);
-        retiringHailContacts.length = 0;
-        retiringHailContacts.push(...hailContacts);
-        transitionProgress = 0;
-      } else {
-        retiringParticles.length = 0;
-        retiringEffect = null;
-        transitionProgress = 1;
+      let resumed = null;
+      for (let i = retiringLayers.length - 1; i >= 0; i -= 1) {
+        const layer = retiringLayers[i];
+        if (layer.effect === nextEffect) {
+          resumed = layer;
+          retiringLayers.splice(i, 1);
+        } else {
+          layer.fromAlpha = layer.alpha;
+        }
+      }
+      if (effect && particles.length && currentAlpha > 0) {
+        retiringLayers.push({
+          effect, particles, dynamics, alpha: currentAlpha, fromAlpha: currentAlpha,
+          groundImpacts: groundImpacts.slice(), contactImpacts: contactImpacts.slice(),
+          snowContacts: snowContacts.slice(), hailContacts: hailContacts.slice()
+        });
       }
       effect = nextEffect;
       dynamics = nextDynamics;
-      rebuildParticles();
+      if (resumed) {
+        particles = resumed.particles;
+        groundImpacts.length = 0;
+        groundImpacts.push(...resumed.groundImpacts);
+        clearContactEffects();
+        contactImpacts.push(...resumed.contactImpacts);
+        snowContacts.push(...resumed.snowContacts);
+        hailContacts.push(...resumed.hailContacts);
+        currentAlpha = resumed.alpha;
+        adjustParticleCount();
+        retargetDynamics();
+      } else {
+        rebuildParticles();
+        currentAlpha = nextEffect ? 0 : 1;
+      }
+      currentFromAlpha = currentAlpha;
+      transitionProgress = retiringLayers.length || currentAlpha < 1 ? 0 : 1;
     } else if (dynamicsChanged) {
       dynamics = nextDynamics;
       adjustParticleCount();
@@ -1252,6 +1181,8 @@ export function createWeatherFx(canvas, {
     attributes: true,
     attributeFilter: [
       "data-state",
+      "data-motion",
+      "data-unconfirmed",
       "data-weather",
       "data-light",
       "data-precipitation",
@@ -1260,8 +1191,7 @@ export function createWeatherFx(canvas, {
       "data-wind-direction",
       "data-wind-gust",
       "data-storm",
-      "data-visibility",
-      "data-lightning"
+      "data-visibility"
     ]
   });
   window.addEventListener("resize", queueResize, { passive: true });

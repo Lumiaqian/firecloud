@@ -1,28 +1,30 @@
 /**
- * 纸面特效：闪电劈中黄铜夹、晴光暖印、阵风掀纸与碎屑、雨滴打在主卡上的涟漪，
- * 以及按实况天气切换的纸面状态（受潮、晴光、云影）。
- * 粒子画在前景画布上；只有存在粒子或正在下雨时才占用共享帧循环。
+ * 纸缘特效：手动夹端受光、评分圈注暖光、阵风碎屑与实况纸缘接触。
+ * 四张纸面分别承接天气；透明的主卡分组与纸上文字不参与运动。
+ * 粒子画在前景画布上，系统减弱动态实时清理所有未完成反馈。
  */
-import { reducedMotion } from "./motion.mjs";
+import { motionAllowed, reducedMotion } from "./motion.mjs";
 
-const AMBIENT_GUST_INTERVAL = { strong: 32_000, breezy: 45_000, calm: 60_000 };
-const MAX_RIPPLES = 24;
+const AMBIENT_GUST_INTERVAL = { strong: 32_000, breezy: 45_000 };
+const STRIKE_DURATION = 650;
+const WARM_DURATION = 3600;
+const GUST_DURATION = 2200;
 
 function lightningPath(fromX, hitX, hitY) {
   const segments = [];
-  const startY = -40;
+  const startY = hitY - 64;
   let x = fromX;
   let y = startY;
-  const steps = 14;
+  const steps = 8;
   for (let step = 1; step <= steps; step += 1) {
     const t = step / steps;
-    const jitter = (1 - t * 0.6) * 45;
+    const jitter = (1 - t * 0.6) * 12;
     const nextX = step === steps ? hitX : fromX + (hitX - fromX) * t + (Math.random() - 0.5) * jitter;
     const nextY = step === steps ? hitY : startY + (hitY - startY) * t + (Math.random() - 0.5) * 8;
     segments.push({ x1: x, y1: y, x2: nextX, y2: nextY });
     // 偶发小旁支
-    if (step > 3 && step < 11 && Math.random() < 0.45) {
-      segments.push({ x1: x, y1: y, x2: x + (Math.random() - 0.5) * 60, y2: y + Math.random() * 38 + 10 });
+    if (step > 2 && step < 7 && Math.random() < 0.3) {
+      segments.push({ x1: x, y1: y, x2: x + (Math.random() - 0.5) * 20, y2: y + Math.random() * 12 + 4 });
     }
     x = nextX;
     y = nextY;
@@ -30,174 +32,203 @@ function lightningPath(fromX, hitX, hitY) {
   return segments;
 }
 
-function flash(element, className, duration) {
-  if (!element) return;
-  element.classList.add(className);
-  setTimeout(() => element.classList.remove(className), duration);
-}
-
 export function createPaperFx(canvas, { loop, body = document.body }) {
   const ctx = canvas.getContext("2d");
   const els = {
-    card: document.getElementById("hero-master-card"),
-    clip: document.querySelector(".hero-brass-clip"),
-    seal: document.querySelector(".cinnabar-seal-stamp"),
-    tape: document.querySelector(".hero-washi-tape-topleft"),
-    score: document.querySelector(".score-number-display"),
-    time: document.querySelector(".hero-event-time")
+    sheets: [...document.querySelectorAll("[data-weather-surface]")].map((element) => ({ element, rect: element.getBoundingClientRect() })),
+    clip: document.getElementById("paper-clip-action"),
+    circle: document.getElementById("score-circle-action"),
+    tape: document.getElementById("paper-tape-action")
   };
+  for (const { element } of els.sheets) {
+    if (!element.closest("#panel-ready")) continue;
+    const edge = document.createElement("span");
+    edge.className = "paper-edge-contact";
+    edge.setAttribute("aria-hidden", "true");
+    edge.innerHTML = "<i></i><i></i>";
+    element.append(edge);
+    const corner = document.createElement("i");
+    corner.className = "paper-free-edge";
+    corner.setAttribute("aria-hidden", "true");
+    element.append(corner);
+  }
   const bolts = [];
   const sparks = [];
   const debris = [];
-  const ripples = [];
   let width = 0;
   let height = 0;
-  let raining = false;
-  let nextRippleAt = 0;
   let gustTimer = null;
+  let strikeTimer = null;
+  let warmTimer = null;
   let ambientTimer = null;
-  let thunderTimer = null;
   let lastConditions = null;
+  let measureFrame = null;
+  const ambientMotionAllowed = () => !reducedMotion.matches && body.dataset.motion !== "false" && !document.hidden;
+
+  function measureSheets() {
+    for (const sheet of els.sheets) sheet.rect = sheet.element.getBoundingClientRect();
+    measureFrame = null;
+  }
+
+  function queueMeasure() {
+    if (measureFrame == null) measureFrame = requestAnimationFrame(measureSheets);
+  }
 
   function resize() {
     width = window.innerWidth;
     height = window.innerHeight;
-    const ratio = window.devicePixelRatio || 1;
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = width * ratio;
     canvas.height = height * ratio;
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    measureSheets();
   }
 
-  const busy = () => bolts.length || sparks.length || debris.length || ripples.length || raining;
-  const wake = () => loop.add(frame);
+  const busy = () => bolts.length || sparks.length || debris.length;
+  const wake = () => { if (ambientMotionAllowed()) loop.add(frame); };
 
-  // ---------- 闪电 ----------
+  // ---------- 夹端的一次局部引雷：从不自动触发，不触及评分或时间 ----------
   function strike() {
-    let hitX = width * 0.72;
-    let hitY = height * 0.28;
-    if (els.clip) {
-      const rect = els.clip.getBoundingClientRect();
-      hitX = rect.left + rect.width * 0.5;
-      hitY = rect.top + rect.height * 0.3;
-    }
-    flash(els.clip, "is-lightning-struck", 380);
-    flash(els.score, "is-lightning-flicker", 450);
-    flash(els.time, "is-lightning-flicker", 450);
-    // 减少动效时只保留纸面状态，不画闪电与火花
-    if (reducedMotion.matches) return;
-
-    const fromX = hitX + (Math.random() - 0.5) * 260 + (Math.random() > 0.5 ? 120 : -120);
-    bolts.push({ segments: lightningPath(fromX, hitX, hitY), hitX, hitY, startTime: performance.now(), duration: 480 });
-    for (let k = 0; k < 32; k += 1) {
+    if (!motionAllowed() || !els.clip) return;
+    clearTimeout(strikeTimer);
+    bolts.length = 0;
+    sparks.length = 0;
+    const rect = els.clip.getBoundingClientRect();
+    const hitX = rect.left + rect.width * 0.5;
+    const hitY = rect.top + rect.height * 0.3;
+    els.clip.classList.add("is-lightning-struck");
+    const fromX = hitX + (Math.random() - 0.5) * 36;
+    bolts.push({ segments: lightningPath(fromX, hitX, hitY), hitX, hitY, startTime: performance.now(), duration: STRIKE_DURATION });
+    for (let k = 0; k < 16; k += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 9 + 3;
+      const speed = Math.random() * 1.4 + 0.5;
       sparks.push({
-        x: hitX + (Math.random() - 0.5) * 6,
-        y: hitY + (Math.random() - 0.5) * 6,
+        x: hitX,
+        y: hitY,
+        hitX,
+        hitY,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2.8,
-        radius: Math.random() * 2.4 + 1.2,
+        vy: Math.sin(angle) * speed - 1,
+        radius: Math.random() * 1.2 + 0.7,
         alpha: 1,
         color: Math.random() > 0.35 ? "rgba(255, 245, 195," : "rgba(255, 205, 80,"
       });
     }
+    strikeTimer = setTimeout(() => {
+      strikeTimer = null;
+      els.clip.classList.remove("is-lightning-struck");
+      bolts.length = 0;
+      sparks.length = 0;
+      wake();
+    }, STRIKE_DURATION);
     wake();
   }
 
   // ---------- 晴光 ----------
   function setSunlit(on) {
     els.clip?.classList.toggle("is-sun-glowing", on);
-    els.seal?.classList.toggle("is-sun-warmed", on);
     els.tape?.classList.toggle("is-sun-translucent", on);
   }
 
   function warm() {
-    setSunlit(true);
-    setTimeout(() => setSunlit(Boolean(lastConditions?.sunlit)), 3600);
+    if (!motionAllowed()) return;
+    clearTimeout(warmTimer);
+    els.circle?.classList.add("is-sun-warmed");
+    warmTimer = setTimeout(() => {
+      warmTimer = null;
+      els.circle?.classList.remove("is-sun-warmed");
+    }, WARM_DURATION);
   }
 
   // ---------- 阵风 ----------
   function gust(intensity = "high") {
-    if (reducedMotion.matches) return;
+    if (!ambientMotionAllowed() || body.dataset.input === "keyboard") return;
     clearTimeout(gustTimer);
-    // 正在起风时先移除再设置，让纸面动画从头播放
-    if (body.dataset.paperWind) {
-      delete body.dataset.paperWind;
-      void body.offsetWidth;
-    }
     body.dataset.paperWind = intensity;
+    debris.length = 0;
 
     const strong = intensity === "high";
     for (let k = 0; k < (strong ? 14 : 7); k += 1) {
       const roll = Math.random();
       debris.push({
-        x: -40 - Math.random() * 120,
-        y: Math.random() * (height * 0.88) + height * 0.04,
-        vx: Math.random() * (strong ? 9 : 5.5) + (strong ? 8 : 4.5),
-        vy: (Math.random() - 0.42) * (strong ? 3 : 1.8),
+        startX: -40 - k * 11,
+        startY: Math.random() * (height * 0.88) + height * 0.04,
+        startedAt: performance.now(),
+        duration: strong ? 1400 : 2300,
+        travel: strong ? 1450 : 1000,
         size: Math.random() * 6 + 3,
         angle: Math.random() * Math.PI * 2,
-        vrot: (Math.random() - 0.5) * (strong ? 0.2 : 0.1),
         alpha: strong ? Math.random() * 0.22 + 0.6 : Math.random() * 0.18 + 0.4,
         type: roll > 0.62 ? "leaf" : roll > 0.32 ? "petal" : "chaff"
       });
     }
     wake();
-    // 等纸面动画（主卡 2.0s / 1.6s，子卡错峰至 0.36s）完全落定后再移除属性，避免跳动
-    gustTimer = setTimeout(() => { delete body.dataset.paperWind; }, strong ? 2500 : 2100);
+    gustTimer = setTimeout(() => {
+      gustTimer = null;
+      delete body.dataset.paperWind;
+      debris.length = 0;
+      wake();
+    }, GUST_DURATION);
   }
 
   // ---------- 雨 ----------
   function soak() {
-    els.card?.classList.add("is-rain-damp");
-    raining = true;
-    wake();
+    els.sheets.forEach(({ element }) => element.classList.add("is-rain-damp"));
   }
 
   function dry() {
-    els.card?.classList.remove("is-rain-damp");
-    raining = false;
+    els.sheets.forEach(({ element }) => element.classList.remove("is-rain-damp"));
   }
 
-  /**
-   * 按实况天气切换纸面状态。只在条件变化时生效：天幕每 30 秒重算一次，
-   * 重复调用不会重置环境风周期，也不会重复触发阵风或闪电。
-   */
-  function syncWeather({ weather, windSpeed = 0, windGust = 0, cloudCover = 0, precipitation = 0, isDay = true } = {}) {
+  function clearEffects() {
+    clearTimeout(strikeTimer);
+    clearTimeout(warmTimer);
+    clearTimeout(gustTimer);
+    clearInterval(ambientTimer);
+    strikeTimer = warmTimer = gustTimer = ambientTimer = null;
+    delete body.dataset.paperWind;
+    els.clip?.classList.remove("is-lightning-struck");
+    els.circle?.classList.remove("is-sun-warmed");
+    setSunlit(Boolean(lastConditions?.sunlit));
+    bolts.length = sparks.length = debris.length = 0;
+    loop.remove(frame);
+    ctx.clearRect(0, 0, width, height);
+  }
+
+  function startAmbientWind() {
+    if (!ambientMotionAllowed() || !lastConditions || lastConditions.ambient === "calm") return;
+    ambientTimer = setInterval(() => {
+      if (ambientMotionAllowed()) gust("gentle");
+    }, AMBIENT_GUST_INTERVAL[lastConditions.ambient]);
+  }
+
+  // 只消费当前实况；预报日期与朝晚霞选择不改写纸面天气。
+  function syncWeather({ weather, windSpeed = 0, windGust = 0, cloudCover = 0, precipitation = 0, isDay = true, light = isDay ? "day" : "night" } = {}) {
+    queueMeasure();
     const conditions = {
+      weather, light,
       thunder: weather === "thunder",
       sunlit: (weather === "clear" || weather === "sunny") && isDay,
       windy: windSpeed >= 18 || windGust >= 28,
       ambient: windSpeed >= 20 ? "strong" : windSpeed >= 8 ? "breezy" : "calm",
-      cloudy: cloudCover >= 75 || weather === "cloudy",
-      rainy: weather === "rain" || weather === "thunder" || precipitation > 0.05
+      cloudy: cloudCover >= 75 || ["overcast", "rain", "thunder", "hail"].includes(weather),
+      snowy: weather === "snow",
+      hailing: weather === "hail",
+      rainy: weather === "rain" || weather === "thunder" || (!["snow", "hail"].includes(weather) && precipitation > 0.05)
     };
     const previous = lastConditions;
     if (previous && Object.keys(conditions).every((key) => conditions[key] === previous[key])) return;
+    clearEffects();
     lastConditions = conditions;
-
-    if (conditions.thunder !== previous?.thunder) {
-      clearInterval(thunderTimer);
-      thunderTimer = null;
-      if (conditions.thunder) {
-        strike();
-        thunderTimer = setInterval(() => {
-          if (Math.random() < 0.65) strike();
-        }, 7000 + Math.random() * 5000);
-      }
-    }
     setSunlit(conditions.sunlit);
-    if (conditions.ambient !== previous?.ambient) {
-      clearInterval(ambientTimer);
-      ambientTimer = setInterval(() => {
-        if (!document.hidden) gust("gentle");
-      }, AMBIENT_GUST_INTERVAL[conditions.ambient]);
-    }
-    if (conditions.windy !== previous?.windy || !previous) {
-      if (conditions.windy) gust("high");
-      else setTimeout(() => gust("gentle"), 1200);
-    }
-    els.card?.classList.toggle("is-cloud-shadowed", conditions.cloudy);
+    startAmbientWind();
+    if (conditions.windy) gust("high");
+    els.sheets.forEach(({ element }) => {
+      element.classList.toggle("is-cloud-shadowed", conditions.cloudy);
+      element.classList.toggle("is-thunder-ambient", conditions.thunder);
+      element.classList.toggle("is-snow-contact", conditions.snowy);
+      element.classList.toggle("is-hail-contact", conditions.hailing);
+    });
     if (conditions.rainy) soak();
     else dry();
   }
@@ -220,6 +251,10 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
         });
       };
       ctx.save();
+      // One local pulse above the clip: never cross into the score or time.
+      ctx.beginPath();
+      ctx.rect(bolt.hitX - 40, bolt.hitY - 78, 80, 84);
+      ctx.clip();
       trace();
       ctx.strokeStyle = `rgba(255, 240, 180, ${alpha * 0.85})`;
       ctx.lineWidth = 5.5 * alpha;
@@ -231,7 +266,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
       ctx.lineWidth = 2.2;
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(bolt.hitX, bolt.hitY, 14 + (1 - alpha) * 24, 0, Math.PI * 2);
+      ctx.arc(bolt.hitX, bolt.hitY, 6 + (1 - alpha) * 6, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255, 245, 210, ${alpha * 0.75})`;
       ctx.fill();
       ctx.restore();
@@ -245,23 +280,38 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
       spark.y += spark.vy;
       spark.vy += 0.28;
       spark.alpha *= 0.94;
+      if (spark.y > spark.hitY + 8 || Math.abs(spark.x - spark.hitX) > 28 || spark.alpha < 0.05) {
+        sparks.splice(index, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(spark.hitX - 40, spark.hitY - 78, 80, 84);
+      ctx.clip();
       ctx.beginPath();
       ctx.arc(spark.x, spark.y, spark.radius, 0, Math.PI * 2);
       ctx.fillStyle = `${spark.color} ${spark.alpha})`;
       ctx.shadowColor = "rgba(255, 220, 100, 0.8)";
       ctx.shadowBlur = 6;
       ctx.fill();
-      if (spark.alpha < 0.05) sparks.splice(index, 1);
+      ctx.restore();
     }
     ctx.shadowBlur = 0;
   }
 
-  function drawDebris() {
+  function drawDebris(now) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, width, height);
+    for (const { rect } of els.sheets) ctx.rect(rect.left, rect.top, rect.width, rect.height);
+    ctx.clip("evenodd");
     for (let index = debris.length - 1; index >= 0; index -= 1) {
       const piece = debris[index];
-      piece.x += piece.vx;
-      piece.y += piece.vy;
-      piece.angle += piece.vrot;
+      const progress = (now - piece.startedAt) / piece.duration;
+      if (progress >= 1) { debris.splice(index, 1); continue; }
+      piece.x = piece.startX + progress * piece.travel;
+      piece.y = piece.startY + 15 - progress * 55;
+      piece.angle = (-10 + progress * 100) * Math.PI / 180;
       ctx.save();
       ctx.translate(piece.x, piece.y);
       ctx.rotate(piece.angle);
@@ -280,73 +330,38 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
       ctx.restore();
       if (piece.x > width + 60) debris.splice(index, 1);
     }
+    ctx.restore();
   }
 
-  // 雨滴打在主卡上的扩散涟漪
-  function spawnRipples(now) {
-    if (!raining || reducedMotion.matches || now < nextRippleAt || !els.card) return;
-    const rect = els.card.getBoundingClientRect();
-    if (rect.width > 50 && rect.height > 50 && rect.bottom > 0 && rect.top < height) {
-      const padX = Math.min(32, rect.width * 0.1);
-      const padY = Math.min(32, rect.height * 0.1);
-      const count = Math.random() < 0.4 ? 2 : 1;
-      for (let c = 0; c < count && ripples.length < MAX_RIPPLES; c += 1) {
-        ripples.push({
-          x: rect.left + padX + Math.random() * (rect.width - padX * 2),
-          y: rect.top + padY + Math.random() * (rect.height - padY * 2),
-          radius: 1.5,
-          maxRadius: Math.random() * 16 + 10,
-          speed: Math.random() * 0.35 + 0.45,
-          alpha: Math.random() * 0.25 + 0.55
-        });
-      }
-    }
-    nextRippleAt = now + Math.random() * 120 + 80;
-  }
-
-  function drawRipples() {
-    for (let index = ripples.length - 1; index >= 0; index -= 1) {
-      const ripple = ripples[index];
-      ripple.radius += ripple.speed;
-      ripple.alpha *= 0.945;
-      const progress = ripple.radius / ripple.maxRadius;
-      if (ripple.alpha < 0.02 || progress >= 1) {
-        ripples.splice(index, 1);
-        continue;
-      }
-      ctx.beginPath();
-      ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(165, 205, 235, ${ripple.alpha * 0.55})`;
-      ctx.lineWidth = Math.max(0.6, (1 - progress) * 1.6);
-      ctx.stroke();
-      // 上方高光弧线，模拟斜射天光在水珠上的反射
-      ctx.beginPath();
-      ctx.arc(ripple.x, ripple.y, ripple.radius, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.strokeStyle = `rgba(255, 255, 255, ${ripple.alpha * 0.75})`;
-      ctx.lineWidth = Math.max(0.5, (1 - progress) * 1.2);
-      ctx.stroke();
-      if (ripple.radius < 5) {
-        ctx.beginPath();
-        ctx.arc(ripple.x, ripple.y, 1.2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(235, 248, 255, ${ripple.alpha * 0.85})`;
-        ctx.fill();
-      }
-    }
-  }
 
   function frame() {
+    if (!ambientMotionAllowed()) {
+      clearEffects();
+      return;
+    }
     const now = performance.now();
     ctx.clearRect(0, 0, width, height);
     drawBolts(now);
     drawSparks();
-    drawDebris();
-    spawnRipples(now);
-    drawRipples();
+    drawDebris(now);
     if (!busy()) loop.remove(frame);
   }
 
   window.addEventListener("resize", resize, { passive: true });
+  window.addEventListener("resize", queueMeasure, { passive: true });
+  window.addEventListener("scroll", queueMeasure, { passive: true });
+  const layoutObserver = new MutationObserver(queueMeasure);
+  const layoutRoot = document.getElementById("panel-ready");
+  if (layoutRoot) layoutObserver.observe(layoutRoot, { childList: true, subtree: true });
+  const onMotionChange = () => {
+    clearEffects();
+    if (ambientMotionAllowed()) {
+      startAmbientWind();
+    }
+  };
+  body.addEventListener("firecloud:motionchange", onMotionChange);
+  document.addEventListener("visibilitychange", onMotionChange);
   resize();
 
-  return { strike, warm, gust, soak, dry, syncWeather };
+  return { strike, warm, gust, syncWeather };
 }

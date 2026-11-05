@@ -29,6 +29,21 @@ test("天气主题映射到真实粒子效果", () => {
   assert.equal(weatherEffectFor({ weather: "overcast", light: "day", storm: "calm" }), null);
 });
 
+test("未确认实况不启动降水、风或星空，确认后恢复", () => {
+  for (const unconfirmed of [true, "true"]) {
+    for (const weather of ["clear", "partly", "rain", "thunder", "snow", "hail", "wind", "fog"]) {
+      const conditions = { weather, light: "night", storm: "severe", windGust: 90, unconfirmed };
+      assert.equal(weatherEffectFor(conditions), null);
+      assert.equal(overlayStarfieldFor({ ...conditions, effect: "rain" }), false);
+    }
+  }
+  for (const unconfirmed of [false, "false"]) {
+    assert.equal(weatherEffectFor({ weather: "thunder", light: "night", unconfirmed }), "rain");
+    assert.equal(weatherEffectFor({ weather: "clear", light: "night", unconfirmed }), "stars");
+    assert.equal(overlayStarfieldFor({ weather: "rain", light: "night", unconfirmed }), true);
+  }
+});
+
 test("粒子数量随画布面积变化且受上限保护", () => {
   assert.equal(particleBudget("rain", 390, 844), 78);
   assert.equal(particleBudget("snow", 390, 844), 47);

@@ -5,16 +5,18 @@ import { runInNewContext } from "node:vm";
 
 const source = readFileSync(new URL("../sw.js", import.meta.url), "utf8");
 
-function worker({ scope = "https://weather.example/", fetch, cacheWriteError } = {}) {
+function worker({ scope = "https://weather.example/", fetch, cacheWriteError, cacheOpenError, cacheWrite } = {}) {
   const handlers = new Map();
   const entries = new Map();
   const requested = [];
   const key = (request) => new URL(typeof request === "string" ? request : request.url, scope).href;
   const caches = {
     async open() {
+      if (cacheOpenError) throw cacheOpenError;
       return {
         async put(request, response) {
           if (cacheWriteError) throw cacheWriteError;
+          if (cacheWrite) await cacheWrite();
           entries.set(key(request), response.clone());
         }
       };
@@ -146,14 +148,33 @@ test("导航 HTTP 错误响应不触发应用壳回退或缓存更新", async ()
   assert.equal(await sw.caches.match("./?new=query"), undefined);
 });
 
-test("缓存更新失败不冒充网络失败回退应用壳", async () => {
-  const cacheWriteError = new Error("cache write failed");
-  const sw = worker({ fetch: async () => new Response("online page"), cacheWriteError });
-  sw.seed("./index.html", "fallback shell");
-  const event = sw.request("./?new=query");
+test("缓存配额或打开失败仍返回新的网络内容，不退回旧应用壳", async () => {
+  for (const failure of [
+    { cacheWriteError: new Error("quota exceeded") },
+    { cacheOpenError: new Error("cache unavailable") }
+  ]) {
+    const sw = worker({ fetch: async () => new Response("online page"), ...failure });
+    sw.seed("./index.html", "fallback shell");
+    const event = sw.request("./?new=query");
+    assert.equal(await (await event.response).text(), "online page");
+    await event.settled;
+    assert.equal(await sw.caches.match("./?new=query"), undefined);
+  }
+});
 
-  await assert.rejects(event.response, (error) => error === cacheWriteError);
+test("新网络响应不等待缓存写入，后台写入仍受 waitUntil 保护", async () => {
+  let finishWrite;
+  const writing = new Promise((resolve) => { finishWrite = resolve; });
+  const sw = worker({ fetch: async () => new Response("fresh asset"), cacheWrite: () => writing });
+  const event = sw.request("./new.css", { mode: "cors" });
+  let settled = false;
+  event.settled.then(() => { settled = true; });
+  assert.equal(await (await event.response).text(), "fresh asset");
+  assert.equal(settled, false);
+  assert.equal(await sw.caches.match("./new.css"), undefined);
+  finishWrite();
   await event.settled;
+  assert.equal(await (await sw.caches.match("./new.css")).text(), "fresh asset");
 });
 
 test("已有缓存立即返回，waitUntil 等待后台网络刷新完成", async () => {

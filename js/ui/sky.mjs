@@ -17,18 +17,57 @@ import {
 } from "../forecast.mjs";
 import { atmosphereDriveFor, clearEnergyFor } from "../weather-fx.mjs";
 import { KEYS } from "../core/storage.mjs";
+import { localTimeZone } from "../core/format.mjs";
 
 export function createSky({ storage, paperFx, moonView, themeColor, body = document.body }) {
+  const skyElement = body.querySelector(".sky");
+  const washes = new Map();
+  let activeScene = null;
+  function clearRetiredWashes() {
+    for (const [scene, wash] of washes) {
+      if (scene !== activeScene) { wash.remove(); washes.delete(scene); }
+    }
+  }
+  body.addEventListener("firecloud:motionchange", clearRetiredWashes);
+  function crossfadeSky(scene) {
+    if (!skyElement) return;
+    let wash = washes.get(scene);
+    if (!wash) {
+      wash = document.createElement("div");
+      wash.className = "sky-scene-wash";
+      wash.setAttribute("aria-hidden", "true");
+      wash.addEventListener("transitionend", (event) => {
+        if (event.propertyName === "opacity" && scene !== activeScene) {
+          wash.remove();
+          washes.delete(scene);
+        }
+      });
+      washes.set(scene, wash);
+      skyElement.prepend(wash);
+    }
+    wash.style.backgroundImage = getComputedStyle(skyElement).backgroundImage;
+    activeScene = scene;
+    for (const [key, layer] of washes) layer.style.opacity = key === scene ? "1" : "0";
+    if (body.dataset.motion === "false") clearRetiredWashes();
+  }
   return {
-    apply(bundle, place) {
+    apply(bundle, place, { unconfirmed = false } = {}) {
       const now = new Date();
-      const current = bundle?.forecasts?.local?.current ?? {};
-      const metrics = metricsAt(bundle, now);
+      // Retained records inform the forecast, not the current measured environment.
+      const current = unconfirmed ? {} : bundle?.forecasts?.local?.current ?? {};
+      const metrics = unconfirmed ? {} : metricsAt(bundle, now);
       const cloudLayers = [metrics.low, metrics.mid, metrics.high].filter(Number.isFinite);
       const cloudCover = current.cloud_cover ?? (cloudLayers.length ? Math.max(...cloudLayers) : null);
       const sun = sunTimes(now, place.lat, place.lon);
-      const apiLight = current.is_day === 0 ? "night" : "day";
+      const elevation = solarElevation(now, place.lat, place.lon);
+      const apiLight = unconfirmed
+        ? (elevation >= 0 ? "day" : "night")
+        : current.is_day === 0 ? "night" : "day";
       const light = lightFromSunClock(now, sun, apiLight);
+      const paperTheme = sun.civilDawn && sun.goldenEnd && now >= sun.civilDawn && now <= sun.goldenEnd
+        ? "dawn"
+        : sun.goldenStart && sun.civilDusk && now >= sun.goldenStart && now <= sun.civilDusk
+          ? "dusk" : light;
       const precipitation = current.precipitation ?? metrics.precip;
       const theme = weatherTheme({
         weatherCode: current.weather_code,
@@ -46,6 +85,8 @@ export function createSky({ storage, paperFx, moonView, themeColor, body = docum
       } = current;
       const visibility = metrics.vis;
       const storm = stormLevelFor({ windSpeed, windGust, pressure });
+      // Wind is a measured environment, never a forecast-score illustration.
+      if (["clear", "partly"].includes(theme.weather) && Math.max(windSpeed ?? 0, windGust ?? 0) >= 40) theme.weather = "wind";
       const atmosphereInputs = { precipitation, snowfall: current.snowfall, windSpeed, windDirection, windGust, pressure, visibility };
       const drive = atmosphereDriveFor({
         weather: theme.weather,
@@ -68,11 +109,12 @@ export function createSky({ storage, paperFx, moonView, themeColor, body = docum
         : 0;
       const twilightWarmth = twilightWarmthFor(now, sun);
       const tier = body.dataset.tier || "great";
-      const clearEnergy = clearEnergyFor({ twilightWarmth, tier });
+      // 环境暖光只取此刻太阳位置，不能被所选预报日期的分数改写。
+      const clearEnergy = clearEnergyFor({ twilightWarmth });
       const azimuth = solarAzimuth(now, place.lat, place.lon);
-      const elevation = solarElevation(now, place.lat, place.lon);
       const sunPos = theme.light === "night" ? { x: 78, y: 19, valid: false } : sunDiskPosition(azimuth, elevation);
-      const moon = lunarPhase(now, place.lat, place.lon);
+      const timeZone = localTimeZone(bundle);
+      const moon = lunarPhase(now, place.lat, place.lon, timeZone);
 
       const styles = {
         "--sun-x": `${sunPos.x.toFixed(1)}%`,
@@ -101,22 +143,26 @@ export function createSky({ storage, paperFx, moonView, themeColor, body = docum
         "--strong-cloud-duration": `${Math.max(9, 16 - windStrength * 5).toFixed(2)}s`,
         "--severe-cloud-duration": `${Math.max(6, 11 - windStrength * 4).toFixed(2)}s`
       };
+      body.dataset.unconfirmed = String(unconfirmed);
       body.dataset.weather = theme.weather;
       body.dataset.light = theme.light;
+      body.dataset.theme = paperTheme;
       body.dataset.storm = storm;
       body.dataset.windActive = String(Math.max(windSpeed ?? 0, windGust ?? 0) >= 40);
-      body.dataset.lightning = String(theme.weather === "thunder" || theme.weather === "hail");
       for (const [name, value] of Object.entries(styles)) body.style.setProperty(name, value);
       for (const [name, value] of Object.entries(atmosphereInputs)) {
         if (Number.isFinite(value)) body.dataset[name] = String(value);
         else delete body.dataset[name];
       }
+      crossfadeSky(`${theme.weather}:${paperTheme}`);
+      if (unconfirmed) clearRetiredWashes();
 
       const computed = getComputedStyle(body);
       const skyTop = computed.getPropertyValue("--sky-top").trim();
       if (/^#[\da-f]{6}$/i.test(skyTop)) themeColor.content = skyTop;
-      storage.set(KEYS.theme, {
+      if (!unconfirmed) storage.set(KEYS.theme, {
         light: theme.light,
+        paperTheme,
         weather: theme.weather,
         storm,
         tier,
@@ -126,16 +172,17 @@ export function createSky({ storage, paperFx, moonView, themeColor, body = docum
       });
 
       paperFx.syncWeather({
-        weather: theme.weather,
+        weather: unconfirmed ? null : theme.weather,
         windSpeed: Number(windSpeed) || 0,
         windGust: Number(windGust) || 0,
-        cloudCover: Number(current.cloud_cover) || 0,
+        cloudCover: Number(cloudCover) || 0,
         precipitation: Number(precipitation) || 0,
-        isDay: theme.light !== "night"
+        isDay: theme.light !== "night",
+        light: paperTheme
       });
-      moonView.render(moon);
+      moonView.render(moon, { placeName: place.name, timeZone });
 
-      return weatherConditionFor({
+      return unconfirmed ? null : weatherConditionFor({
         weather: theme.weather,
         weatherCode: current.weather_code,
         precipitation,

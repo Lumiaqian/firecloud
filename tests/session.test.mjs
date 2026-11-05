@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createForecastSession } from "../js/core/session.mjs";
-import { createForecastCache, createStorage } from "../js/core/storage.mjs";
+import { createForecastCache, createStorage, KEYS } from "../js/core/storage.mjs";
 
 const HZ = { name: "杭州", lat: 30.27, lon: 120.15 };
 const SH = { name: "上海", lat: 31.23, lon: 121.47 };
@@ -21,8 +21,7 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-function setup({ clock = () => NOW.getTime() } = {}) {
-  const storage = createStorage(memoryBackend());
+function setup({ clock = () => NOW.getTime(), storage = createStorage(memoryBackend()) } = {}) {
   const cache = createForecastCache(storage, { now: clock });
   const requests = [];
   const calls = [];
@@ -50,6 +49,8 @@ function setup({ clock = () => NOW.getTime() } = {}) {
       return d.promise;
     },
     cache,
+    persistPlace: (place) => storage.set(KEYS.place, place),
+    persistViewMode: (mode) => storage.set(KEYS.viewMode, mode),
     nextEvent: eventAt,
     now: () => new Date(clock()),
     view
@@ -88,6 +89,58 @@ test("首次加载显示加载面板，成功后渲染并聚焦结果", async ()
   assert.equal(ctx.panel(), "ready");
   assert.equal(ctx.session.state.stale, false);
   assert.ok(ctx.calls.some(([name]) => name === "focus"));
+});
+
+test("本机存储读取受限或写入超额时，网络成功仍进入就绪态并保留新鲜预报", async () => {
+  for (const denyReads of [false, true]) {
+    let writes = 0;
+    const storage = createStorage({
+      getItem() {
+        if (denyReads) throw new DOMException("Access denied", "SecurityError");
+        return null;
+      },
+      setItem() {
+        writes += 1;
+        throw new DOMException("Storage full", "QuotaExceededError");
+      }
+    });
+    const ctx = setup({ storage });
+    const loading = ctx.session.load(HZ);
+    const forecast = ctx.bundle(HZ, "sunset");
+    ctx.requests[0].resolve(forecast);
+    await loading;
+    assert.equal(ctx.panel(), "ready");
+    assert.equal(ctx.session.state.bundle, forecast);
+    assert.equal(ctx.session.state.dataTimestamp, forecast.fetchedAt);
+    assert.equal(ctx.session.state.stale, false);
+    assert.equal(ctx.session.state.refreshFailed, false);
+    assert.equal(ctx.session.state.refreshing, false);
+    assert.equal(ctx.session.state.pendingEvent, null);
+    assert.equal(ctx.cache.read(HZ, "sunset"), null);
+    assert.equal(writes, 2);
+    assert.equal(ctx.calls.some(([name]) => name === "error"), false);
+    assert.deepEqual(ctx.calls.at(-1), ["busy", false]);
+  }
+});
+
+test("损坏的缓存根节点或空条目不会使成功网络预报变成错误，且会被有效缓存替换", async () => {
+  for (const raw of ["1", "null", "[]", '{"broken":null,"30.27,120.15:sunset":null}']) {
+    const backend = memoryBackend();
+    backend.setItem(KEYS.data, raw);
+    const ctx = setup({ storage: createStorage(backend) });
+    const loading = ctx.session.load(HZ);
+    const forecast = ctx.bundle(HZ, "sunset");
+    ctx.requests[0].resolve(forecast);
+    await loading;
+    assert.equal(ctx.panel(), "ready");
+    assert.equal(ctx.session.state.bundle, forecast);
+    assert.equal(ctx.session.state.stale, false);
+    assert.equal(ctx.session.state.refreshFailed, false);
+    assert.deepEqual(ctx.cache.read(HZ, "sunset"), {
+      bundle: forecast, savedAt: NOW.getTime(), age: 0
+    });
+    assert.equal(ctx.calls.some(([name]) => name === "error"), false);
+  }
 });
 
 test("同地点切换晨昏：切换期间保留当前手记并显示目标时段，成功后日期回到下一场", async () => {

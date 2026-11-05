@@ -222,8 +222,9 @@ export function moonDiskPosition(azimuthDeg, elevationDeg, {
 
 /**
  * 天文月相与月球坐标算法 (Jean Meeus 算法)
+ * 农历按地点时区展示；时区缺失或无效时与其他日期展示一致，退回设备时区。
  */
-export function lunarPhase(date = new Date(), lat = 30.27, lng = 120.15) {
+export function lunarPhase(date = new Date(), lat = 30.27, lng = 120.15, timeZone) {
   const d = toDays(date);
 
   // 1. 太阳平黄经与真黄经
@@ -283,7 +284,14 @@ export function lunarPhase(date = new Date(), lat = 30.27, lng = 120.15) {
   // 6. 农历月日格式化 (利用 Intl 原生中历引擎)
   let lunarDate = "";
   try {
-    const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", { month: "long", day: "numeric" });
+    let formatter;
+    try {
+      formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+        month: "long", day: "numeric", timeZone: typeof timeZone === "string" && timeZone ? timeZone : undefined
+      });
+    } catch {
+      formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", { month: "long", day: "numeric" });
+    }
     const parts = formatter.format(date);
     const match = parts.match(/^(.*?)(\d+)日?$/);
     if (match) {
@@ -599,21 +607,17 @@ export function scoreSky(metrics) {
   return skyBreakdown(metrics).score;
 }
 
-// 唯一档位表：主卡、印章、7 日卡片与主题色都从这里取值，避免分界各自漂移。
+// 唯一档位表：主卡、7 日卡片与主题色都从这里取值，避免分界各自漂移。
 const GRADES = [
-  { min: 80, tier: "epic", band: "极佳", advice: "值得专程等待", seal: { text: "紫金", sub: "绝艳霞天" } },
-  { min: 65, tier: "great", band: "值得追", advice: "值得追这场霞光", seal: { text: "晴金", sub: "绚彩可期" } },
-  { min: 50, tier: "good", band: "有机会", advice: "可以顺路看看", seal: { text: "柔光", sub: "浮云堪赏" } },
-  { min: 35, tier: "fair", band: "一般", advice: "有空可以留意", seal: { text: "敛光", sub: "云厚光微" } },
-  { min: -Infinity, tier: "dull", band: "平淡", advice: "不建议专程等待", seal: { text: "微茫", sub: "且待新晴" } }
+  { min: 80, tier: "epic", band: "极佳", advice: "值得专程等待" },
+  { min: 65, tier: "great", band: "值得追", advice: "值得追这场霞光" },
+  { min: 50, tier: "good", band: "有机会", advice: "可以顺路看看" },
+  { min: 35, tier: "fair", band: "一般", advice: "有空可以留意" },
+  { min: -Infinity, tier: "dull", band: "平淡", advice: "不建议专程等待" }
 ];
 
 export function gradeFor(score) {
   return GRADES.find((grade) => score >= grade.min);
-}
-
-export function sealFor(score) {
-  return { ...gradeFor(score).seal };
 }
 
 export function indexBand(score) {
@@ -652,7 +656,7 @@ export function sunDiscBreakdown(metrics) {
     factor("low", "本地低云", low, pct, { min: 0, max: 100, ideal: [0, 8] },
       (low ?? 0) > 8 ? -Math.min(50, (low - 8) * 1.1) : 0,
       low > 40 ? "低云厚，太阳易提前没入云层" : low > 8 ? "地平附近有零散低云" : "低云极少，视线直达地平"),
-    factor("pathLow", "太阳方向低云", pathLow, pct, { min: 0, max: 100, ideal: [0, 10] },
+    factor("pathLow", "太阳方向低云", metrics?.pathLow, pct, { min: 0, max: 100, ideal: [0, 10] },
       (pathLow ?? 0) > 10 ? -Math.min(40, (pathLow - 10) * 0.9) : 0,
       pathLow > 45 ? "太阳方向低云堆叠，难见完整日轮" : pathLow > 10 ? "太阳方向有低云扰动" : "太阳方向地平通透"),
     factor("mid", "中云", mid, pct, { min: 0, max: 100, ideal: [0, 20] },
@@ -759,23 +763,6 @@ export function sunDiscPhenomenon(metrics, score) {
     name: "晴晖丽日",
     sub: "日轮分明"
   };
-}
-
-/**
- * 日轮朱砂印章研判
- */
-export function sealForSunDisc(score, phenomenon) {
-  if (phenomenon) {
-    if (phenomenon.key === "egg_yolk") return { text: "丹曦", sub: "融融红日" };
-    if (phenomenon.key === "crisp_gold") return { text: "澄金", sub: "极目无遮" };
-    if (phenomenon.key === "crepuscular") return { text: "云隙", sub: "破云漏光" };
-    if (phenomenon.key === "swallowed") return { text: "吞日", sub: "隐入云墙" };
-  }
-  if (score >= 85) return { text: "圆明", sub: "金乌朗曜" };
-  if (score >= 70) return { text: "清晖", sub: "日轮分明" };
-  if (score >= 50) return { text: "薄霭", sub: "微光映影" };
-  if (score >= 30) return { text: "敛曜", sub: "地平云重" };
-  return { text: "微茫", sub: "日隐重云" };
 }
 
 /**

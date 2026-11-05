@@ -1,0 +1,41 @@
+<!-- @dsCard group="天空与月相" height=900 -->
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>天气，轻轻过场 · 非实时样例</title></head>
+<body class="sl-preview">
+<main class="sl-weather-stage" id="weather-stage" data-weather="clear" data-motion="true">
+  <div class="sl-weather-world" id="weather-world" aria-hidden="true"></div>
+  <div class="sl-atmo-controls sl-paper sl-body14" aria-label="本地天气样例控制">
+    <label for="weather">天气 <select id="weather"><option value="clear">晴空</option><option value="partly">多云</option><option value="overcast">阴天</option><option value="fog">雾</option><option value="rain">雨</option><option value="snow">雪</option><option value="thunder">雷雨</option><option value="hail">冰雹</option><option value="wind">风</option></select></label>
+    <label for="weather-light">天色 <select id="weather-light"><option value="day">白昼</option><option value="dawn">破晓</option><option value="dusk">暮色</option><option value="night">夜色</option></select></label>
+    <button id="weather-motion" type="button" aria-pressed="true">动效 开</button>
+    <p class="sl-atmo-status" id="weather-status" role="status" aria-live="polite">晴空 · 非实时样例 · 650 ms 交叠</p>
+  </div>
+  <section class="sl-atmo-hero" aria-label="不透明纸笺与天气交互">
+    <header class="sl-atmo-heading sl-paper"><h1 class="sl-heading22">天气，轻轻过场</h1><p class="sl-caption12">杭州 · 11 月 03 日 · 非实时样例</p></header>
+    <article class="sl-atmo-score sl-paper sl-fc-score-note" aria-label="固定晚霞预报样例">
+      <i class="sl-atmo-edge" aria-hidden="true"></i><i class="sl-atmo-edge second" aria-hidden="true"></i><i class="sl-atmo-hailcontact" aria-hidden="true"></i>
+      <svg class="sl-atmo-snowcap" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 L36 4 78 6 126 1 183 5 234 0 294 5" fill="none" stroke-width="7" stroke-linecap="round"/></svg>
+      <svg class="sl-atmo-bolt" viewBox="0 0 119 185" aria-hidden="true"><path d="M3 2 L38 37 25 55 68 92 53 111 102 148 106 181 M67 92 L96 94 108 112"/></svg>
+      <button class="sl-contact-button sl-atmo-clip" id="weather-clip" type="button" aria-label="黄铜夹，演示一次局部引雷，数据不闪"><img src="../../components/art/clip.png" alt=""></button>
+      <img class="sl-fc-score-ink" src="/_blob/a3a5f3b700b02619f6dafa51f92ed274" alt="">
+      <p class="sl-fc-score-heading">晨昏观测手记</p><p id="score-label" class="sl-caption13 sl-muted">霞光指数 0–99</p>
+      <div class="sl-fc-score-line"><span class="sl-fc-score">77</span></div><button class="sl-contact-button sl-fc-grade sl-atmo-annotation" id="weather-annotation" type="button" aria-label="值得追，演示一次圈注暖光">值得追</button>
+      <p class="sl-fc-advice">中高云适宜，留意西侧低云。</p><i class="sl-atmo-corner" aria-hidden="true"></i>
+    </article>
+    <aside class="sl-atmo-sunset sl-paper" aria-label="固定日落时间样例">
+      <i class="sl-atmo-edge" aria-hidden="true"></i><i class="sl-atmo-edge second" aria-hidden="true"></i><i class="sl-atmo-hailcontact" aria-hidden="true"></i>
+      <svg class="sl-atmo-snowcap" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 L36 4 78 6 126 1 183 5 234 0 294 5" fill="none" stroke-width="7" stroke-linecap="round"/></svg>
+      <button class="sl-contact-button sl-atmo-tape-button" id="weather-tape" type="button" aria-label="胶带，演示阵风与自由纸角"><span class="sl-atmo-tape" aria-hidden="true"></span></button>
+      <p class="sl-caption13 sl-muted">日落</p><p class="sl-atmo-time">17:12</p><p class="sl-caption13">时间不随天气切换</p><p class="sl-atmo-window sl-caption13">观赏窗口<br><span class="sl-action18">16:57–17:37</span></p><i class="sl-atmo-corner" aria-hidden="true"></i>
+    </aside>
+  </section>
+  <section class="sl-atmo-forecast sl-paper" aria-label="独立预报日期演示">
+    <h2 class="sl-action18">预报日期，与此刻天空分开</h2>
+    <div class="sl-atmo-days"><button type="button" data-day="today" aria-pressed="true">03 日 · 77 · 17:12</button><button type="button" data-day="future" aria-pressed="false">05 日 · 84 · 17:10</button></div>
+    <p class="sl-caption13" id="forecast-note" aria-live="polite">横笺选中 03 日；主笺数值固定，不重算环境。</p>
+    <p class="sl-caption12 sl-muted">非实时样例 · 切日期只改横笺选中态；本卡不演示预报内容联动。无联网、无存储。</p>
+  </section>
+</main>
+<script>window.SkyLetter.WeatherStage(document);</script>
+</body></html>

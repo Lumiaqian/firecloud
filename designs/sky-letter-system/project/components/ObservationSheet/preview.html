@@ -1,0 +1,15 @@
+<!-- @dsCard group="墨迹控件" height=480 -->
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>观测纸笺 · 非实时样例</title></head>
+<body class="sl-preview"><main class="sl-demo"><section class="sl-paper sl-control-paper" aria-labelledby="sheet-preview-title">
+<p class="sl-control-eyebrow">纸笺容器 · 非实时样例</p><h1 class="sl-control-heading" id="sheet-preview-title">观测说明</h1><p class="sl-control-help">桌面居中纸笺；600px 及以下贴底抽屉。打开后可用 Tab、Shift+Tab 与 Escape。</p>
+<button class="sl-ink-button sl-ink-primary" id="sheet-opener" type="button" style="margin-top:20px;font-size:18px">打开观测纸笺 ↗</button><p class="sl-control-feedback" role="status" id="sheet-feedback">未打开 · 不联网、不定位、不保存。</p>
+<p class="sl-control-help">移动端横线是原稿的抽屉视觉标记，不提供拖拽。没有模拟软键盘，也不触发地理定位。</p>
+</section></main>
+<dialog class="sl-observation-dialog" id="observation-sheet" aria-labelledby="sheet-title" aria-describedby="sheet-description">
+<div class="sl-drawer-handle" aria-hidden="true"></div>
+<header class="sl-control-head"><div><p class="sl-control-eyebrow">容器示例 · 非实时样例</p><h2 class="sl-control-heading" id="sheet-title">观测说明</h2></div><button class="sl-ink-button sl-icon-button sl-dialog-close" id="sheet-close" type="button" aria-label="关闭观测纸笺" autofocus><svg class="sl-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></header>
+<div class="sl-dialog-scroll" tabindex="0" aria-label="观测说明，可独立滚动"><p class="sl-control-help" id="sheet-description">预报日期与当前天气分开呈现；保存的记录不代表此刻天气。</p>
+<section class="sl-control-section" aria-labelledby="sheet-note-title"><h3 class="sl-control-section-label" id="sheet-note-title">留意日期</h3><p class="sl-control-help">查看朝霞或晚霞前，先确认观测日期与地点时区。未来第 5–7 日仅供参考。</p></section>
+<div class="sl-dialog-actions"><button class="sl-ink-button sl-ink-primary" id="sheet-finish" type="button">收起纸笺 ✓</button></div><p class="sl-control-help">本页仅演示容器，不联网、不保存。</p>
+</div></dialog><script>window.SkyLetter.ObservationSheet(document);</script></body></html>

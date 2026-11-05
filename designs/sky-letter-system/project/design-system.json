@@ -1,0 +1,195 @@
+{
+  "v": 3,
+  "assetGroups": {
+    "Logos": {
+      "files": {
+        "logo-a.png": {
+          "blob": "85712d98fe5c97592b888ef332c464b3",
+          "name": "logo-a.png",
+          "size": 616428,
+          "type": "image/png"
+        },
+        "favicon-a-16.png": {
+          "name": "favicon-a-16.png",
+          "blob": "2924ac7d1ccd50493d39bb6d8d5af7cb",
+          "size": 788,
+          "type": "image/png"
+        },
+        "favicon-a-32.png": {
+          "name": "favicon-a-32.png",
+          "blob": "ca37740f0ece33c998a845c0bf26fc09",
+          "size": 1887,
+          "type": "image/png"
+        },
+        "favicon-a-48.png": {
+          "name": "favicon-a-48.png",
+          "blob": "3b6594a53f83ba7e57b595cb906fe3b5",
+          "size": 3875,
+          "type": "image/png"
+        },
+        "favicon-a-micro.png": {
+          "name": "favicon-a-micro.png",
+          "blob": "72e5e2401eb7a152a6a5708897c7ac40",
+          "size": 183432,
+          "type": "image/png"
+        },
+        "favicon-a-detail.png": {
+          "name": "favicon-a-detail.png",
+          "blob": "66f29cace70397b855bce9dc827cd270",
+          "size": 178105,
+          "type": "image/png"
+        }
+      },
+      "name": "Logos",
+      "order": [
+        "logo-a.png",
+        "favicon-a-16.png",
+        "favicon-a-32.png",
+        "favicon-a-48.png",
+        "favicon-a-micro.png",
+        "favicon-a-detail.png"
+      ],
+      "tile": "l"
+    },
+    "Paper": {
+      "files": {
+        "paper-grain-note.png": {
+          "blob": "607e97c4b8eaad1e1b8f1fb49cc9b8a1",
+          "name": "paper-grain-note.png",
+          "size": 185541,
+          "type": "image/png"
+        },
+        "paper-grain-tall.png": {
+          "blob": "178d1b87b97b62feeec6174ddbcff695",
+          "name": "paper-grain-tall.png",
+          "size": 199474,
+          "type": "image/png"
+        },
+        "paper-grain-wide.png": {
+          "blob": "6c40ba3d833c507b0afc53bacaae4405",
+          "name": "paper-grain-wide.png",
+          "size": 323528,
+          "type": "image/png"
+        },
+        "clip.png": {
+          "blob": "6b03c41165f044976faf1a60b98098b2",
+          "name": "clip.png",
+          "size": 7897,
+          "type": "image/png"
+        },
+        "mark.png": {
+          "blob": "e6a09a2b5261c577a08bbd7f0bef7e0b",
+          "name": "mark.png",
+          "size": 7192,
+          "type": "image/png"
+        },
+        "rule.png": {
+          "blob": "9cedfb4c5bd7f60f6760530f51980cc8",
+          "name": "rule.png",
+          "size": 8877,
+          "type": "image/png"
+        },
+        "seal.png": {
+          "blob": "6cb74947f962f1e36340b5c851c818d4",
+          "name": "seal.png",
+          "size": 21090,
+          "type": "image/png"
+        },
+        "score-annotations.png": {
+          "name": "score-annotations.png",
+          "blob": "a3a5f3b700b02619f6dafa51f92ed274",
+          "size": 652340,
+          "type": "image/png"
+        },
+        "home-time-marks.png": {
+          "name": "home-time-marks.png",
+          "blob": "016c40d1def5678a1bc7b8c1d7ed4199",
+          "size": 328181,
+          "type": "image/png"
+        },
+        "supporting-paper-mask.svg": {
+          "name": "supporting-paper-mask.svg",
+          "blob": "839b3299bb39dc8954afdaae34a320f0",
+          "size": 465,
+          "type": "image/svg+xml"
+        },
+        "supporting-brace.png": {
+          "name": "supporting-brace.png",
+          "blob": "86c74f425173b6e3371430f19441c477",
+          "size": 10037,
+          "type": "image/png"
+        },
+        "supporting-pencil.png": {
+          "name": "supporting-pencil.png",
+          "blob": "ca21bc89b8a03234da940fcb9db94854",
+          "size": 15232,
+          "type": "image/png"
+        },
+        "supporting-leader.png": {
+          "name": "supporting-leader.png",
+          "blob": "168794c2c6247d31fb4dd9639d64370c",
+          "size": 9306,
+          "type": "image/png"
+        },
+        "supporting-rule.png": {
+          "name": "supporting-rule.png",
+          "blob": "48df054d9f1dbf8c6f38c170830d25dd",
+          "size": 3566,
+          "type": "image/png"
+        },
+        "outlook-focus.png": {
+          "name": "outlook-focus.png",
+          "blob": "866c37972149fbf785c2705c9d2d3678",
+          "size": 22587,
+          "type": "image/png"
+        }
+      },
+      "name": "Paper",
+      "order": [
+        "paper-grain-note.png",
+        "paper-grain-tall.png",
+        "paper-grain-wide.png",
+        "rule.png",
+        "mark.png",
+        "seal.png",
+        "clip.png",
+        "score-annotations.png",
+        "home-time-marks.png",
+        "supporting-paper-mask.svg",
+        "supporting-brace.png",
+        "supporting-pencil.png",
+        "supporting-leader.png",
+        "supporting-rule.png",
+        "outlook-focus.png"
+      ]
+    }
+  },
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-11-03T11:47:53.127Z",
+    "v": 1
+  },
+  "docs": {
+    "readme": "project/README.md",
+    "sections": [
+      "project/Accessibility.md",
+      "project/Inventory.md",
+      "project/Motion.md"
+    ]
+  },
+  "groups": [
+    "Logos",
+    "Paper"
+  ],
+  "lastChange": {
+    "at": "2026-11-05T02:14:06.644Z",
+    "by": "Codex",
+    "via": "Codex",
+    "note": "统一天空文字及动作的明暗底色令牌，首页保留现有颜色；生产通过 sky-ink 与 sky-accent 引用源系统，移除独立硬编码配色。"
+  },
+  "layout": "files",
+  "libraries": [],
+  "namespace": "SkyLetter",
+  "sections": {},
+  "title": "天空画笺"
+}
