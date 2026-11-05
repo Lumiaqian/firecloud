@@ -7,11 +7,22 @@ export function createFrameLoop({
   cancel = (id) => cancelAnimationFrame(id)
 } = {}) {
   const tasks = new Set();
+  const snapshot = [];
   let frame = null;
 
   function run(timestamp) {
     frame = null;
-    for (const task of [...tasks]) task(timestamp);
+    let count = 0;
+    for (const task of tasks) snapshot[count++] = task;
+    try {
+      for (let index = 0; index < count; index += 1) {
+        const task = snapshot[index];
+        task(timestamp);
+      }
+    } finally {
+      // Keep the backing array, but release callbacks on idle and error paths too.
+      while (count) snapshot[--count] = undefined;
+    }
     if (tasks.size && frame == null) frame = request(run);
   }
 

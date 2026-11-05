@@ -89,7 +89,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
 
   // ---------- 夹端的一次局部引雷：从不自动触发，不触及评分或时间 ----------
   function strike() {
-    if (!motionAllowed() || !els.clip) return;
+    if (!motionAllowed() || !ambientMotionAllowed() || !els.clip) return false;
     clearTimeout(strikeTimer);
     bolts.length = 0;
     sparks.length = 0;
@@ -122,6 +122,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
       wake();
     }, STRIKE_DURATION);
     wake();
+    return true;
   }
 
   // ---------- 晴光 ----------
@@ -131,18 +132,19 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   }
 
   function warm() {
-    if (!motionAllowed()) return;
+    if (!motionAllowed() || !ambientMotionAllowed() || !els.circle) return false;
     clearTimeout(warmTimer);
     els.circle?.classList.add("is-sun-warmed");
     warmTimer = setTimeout(() => {
       warmTimer = null;
       els.circle?.classList.remove("is-sun-warmed");
     }, WARM_DURATION);
+    return true;
   }
 
   // ---------- 阵风 ----------
-  function gust(intensity = "high") {
-    if (!ambientMotionAllowed() || body.dataset.input === "keyboard") return;
+  function blowWind(intensity = "high") {
+    if (!ambientMotionAllowed()) return false;
     clearTimeout(gustTimer);
     body.dataset.paperWind = intensity;
     debris.length = 0;
@@ -169,6 +171,12 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
       debris.length = 0;
       wake();
     }, GUST_DURATION);
+    return true;
+  }
+
+  function gust(intensity = "high") {
+    if (!motionAllowed()) return false;
+    return blowWind(intensity);
   }
 
   // ---------- 雨 ----------
@@ -198,7 +206,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
   function startAmbientWind() {
     if (!ambientMotionAllowed() || !lastConditions || lastConditions.ambient === "calm") return;
     ambientTimer = setInterval(() => {
-      if (ambientMotionAllowed()) gust("gentle");
+      blowWind("gentle");
     }, AMBIENT_GUST_INTERVAL[lastConditions.ambient]);
   }
 
@@ -222,7 +230,7 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
     lastConditions = conditions;
     setSunlit(conditions.sunlit);
     startAmbientWind();
-    if (conditions.windy) gust("high");
+    if (conditions.windy) blowWind("high");
     els.sheets.forEach(({ element }) => {
       element.classList.toggle("is-cloud-shadowed", conditions.cloudy);
       element.classList.toggle("is-thunder-ambient", conditions.thunder);

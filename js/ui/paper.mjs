@@ -3,7 +3,7 @@
  * 天气与预报文字始终留在原处；横笺滚动不参与天空手势。
  */
 import { $ } from "./dom.mjs";
-import { motionAllowed, triggerHaptic } from "./motion.mjs";
+import { triggerHaptic } from "./motion.mjs";
 
 const SWIPE_MIN = 90;
 const SWIPE_STRONG = 160;
@@ -11,27 +11,26 @@ const SWIPE_MAX_DRIFT = 55;
 const SWIPE_EXCLUDED = "button, a, input, select, textarea, label, summary, dialog, [role='dialog'], [role='button'], [contenteditable], [data-weather-surface], [data-scroll-region], .horizontal-scroll-region, .week-scroll, #week, .week-block";
 
 export function bindPaperInteractions(paperFx) {
-  const announce = (message) => {
+  const announce = (message, played) => {
     const status = $("paper-fx-status");
     if (status) {
       status.hidden = false;
-      status.textContent = `${motionAllowed() ? "" : "静态反馈 · "}${message}`;
+      status.textContent = played ? message : document.body.dataset.input === "keyboard"
+        ? "键盘操作 · 仅文字反馈，天气与预报不变。"
+        : "动效已停用 · 仅文字反馈，天气与预报不变。";
     }
   };
   $("paper-clip-action")?.addEventListener("click", () => {
     triggerHaptic([15, 30, 20]);
-    paperFx.strike();
-    announce("夹端受光 · 一次局部光影，天气与预报不变。");
+    announce("夹端受光 · 一次局部光影，天气与预报不变。", paperFx.strike());
   });
   $("score-circle-action")?.addEventListener("click", () => {
     triggerHaptic(25);
-    paperFx.warm();
-    announce("圈注暖光 · 天气与预报不变。");
+    announce("圈注暖光 · 天气与预报不变。", paperFx.warm());
   });
   const windFromTape = () => {
     triggerHaptic([12, 22]);
-    paperFx.gust("high");
-    announce("纸缘起风 · 文字与预报留在原处。");
+    announce("纸缘起风 · 文字与预报留在原处。", paperFx.gust("high"));
   };
   $("paper-tape-action")?.addEventListener("click", windFromTape);
 
@@ -72,8 +71,7 @@ export function bindPaperInteractions(paperFx) {
     const drift = Math.abs(touch.clientY - start.y);
     if (deltaX > SWIPE_MIN && drift < SWIPE_MAX_DRIFT && deltaX > drift * 2) {
       triggerHaptic(12);
-      paperFx.gust(deltaX > SWIPE_STRONG ? "high" : "gentle");
-      announce("天空起风 · 文字与预报留在原处。");
+      announce("天空起风 · 文字与预报留在原处。", paperFx.gust(deltaX > SWIPE_STRONG ? "high" : "gentle"));
     }
   }, { passive: true });
   document.addEventListener("click", (event) => {

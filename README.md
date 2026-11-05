@@ -18,7 +18,7 @@
 
 ## 本地运行
 
-使用原生 HTML、CSS 和 JavaScript ES Modules，无第三方 npm 依赖。开发需要 Node.js 22+ 和 Python 3。
+使用原生 HTML、CSS 和 JavaScript ES Modules，无第三方运行时 npm 依赖。开发需要 Node.js 22+ 和 Python 3；浏览器验收使用 Playwright。
 
 ```sh
 npm run dev
@@ -27,8 +27,11 @@ npm run dev
 打开 <http://127.0.0.1:8765/>。
 
 ```sh
-npm run verify   # 语法检查与测试
-npm run build    # 生成静态站点 dist/
+npm ci
+npx playwright install chromium
+npm run verify        # 语法检查与单元测试
+npm run build         # 生成静态站点 dist/
+npm run test:browser  # 验收已构建产物，自动启动并关闭测试服务器
 ```
 
 预览发布产物：
@@ -50,15 +53,15 @@ python3 -m http.server 8766 --bind 127.0.0.1 --directory dist
 | `tests/` | 自动化测试 |
 | `designs/` | 设计稿与设计系统，不进入发布包 |
 
-设计入口：[天空画笺设计系统](designs/sky-letter-system/project/README.md)、[桌面稿](designs/paper-place-finder/project/SkyLetterStudy.dc.html)、[手机稿](designs/paper-place-finder/project/SkyLetterMobile.dc.html)。字体使用[小赖](assets/fonts/Xiaolai-OFL.txt)，完整字体约 11.3 MiB，首次访问需要下载。
+设计入口：[天空画笺设计系统](designs/sky-letter-system/project/README.md)、[桌面稿](designs/paper-place-finder/project/SkyLetterStudy.dc.html)、[手机稿](designs/paper-place-finder/project/SkyLetterMobile.dc.html)。全文使用[小赖](assets/fonts/Xiaolai-OFL.txt)：生产字体按字符分片，保留完整字库，先加载界面常用字，其余按需加载。离线可用已缓存的字片。
 
 ### 更新与部署
 
 新增或删除模块后运行 `npm run sync-modules`，同步 import map 和预缓存列表。发布代码更新时运行 `npm run sync-modules -- --bump`，更新模块与应用壳缓存版本；修改 CSS 时还需更新 `index.html` 中对应样式表的版本号。
 
-`css/sky-letter-tokens.css` 是设计系统生成令牌的生产副本，仅调整字体路径。颜色修改先更新设计系统，再同步生产副本，不分别维护两套数值。
+`css/sky-letter-tokens.css` 是设计系统生成令牌的生产副本，不含 `@font-face`；生产字片由 `css/fonts.css` 声明。颜色修改先更新设计系统，再同步生产副本，不分别维护两套数值。修改界面文案后，用 `uv run --with 'fonttools[woff]==4.61.1' scripts/build-fonts.py` 重新生成字片；脚本校验字符覆盖与原字体一致。
 
-推送到 `main` 后，GitHub Actions 执行检查、构建并将 `dist/` 部署到 GitHub Pages。构建会重建 `dist/`；发布资源白名单维护在 `scripts/build-site.mjs`。
+推送到 `main` 后，GitHub Actions 执行检查、构建及浏览器验收，再将 `dist/` 部署到 GitHub Pages。构建会重建 `dist/`；发布资源白名单维护在 `scripts/build-site.mjs`。
 
 ## 数据与隐私
 

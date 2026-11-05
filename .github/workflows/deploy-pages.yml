@@ -26,11 +26,17 @@ jobs:
         with:
           node-version: lts/*
           check-latest: true
-          package-manager-cache: false
+          cache: npm
+      - name: Install locked development tools
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
       - name: Verify static app
         run: npm run verify
       - name: Package production site
         run: npm run build
+      - name: Smoke test production site
+        run: npm run test:browser
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

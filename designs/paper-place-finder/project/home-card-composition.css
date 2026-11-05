@@ -35,6 +35,8 @@
 .weather-root .sky-caption{position:static;grid-column:1/-1;transform:none;letter-spacing:0;font-size:13px;margin:0}
 .weather-root .horizon{display:none}
 .weather-root .moon-link{position:static;grid-column:2;grid-row:2;align-self:end;justify-self:center;max-width:150px;padding:10px;margin:0 8px 24px;font-size:13px;line-height:1.65}
+.weather-root:not([data-light=night]) .moon-link{display:none!important}
+@media(prefers-reduced-motion:no-preference){.weather-root[data-motion=true][data-light=night] .sky-star{animation:star-breathe 7s ease-in-out infinite alternate}}
 .weather-root .comment{justify-content:flex-end;padding:0 22px 8px;min-height:44px}
 .weather-root .comment::before{display:none}
 .weather-root .observation{width:97%;margin:0 0 0 auto;padding:40px 43px 28px;filter:drop-shadow(1px 5px 6px #43352b12)}

@@ -1,4 +1,4 @@
-// 动效与触感：尊重系统“减少动效”，键盘操作时也不播放过渡动画。
+// 动效与触感：系统与全局开关优先；键盘只抑制主动反馈，不中断天气氛围。
 
 export const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -32,7 +32,7 @@ export function trackInputModality(body = document.body) {
 }
 
 export function motionAllowed() {
-  return !reducedMotion.matches && document.body.dataset.motion !== "false" && document.body.dataset.input !== "keyboard";
+  return !reducedMotion.matches && document.body.dataset.motion !== "false" && !document.hidden && document.body.dataset.input !== "keyboard";
 }
 
 export function triggerHaptic(pattern = 10) {

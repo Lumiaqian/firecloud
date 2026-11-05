@@ -1048,12 +1048,18 @@ export function createWeatherFx(canvas, {
   }
 
   function drawFrame(timestamp) {
+    // A shared-loop snapshot may still dispatch us after a pause removes the task.
+    if (!shouldAnimate()) {
+      stopAnimation();
+      return;
+    }
     const elapsed = previousTime ? Math.min((timestamp - previousTime) / 1_000, 0.04) : 0;
     previousTime = timestamp;
     clearCanvases();
     context.globalCompositeOperation = "screen";
     if (contactContext) contactContext.globalCompositeOperation = "screen";
     if (starfield.length) {
+      updateStars(starfield, elapsed);
       drawStars(context, starfield, 0.38);
     }
     transitionProgress = Math.min(1, transitionProgress + elapsed / TRANSITION_DURATION);
