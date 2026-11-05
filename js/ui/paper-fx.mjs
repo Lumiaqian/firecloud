@@ -1,6 +1,6 @@
 /**
  * 纸缘特效：手动夹端受光、评分圈注暖光、分层铅笔阵风与实况纸缘接触。
- * 四张纸面分别承接天气；透明的主卡分组与纸上文字不参与运动。
+ * 四张原纸面随风微抬，文字与背景一起倾起；不移动主卡分组或改变布局。
  * 粒子画在前景画布上，系统减弱动态实时清理所有未完成反馈。
  */
 import { motionAllowed, reducedMotion } from "./motion.mjs";
@@ -50,10 +50,6 @@ export function createPaperFx(canvas, { loop, body = document.body }) {
     edge.setAttribute("aria-hidden", "true");
     edge.innerHTML = "<i></i><i></i>";
     element.append(edge);
-    const corner = document.createElement("i");
-    corner.className = "paper-free-edge";
-    corner.setAttribute("aria-hidden", "true");
-    element.append(corner);
   }
   const bolts = [];
   const sparks = [];

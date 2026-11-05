@@ -1,6 +1,6 @@
 /**
  * 纸缘反馈：夹端局部受光、评分圈注暖光、胶带与天空右划起风。
- * 天气与预报文字始终留在原处；装饰反馈仅读屏播报，不显示演示说明或占据版面。
+ * 阵风微抬原纸面及内容，不改变预报或布局；装饰反馈仅读屏播报，不显示演示说明。
  */
 import { $ } from "./dom.mjs";
 import { triggerHaptic } from "./motion.mjs";
@@ -29,7 +29,7 @@ export function bindPaperInteractions(paperFx) {
   });
   const windFromTape = () => {
     triggerHaptic([12, 22]);
-    announce("纸缘起风 · 文字与预报留在原处。", paperFx.gust("high"));
+    announce("纸缘起风。", paperFx.gust("high"));
   };
   $("paper-tape-action")?.addEventListener("click", windFromTape);
 
@@ -70,7 +70,7 @@ export function bindPaperInteractions(paperFx) {
     const drift = Math.abs(touch.clientY - start.y);
     if (deltaX > SWIPE_MIN && drift < SWIPE_MAX_DRIFT && deltaX > drift * 2) {
       triggerHaptic(12);
-      announce("天空起风 · 文字与预报留在原处。", paperFx.gust(deltaX > SWIPE_STRONG ? "high" : "gentle"));
+      announce("天空起风。", paperFx.gust(deltaX > SWIPE_STRONG ? "high" : "gentle"));
     }
   }, { passive: true });
   document.addEventListener("click", (event) => {

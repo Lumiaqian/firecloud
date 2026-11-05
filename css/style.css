@@ -2099,12 +2099,16 @@ dialog#lunar-dialog::backdrop { background: linear-gradient(180deg,var(--sky-top
 .is-rain-damp .paper-edge-contact i { animation:paper-edge-drop 1.6s ease-out infinite; }
 .is-rain-damp .paper-edge-contact i + i { animation-delay:-.7s; }
 .is-hail-contact .paper-edge-contact i { width:4px; height:4px; background:#c5d8df; border:0; border-radius:1px; animation:paper-edge-hail 1.8s linear infinite; }
-.paper-free-edge { position:absolute; right:1.4%; bottom:1.5%; z-index:1; width:36px; height:18px; pointer-events:none; opacity:0; border-radius:80% 24% 74% 35% / 65% 35% 70% 35%; background:linear-gradient(166deg,transparent 34%,#75664b24 46%,#d6cbb34d 52%,transparent 74%),var(--paper) url('../assets/paper/paper-grain-wide.png') right bottom/380px auto; background-blend-mode:multiply; box-shadow:0 2px 3px #43352b20; transform-origin:right bottom; transform:scaleY(.35) rotate(-2deg); transition:transform var(--duration-scene) cubic-bezier(.23,1,.32,1),opacity var(--duration-scene) linear; transition-delay:240ms; }
-.hero-meta-col .paper-free-edge { transition-delay:160ms; }
-.factor-sheet .paper-free-edge { transition-delay:320ms; }
-body[data-weather="wind"] .paper-free-edge { opacity:1; animation:paper-free-corner 4.5s cubic-bezier(.25,1,.4,1) infinite; }
-body[data-paper-wind] .paper-free-edge { opacity:1; transform:translateY(-3px) rotate(-2deg); animation:none; }
-body[data-paper-wind="high"] .paper-free-edge { transform:translateY(-6px) rotate(-4deg); }
+/* Lift the original paper and its ink together; no detached corner overlay. */
+#panel-ready [data-weather-surface] { transform-origin:50% 0; transition:transform var(--duration-scene) cubic-bezier(.23,1,.32,1); transition-delay:240ms; }
+#panel-ready [data-weather-surface]::after { content:""; position:absolute; z-index:-2; pointer-events:none; left:5%; right:5%; bottom:-12px; height:22px; background:radial-gradient(ellipse at center,#43352b55,transparent 70%); opacity:0; transition:opacity var(--duration-scene) linear; transition-delay:240ms; }
+#panel-ready .hero-meta-col { transition-delay:160ms; }
+#panel-ready .factor-sheet { transition-delay:320ms; }
+body[data-paper-wind] #panel-ready [data-weather-surface] { transform:perspective(1000px) translateY(-1px) rotateX(1.5deg) rotateZ(-.12deg); }
+body[data-paper-wind="high"] #panel-ready [data-weather-surface] { transform:perspective(1000px) translateY(-2px) rotateX(3deg) rotateZ(-.25deg); }
+body[data-paper-wind] #panel-ready :is(.factor-sheet,.week-strip) { transform:perspective(1000px) translateY(-1px) rotateX(.35deg) rotateZ(-.05deg); }
+body[data-paper-wind="high"] #panel-ready :is(.factor-sheet,.week-strip) { transform:perspective(1000px) translateY(-2px) rotateX(.6deg) rotateZ(-.1deg); }
+body[data-paper-wind] #panel-ready [data-weather-surface]::after { opacity:.65; }
 #paper-tape-action::before { transform-origin: left center; transition: transform var(--duration-scene) cubic-bezier(.23,1,.32,1), opacity var(--duration-scene) linear; }
 body[data-weather="wind"] #paper-tape-action::before { animation: paper-tape-tail 4.5s cubic-bezier(.25,1,.4,1) infinite; }
 body[data-paper-wind] #paper-tape-action::before { transform: rotate(-5deg); animation: none; }
@@ -2116,18 +2120,19 @@ body[data-paper-wind="high"] #paper-tape-action::before { transform: rotate(-9de
 #paper-tape-action.is-sun-translucent { opacity:.62; }
 @keyframes paper-edge-drop { 0%,60%,100%{opacity:0;transform:scale(.7)}15%{opacity:.65;transform:scale(1)}40%{opacity:0;transform:scale(1.5)} }
 @keyframes paper-edge-hail { 0%,65%,100%{opacity:0;transform:translate(0,0)}12%{opacity:.8;transform:translate(0,0)}25%{opacity:.8;transform:translate(8px,-12px)}45%{opacity:0;transform:translate(17px,3px)} }
-@keyframes paper-free-corner { 0%,65%,100%{transform:scaleY(.35) rotate(-2deg);opacity:0}18%{transform:translateY(-6px) rotate(-4deg);opacity:1}34%{transform:translateY(-2px) rotate(-1deg);opacity:.5} }
 @keyframes paper-tape-tail { 0%,65%,100%{transform:rotate(-8deg)}18%{transform:rotate(-15deg)}34%{transform:rotate(-9deg)} }
 /* Effective motion flag is set by motion.mjs; system reduction always wins. */
 body[data-motion="false"],body[data-motion="false"] *,body[data-motion="false"] *::before,body[data-motion="false"] *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
 body[data-motion="false"] :is(.weather-canvas,.weather-contact-canvas,.weather-foreground-canvas) { visibility:hidden; }
-body[data-motion="false"] .paper-free-edge { transform:none; opacity:0; }
+body[data-motion="false"] #panel-ready [data-weather-surface] { transform:none; }
+body[data-motion="false"] #panel-ready [data-weather-surface]::after { opacity:0; }
 body[data-motion="false"] #paper-tape-action::before { transform: rotate(-8deg); }
 body[data-motion="false"] .is-rain-damp .paper-edge-contact i,body[data-motion="false"] .is-hail-contact .paper-edge-contact i { opacity:.55; }
 body[data-motion="false"] :is(#score-circle-action,#paper-clip-action)::after { opacity:0; }
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
- .paper-free-edge{transform:none!important;opacity:0}
+ #panel-ready [data-weather-surface]{transform:none!important}
+ #panel-ready [data-weather-surface]::after{opacity:0!important}
  #paper-tape-action::before{transform:rotate(-8deg)!important}
  .is-rain-damp .paper-edge-contact i,.is-hail-contact .paper-edge-contact i{opacity:.55}
  #score-circle-action::after,#paper-clip-action::after{opacity:0}
@@ -2139,6 +2144,8 @@ body[data-motion="false"] :is(#score-circle-action,#paper-clip-action)::after { 
  .app-shell>footer,.app-shell>footer a{color:CanvasText}
  .error::before{background:Canvas}
  :is(.hero-score-col,.hero-meta-col,.factor-sheet,.week-strip)::before{background:Canvas!important}
- .paper-edge-contact,.paper-free-edge,#score-circle-action::after,#paper-clip-action::after{display:none}
+ #panel-ready [data-weather-surface]{transform:none!important}
+ #panel-ready [data-weather-surface]::after{display:none}
+ .paper-edge-contact,#score-circle-action::after,#paper-clip-action::after{display:none}
  :is(button,a):focus-visible{outline:2px solid Highlight;outline-offset:2px}
 }

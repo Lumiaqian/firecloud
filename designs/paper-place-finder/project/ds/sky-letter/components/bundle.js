@@ -379,25 +379,25 @@ weather.addEventListener('change', () => { clearEffects(); render(); });
 light.addEventListener('change', () => { followTheme = false; clearEffects(); render(); });
 motionButton.addEventListener('click', () => { motionRequested = !motionRequested; clearEffects(); render(); });
 reduced.addEventListener('change', () => { clearEffects(); render(); });
-document.addEventListener('visibilitychange', () => { clearEffects(); render(); });
+document.addEventListener('visibilitychange', () => { stage.dataset.pageHidden = String(document.hidden); clearEffects(); render(); });
 new MutationObserver(parentTheme).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
 function pulse(name, label, duration, event) {
   const keyboard = event.detail === 0;
   if (keyboard || stage.dataset.motion !== 'true') {
     if (stage.dataset.motion !== 'true') clearEffects();
-    status.textContent = `${keyboard ? '键盘操作仅文字反馈' : '动效已关闭'} · 非实时样例 · 纸面数值保持不变`;
+    status.textContent = `${keyboard ? '键盘操作仅文字反馈' : '动效已关闭'} · 非实时样例 · 纸面静止，数值不变`;
     return;
   }
   clearTimeout(timers.get(name));
   stage.dataset[name] = 'true';
   timers.set(name, setTimeout(() => { delete stage.dataset[name]; timers.delete(name); render(); }, duration));
-  status.textContent = `${label} · 非实时样例 · 数据不移动、不闪烁`;
+  status.textContent = `${label} · 非实时样例 · 数据不改变、不闪烁`;
 }
 document.querySelector('#weather-clip').addEventListener('click', event => pulse('strike', '夹端引雷', 650, event));
 document.querySelector('#weather-annotation').addEventListener('click', event => pulse('warm', '圈注暖光', 3600, event));
 document.querySelector('#weather-tape').addEventListener('click', event => {
   const allowed = event.detail !== 0 && stage.dataset.motion === 'true';
-  pulse('gust', '分层手绘阵风掠过天空，纸缘迟半拍轻动', 5000, event);
+  pulse('gust', '分层手绘阵风掠过天空，胶带尾摆动，原纸面整体轻抬', 5000, event);
   if (allowed) emitWind(true);
 });
 for (const button of document.querySelectorAll('[data-day]')) button.addEventListener('click', () => {

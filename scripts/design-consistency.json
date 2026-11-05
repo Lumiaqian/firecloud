@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "scope": "File distribution and effective stylesheet dependency inventory; not visual or runtime acceptance.",
   "source": "designs/sky-letter-system/project",
-  "sourceHash": "955ecbfacec522b54cc0c7c33dfee93f8f62d22ded7162dc73bc2eaf49aaef92",
+  "sourceHash": "297407069959f18881df192a88e3941268d6781229fc8d649e8afc211b425938",
   "installed": "designs/paper-place-finder/project/ds/sky-letter",
   "sourceFiles": {
-    "Accessibility.md": "33ab526adbb5fcdec3ca51f5c92e265920eb6b8934e6e523b76a102c96857041",
+    "Accessibility.md": "6baadc70091c6921e60529e22ce8fa9ac2f7fd82f53e3bf51a0a526511338b9c",
     "Inventory.md": "37d81f5d95e39cee7952b7df20974dd10f535f375ffc83ad85b0ddfd07b71825",
-    "Motion.md": "b4582c25108f509a25c39b06d2d41f6fce9a4737126f82ed3db483ef96bdd3a7",
-    "README.md": "a67529f8fb007070dbdabf07d4fff8d577988d5dc3c526c6dffa574d1d8257b9",
+    "Motion.md": "592405eaecfbb662d7e7dc8eedcb409e1a22f33cf695f5023d7ba12b48f56af1",
+    "README.md": "76c892332b2098c72f2f8977794a265b850e11df3ef8802532cd7dbfc0e250fa",
     "_blobs/016c40d1def5678a1bc7b8c1d7ed4199.png": "016c40d1def5678a1bc7b8c1d7ed419922cd59bb42816677ed65be8ed3759f60",
     "_blobs/168794c2c6247d31fb4dd9639d64370c.png": "168794c2c6247d31fb4dd9639d64370cde0ac885536eabe7e0fb39a929f21429",
     "_blobs/178d1b87b97b62feeec6174ddbcff695.png": "178d1b87b97b62feeec6174ddbcff6950456fdfb25912183d6a2b7c4e82af3fb",
@@ -68,18 +68,18 @@
     "components/PlaceRow/preview.html": "6efe6a76aab729f24747f6765af2b6d78aa584ad0196f909ffbaa30a8a0219a4",
     "components/StatusNote/README.md": "527c064ae030bd9d790ba4dff96e022336c859c8a4e82dcb827b3b9a608b284c",
     "components/StatusNote/preview.html": "a3adfa47a51783b8439cd09ebde3a7d112397cc51d0a815c6c6104e4158bd4c2",
-    "components/WeatherStage/README.md": "f9e625db79675e03936e7ba4e60a51d704b76d81e7f7a45ffa6d5eaa436f6d07",
-    "components/WeatherStage/preview.html": "69cabdc89bf9ca00e4844fb2ca01432b61a28002d32cc6ad872cc89ddcaa6f37",
+    "components/WeatherStage/README.md": "2472bc9a89d695971ad6167371b1d672c0a75ebfe7a45d42defa7f66f93c93e1",
+    "components/WeatherStage/preview.html": "8b41bbee8a0e460eeb677433cfcf17b8ba8c36ae98daf9e2e4f866c14303cb94",
     "components/art/clip.png": "6b03c41165f044976faf1a60b98098b2d85c5505a52111c256dab9f56b126693",
     "components/art/mark.png": "e6a09a2b5261c577a08bbd7f0bef7e0b02c6b44dc4bb6890093cb9430034fd72",
     "components/art/rule.png": "9cedfb4c5bd7f60f6760530f51980cc8ed6493103c79f5f1e3abee9a45068103",
     "components/art/seal.png": "6cb74947f962f1e36340b5c851c818d4782678294083570a0921d812cafdf656",
-    "components/bundle.css": "a5d31b3bdb3cbc7e2d2b3d77073b834a92b9262064b644c324f65dc79d163569",
-    "components/bundle.js": "82538c2bc07aba4853cbd20a88a71870ca596cadf98ca5c5716c1ab4bd8394c7",
+    "components/bundle.css": "0bb18f0d53429b7f0a2af1cb4d2a991e21cb865c24c53ef0f647b43253cfafcb",
+    "components/bundle.js": "3012a245dfb826d16e6eaadbc547cf8b17cef50c5d2f7d7048b440a00d874086",
     "components/card-foundation.css": "b62c163dc7bece966ebcd7a51ddc0663efd8cfab2c59e571503e9c1bdcdad712",
     "components/index.d.ts": "3ce95601c5f7a4056d8573b7fd1e7b724b6bfd1d8686352fab3139faf1fdd888",
-    "components/preview-layout.css": "b78bd282e6b793566e113160ee167f7587680b445f83d567cd44a0dcce1a5f9e",
-    "design-system.json": "fffe165aba343a3f4fa007ca960de881c1aed193b3e4aef347034a47331530bd",
+    "components/preview-layout.css": "7e871d0db2db25873a10218494ea9dbe86f912c294e7e4fdddd925aa5b4b6289",
+    "design-system.json": "e1751e4c7e62017b233d1633174f9f6c1d4e8bd4caf8ca09df5d6e9c781b4301",
     "fonts/Xiaolai-Regular.woff2": "b01b7373b008c76f7ec6d7b19468d11f54e2ec40bc0df5713e79bb3d6a952303",
     "licenses/Xiaolai-OFL.txt": "0df7e09be4c2c850a48bd8beb9cd64b343aad49cd5d3f6cfb2ad2e3d28a56ca4",
     "manifest.json": "261caf33c009f0b408db9d14651fbde9cd764600c5cb0930d5e644f3c4f0c6b5",
@@ -112,7 +112,7 @@
       },
       {
         "path": "css/style.css",
-        "sha256": "e637ec9e5dd0ad39e911d7c36ca85051df2242091914303178ddf4f2f97d8dc7"
+        "sha256": "8554273aaa00dc72a1efee3dd22f15325c245e67a97e9e0e8a611d96d03daa84"
       }
     ]
   },
@@ -203,7 +203,7 @@
         "stylesheets": [
           {
             "path": "designs/paper-place-finder/project/ds/sky-letter/components/bundle.css",
-            "sha256": "a5d31b3bdb3cbc7e2d2b3d77073b834a92b9262064b644c324f65dc79d163569"
+            "sha256": "0bb18f0d53429b7f0a2af1cb4d2a991e21cb865c24c53ef0f647b43253cfafcb"
           },
           {
             "path": "designs/paper-place-finder/project/ds/sky-letter/components/card-foundation.css",
@@ -638,7 +638,7 @@
       {
         "file": "SkyMotionFlow.dc.html",
         "page": "motion-handoff",
-        "sha256": "d0ff293e0caade3b23a4926d92b177471db3968805f69e7276a8fa5ba75d4c39",
+        "sha256": "39c5b0912e02ba05ae8385284ac81d3221d94190e95c0c468f302d60cff651ed",
         "cardTypes": [
           "factors",
           "forecast",
@@ -664,7 +664,7 @@
       {
         "file": "SkyMotionFlowMobile.dc.html",
         "page": "motion-handoff",
-        "sha256": "9a7b784fce31a4eee58b3a4c9dcf348b07c43cc21bc58b6ffb32b3589d669da8",
+        "sha256": "444a4fab46705180255bf57acfe24c1237385c8739a161a8b66ab3dc8a5462cc",
         "cardTypes": [
           "factors",
           "forecast",
